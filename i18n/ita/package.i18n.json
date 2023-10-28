@@ -206,7 +206,7 @@
 	"cmake-tools.configuration.cmake.launchBehavior.newTerminal.markdownDescriptions": "Viene creata una nuova istanza del terminale in cui viene avviata la destinazione. I terminali esistenti non vengono puliti automaticamente.",
 	"cmake-tools.configuration.cmake.loadCompileCommands.description": "Controlla se l'estensione legge compile_commands.json per abilitare la compilazione di file singoli.",
 	"cmake-tools.command.cmake.projectStatus.update.title": "Aggiornare lo stato del progetto",
-	"cmake-tools.command.cmake.projectStatus.cleanConfigure.title": "Delete Cache and Reconfigure",
+	"cmake-tools.command.cmake.projectStatus.cleanConfigure.title": "Elimina la cache e riconfigura",
 	"cmake-tools.command.cmake.projectStatus.selectTestPreset.title": "Impostare la destinazione test",
 	"cmake-tools.debugger.label": "CMake Debugger"
 }

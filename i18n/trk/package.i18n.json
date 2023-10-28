@@ -206,7 +206,7 @@
 	"cmake-tools.configuration.cmake.launchBehavior.newTerminal.markdownDescriptions": "Yeni bir terminal örneği oluşturulur ve içinde hedef başlatılır. Mevcut terminaller otomatik olarak temizlenmez.",
 	"cmake-tools.configuration.cmake.loadCompileCommands.description": "Tek dosya derlemesini etkinleştirmek için uzantının compile_commands.json dosyasını okuyup okumadığını denetler.",
 	"cmake-tools.command.cmake.projectStatus.update.title": "Proje durumunu yenileyin",
-	"cmake-tools.command.cmake.projectStatus.cleanConfigure.title": "Delete Cache and Reconfigure",
+	"cmake-tools.command.cmake.projectStatus.cleanConfigure.title": "Önbelleği Sil ve Yeniden Yapılandır",
 	"cmake-tools.command.cmake.projectStatus.selectTestPreset.title": "Test Hedefini Ayarla",
 	"cmake-tools.debugger.label": "CMake Hata Ayıklayıcısı"
 }
