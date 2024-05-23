@@ -1,7 +1,6 @@
 .vscode-test/
 build/
 dist/
-node_modules/
 out/
 test/fakebin/
 test/**/log.txt
