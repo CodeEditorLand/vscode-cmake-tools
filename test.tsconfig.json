@@ -1,29 +1,23 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es2017",
-        "outDir": "out",
-        "baseUrl": "./",
-        "lib": [
-            "es6"
-        ],
-        "paths": {
-            "@cmt/*": ["src/*"],
-            "@test/*": ["test/*"]
-        },
-        "sourceMap": true,
-        "rootDir": ".",
-        "strict": true,
-        "experimentalDecorators": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitThis": true,
-        "skipLibCheck": true
-    },
-    "include": [
-        "test/**/*.ts"
-    ],
-    "exclude": [
-        "test/**/CMakeFiles/**/*.ts"
-    ]
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2017",
+		"outDir": "out",
+		"baseUrl": "./",
+		"lib": ["es6"],
+		"paths": {
+			"@cmt/*": ["src/*"],
+			"@test/*": ["test/*"]
+		},
+		"sourceMap": true,
+		"rootDir": ".",
+		"strict": true,
+		"experimentalDecorators": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitThis": true,
+		"skipLibCheck": true
+	},
+	"include": ["test/**/*.ts"],
+	"exclude": ["test/**/CMakeFiles/**/*.ts"]
 }
