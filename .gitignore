@@ -1,6 +1,7 @@
 .vscode-test/
 build/
 dist/
+node_modules/
 out/
 test/fakebin/
 test/**/log.txt
@@ -10,6 +11,10 @@ vscode-translations-import/
 jobs/loc/LCL
 OneLocBuild
 .ci-build
+.DS_Store
+debug.log
+npm-debug.log
+package-lock.json
 test.txt
 *.backup
 *.db*
