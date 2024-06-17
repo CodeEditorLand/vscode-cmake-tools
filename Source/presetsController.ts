@@ -376,12 +376,10 @@ export class PresetsController {
                     break;
                 }
                 case SpecialOptions.ToolchainFile: {
-                    const displayName = localize("custom.configure.preset.toolchain.file", "Configure preset using toolchain file");
-                    const description = localize("description.custom.configure.preset", "Sets Ninja generator, build and install directory");
                     newPreset = {
                         name: '__placeholder__',
-                        displayName,
-                        description,
+                        displayName: `Configure preset using toolchain file`,
+                        description: 'Sets Ninja generator, build and install directory',
                         generator: 'Ninja',
                         binaryDir: '${sourceDir}/out/build/${presetName}',
                         cacheVariables: {
@@ -393,12 +391,10 @@ export class PresetsController {
                     break;
                 }
                 case SpecialOptions.Custom: {
-                    const displayName = localize("custom.configure.preset", "Custom configure preset");
-                    const description = localize("description.custom.configure.preset", "Sets Ninja generator, build and install directory");
                     newPreset = {
                         name: '__placeholder__',
-                        displayName,
-                        description,
+                        displayName: `Custom configure preset`,
+                        description: 'Sets Ninja generator, build and install directory',
                         generator: 'Ninja',
                         binaryDir: '${sourceDir}/out/build/${presetName}',
                         cacheVariables: {
