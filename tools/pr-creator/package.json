@@ -6,8 +6,8 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"@types/node": "^20.14.5",
-		"commander": "^12.1.0",
-		"rimraf": "^5.0.7"
+		"@types/node": "20.14.5",
+		"commander": "12.1.0",
+		"rimraf": "5.0.7"
 	}
 }
