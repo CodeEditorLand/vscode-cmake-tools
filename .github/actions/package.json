@@ -1,12 +1,12 @@
 {
-	"dependencies": {
-		"@actions/core": "^1.9.1",
-		"@actions/github": "^2.1.1"
-	},
-	"description": "GitHub Actions used by CMake Tools for triaging issues",
-	"devDependencies": {},
 	"name": "vscode-cmake-tools-github-triage-actions",
+	"description": "GitHub Actions used by CMake Tools for triaging issues",
 	"scripts": {
 		"build": "tsc"
-	}
+	},
+	"dependencies": {
+		"@actions/core": "1.9.1",
+		"@actions/github": "2.1.1"
+	},
+	"devDependencies": {}
 }
