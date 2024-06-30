@@ -1,39 +1,22 @@
 {
-	"_moduleAliases": {
-		"@cmt": "out/src/",
-		"@test": "out/test/"
+	"name": "cmake-tools",
+	"displayName": "CMake Tools",
+	"description": "Extended CMake support in Visual Studio Code",
+	"main": "./dist/main",
+	"scripts": {
+		"backendTests": "node ./node_modules/mocha/bin/_mocha -u tdd --timeout 999999 --colors -r ts-node/register -r tsconfig-paths/register ./test/backend-unit-tests/**/*.test.ts",
+		"compile": "yarn install && webpack --mode development",
+		"compile-production": "yarn install && yarn run translations-generate && webpack --env BUILD_VSCODE_NLS=true --mode production",
+		"compile-watch": "yarn install && webpack --mode development --watch --progress",
+		"extensionTestsMultiRoot": "yarn run pretest && node ./out/test/extension-tests/multi-root-UI/runTest.js",
+		"extensionTestsSingleRoot": "yarn run pretest && node ./out/test/extension-tests/single-root-UI/runTest.js",
+		"extensionTestsSuccessfulBuild": "yarn run pretest && node ./out/test/extension-tests/successful-build/runTest.js",
+		"smokeTests": "yarn run pretest && node ./out/test/smoke/badProject/runTest.js && node ./out/test/smoke/goodProject/runTest.js && node ./out/test/smoke/noCtest/runTest.js",
+		"translations-export": "gulp translations-export",
+		"translations-generate": "gulp translations-generate",
+		"translations-import": "gulp translations-import",
+		"unitTests": "yarn run pretest && node ./out/test/unit-tests/runTest.js"
 	},
-	"activationEvents": [
-		"onCommand:cmake.activeFolderName",
-		"onCommand:cmake.activeFolderPath",
-		"onCommand:cmake.activeConfigurePresetName",
-		"onCommand:cmake.activeBuildPresetName",
-		"onCommand:cmake.activeTestPresetName",
-		"onCommand:cmake.activePackagePresetName",
-		"onCommand:cmake.activeWorkflowPresetName",
-		"onCommand:cmake.buildTargetName",
-		"onCommand:cmake.launchTargetPath",
-		"onCommand:cmake.launchTargetDirectory",
-		"onCommand:cmake.launchTargetFilename",
-		"onCommand:cmake.getLaunchTargetPath",
-		"onCommand:cmake.getLaunchTargetDirectory",
-		"onCommand:cmake.getLaunchTargetFilename",
-		"onCommand:cmake.buildType",
-		"onCommand:cmake.buildDirectory",
-		"onCommand:cmake.executableTargets",
-		"onCommand:cmake.buildKit",
-		"onCommand:cmake.tasksBuildCommand",
-		"onDebugResolve:cmake",
-		"onDebugInitialConfigurations",
-		"onDebugDynamicConfigurations:cmake",
-		"workspaceContains:CMakeLists.txt",
-		"workspaceContains:*/CMakeLists.txt",
-		"workspaceContains:*/*/CMakeLists.txt",
-		"workspaceContains:*/*/*/CMakeLists.txt",
-		"workspaceContains:.vscode/cmake-kits.json",
-		"onFileSystem:cmake-tools-schema",
-		"onLanguage:cmake"
-	],
 	"contributes": {
 		"breakpoints": [
 			{
@@ -3672,6 +3655,52 @@
 			}
 		]
 	},
+	"activationEvents": [
+		"onCommand:cmake.activeFolderName",
+		"onCommand:cmake.activeFolderPath",
+		"onCommand:cmake.activeConfigurePresetName",
+		"onCommand:cmake.activeBuildPresetName",
+		"onCommand:cmake.activeTestPresetName",
+		"onCommand:cmake.activePackagePresetName",
+		"onCommand:cmake.activeWorkflowPresetName",
+		"onCommand:cmake.buildTargetName",
+		"onCommand:cmake.launchTargetPath",
+		"onCommand:cmake.launchTargetDirectory",
+		"onCommand:cmake.launchTargetFilename",
+		"onCommand:cmake.getLaunchTargetPath",
+		"onCommand:cmake.getLaunchTargetDirectory",
+		"onCommand:cmake.getLaunchTargetFilename",
+		"onCommand:cmake.buildType",
+		"onCommand:cmake.buildDirectory",
+		"onCommand:cmake.executableTargets",
+		"onCommand:cmake.buildKit",
+		"onCommand:cmake.tasksBuildCommand",
+		"onDebugResolve:cmake",
+		"onDebugInitialConfigurations",
+		"onDebugDynamicConfigurations:cmake",
+		"workspaceContains:CMakeLists.txt",
+		"workspaceContains:*/CMakeLists.txt",
+		"workspaceContains:*/*/CMakeLists.txt",
+		"workspaceContains:*/*/*/CMakeLists.txt",
+		"workspaceContains:.vscode/cmake-kits.json",
+		"onFileSystem:cmake-tools-schema",
+		"onLanguage:cmake"
+	],
+	"resolutions": {
+		"**/braces": "3.0.3",
+		"**/minimist": "1.2.5",
+		"ansi-regex": "5.0.1",
+		"chokidar": "3.5.1",
+		"glob-parent": "5.1.2",
+		"hosted-git-info": "3.0.8",
+		"https-proxy-agent": "5.0.0",
+		"minimatch": "3.0.5",
+		"nanoid": "3.1.31",
+		"postcss": "8.2.10",
+		"tsconfig-paths*/json5": "1.0.2",
+		"xml2js": "0.5.0",
+		"yargs-parser": "20.2.4"
+	},
 	"dependencies": {
 		"@types/string.prototype.matchall": "4.0.4",
 		"ajv": "8.16.0",
@@ -3690,7 +3719,6 @@
 		"which": "4.0.0",
 		"xml2js": "0.6.2"
 	},
-	"description": "Extended CMake support in Visual Studio Code",
 	"devDependencies": {
 		"@octokit/rest": "21.0.0",
 		"@types/ajv": "0.0.5",
@@ -3720,41 +3748,13 @@
 		"ts-loader": "9.5.1",
 		"tsconfig-paths": "4.2.0"
 	},
-	"displayName": "CMake Tools",
+	"icon": "res/logo.png",
 	"galleryBanner": {
 		"color": "#13578c",
 		"theme": "dark"
 	},
-	"icon": "res/logo.png",
-	"main": "./dist/main",
-	"name": "cmake-tools",
-	"resolutions": {
-		"**/braces": "3.0.3",
-		"**/minimist": "1.2.5",
-		"ansi-regex": "5.0.1",
-		"chokidar": "3.5.1",
-		"glob-parent": "5.1.2",
-		"hosted-git-info": "3.0.8",
-		"https-proxy-agent": "5.0.0",
-		"minimatch": "3.0.5",
-		"nanoid": "3.1.31",
-		"postcss": "8.2.10",
-		"tsconfig-paths*/json5": "1.0.2",
-		"xml2js": "0.5.0",
-		"yargs-parser": "20.2.4"
-	},
-	"scripts": {
-		"backendTests": "node ./node_modules/mocha/bin/_mocha -u tdd --timeout 999999 --colors -r ts-node/register -r tsconfig-paths/register ./test/backend-unit-tests/**/*.test.ts",
-		"compile": "yarn install && webpack --mode development",
-		"compile-production": "yarn install && yarn run translations-generate && webpack --env BUILD_VSCODE_NLS=true --mode production",
-		"compile-watch": "yarn install && webpack --mode development --watch --progress",
-		"extensionTestsMultiRoot": "yarn run pretest && node ./out/test/extension-tests/multi-root-UI/runTest.js",
-		"extensionTestsSingleRoot": "yarn run pretest && node ./out/test/extension-tests/single-root-UI/runTest.js",
-		"extensionTestsSuccessfulBuild": "yarn run pretest && node ./out/test/extension-tests/successful-build/runTest.js",
-		"smokeTests": "yarn run pretest && node ./out/test/smoke/badProject/runTest.js && node ./out/test/smoke/goodProject/runTest.js && node ./out/test/smoke/noCtest/runTest.js",
-		"translations-export": "gulp translations-export",
-		"translations-generate": "gulp translations-generate",
-		"translations-import": "gulp translations-import",
-		"unitTests": "yarn run pretest && node ./out/test/unit-tests/runTest.js"
+	"_moduleAliases": {
+		"@cmt": "out/src/",
+		"@test": "out/test/"
 	}
 }
