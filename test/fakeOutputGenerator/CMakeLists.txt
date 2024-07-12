@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.15.0)
+project(FakeOutputGenerator VERSION 0.1.0)
+
+file(GLOB CONFIG_FILES "configfiles/*.cfg")
+foreach(config ${CONFIG_FILES})
+    get_filename_component(target "${config}" NAME_WLE)
+    add_executable(${target} main.cpp)
+    set_property(TARGET ${target} PROPERTY CXX_STANDARD 98)
+    install(TARGETS ${target} DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(FILES ${config} DESTINATION ${CMAKE_INSTALL_PREFIX})
+endforeach()
