@@ -2370,6 +2370,17 @@
 					],
 					"scope": "resource",
 					"type": "string"
+				},
+				"cmake.useVsDeveloperEnvironment": {
+					"default": "auto",
+					"description": "%cmake-tools.configuration.cmake.useVsDeveloperEnvironment.description%",
+					"enum": [
+						"always",
+						"never",
+						"auto"
+					],
+					"scope": "resource",
+					"type": "string"
 				}
 			},
 			"title": "CMake Tools",
