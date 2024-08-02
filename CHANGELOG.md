@@ -19,49 +19,25 @@ Improvements:
 
 Bug Fixes:
 
--   Attempt to fix stringifying the extension context.
-    [#3797](https://github.com/microsoft/vscode-cmake-tools/issues/3797)
--   Fix issue where `cmake.preferredGenerators` wasn't falling back to the next
-    entry when the first entry didn't exist.
-    [#2709](https://github.com/microsoft/vscode-cmake-tools/issues/2709)
--   Potential fix for attempting to load a non-variants file as a variants file
-    and throwing a parse exception.
-    [#3727](https://github.com/microsoft/vscode-cmake-tools/issues/3727)
--   Fix issue where `cmakeUserPresets.json` not showing up in project outline.
-    [#3832](https://github.com/microsoft/vscode-cmake-tools/issues/3832)
--   Fix edge case where parsing tests fails when additional output is printed
-    before tests json.
-    [#3750](https://github.com/microsoft/vscode-cmake-tools/issues/3750)
--   Fix issue where `Configure with CMake Debugger` fails on restart because the
-    previously used pipe to CMake Debugger is no longer available.
-    [#3582](https://github.com/microsoft/vscode-cmake-tools/issues/3582)
--   Fix custom kit PATH being overriden.
-    [#3849](https://github.com/microsoft/vscode-cmake-tools/issues/3849)
--   Fix debug variables being overriden.
-    [#3806](https://github.com/microsoft/vscode-cmake-tools/issues/3806)
--   Fix issue in Quick Start where a C file was generated in place of a C++
-    file. [#3856](https://github.com/microsoft/vscode-cmake-tools/issues/3856)
--   Fix custom build tasks not showing up.
-    [#3622](https://github.com/microsoft/vscode-cmake-tools/issues/3622)
--   Fix the bug where if a relative path specified for `installDir`, it is not
-    calculated relative to the source directory, which is how it should be
-    according to the CMake `installDir` docs
-    [here](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html#configure-preset).
-    [#3871](https://github.com/microsoft/vscode-cmake-tools/issues/3871)
--   Fix issue with CMakeLists.txt depth search.
-    [#3901](https://github.com/microsoft/vscode-cmake-tools/issues/3901)
--   Fix localized file path for schema files.
-    [#3872](https://github.com/microsoft/vscode-cmake-tools/issues/3872)
--   Disable annoy and invalid extenion message about fix windows sdk for
-    MSVC 2022.
-    [#3837](https://github.com/microsoft/vscode-cmake-tools/pull/3837)
--   Fix re-using a terminal for launching even when the environment has changed.
-    [#3478](https://github.com/microsoft/vscode-cmake-tools/issues/3478)
--   Fix our keybindings for debug and run without debugging to better match VS
-    Code. [#3507](https://github.com/microsoft/vscode-cmake-tools/issues/3507)
--   Prevent second configure after `QuickStart` if the `automaticReconfigure`
-    setting is enabled.
-    [#3910](https://github.com/microsoft/vscode-cmake-tools/issues/3910)
+- Attempt to fix stringifying the extension context. [#3797](https://github.com/microsoft/vscode-cmake-tools/issues/3797)
+- Fix issue where `cmake.preferredGenerators` wasn't falling back to the next entry when the first entry didn't exist. [#2709](https://github.com/microsoft/vscode-cmake-tools/issues/2709)
+- Potential fix for attempting to load a non-variants file as a variants file and throwing a parse exception. [#3727](https://github.com/microsoft/vscode-cmake-tools/issues/3727)
+- Fix issue where `cmakeUserPresets.json` not showing up in project outline. [#3832](https://github.com/microsoft/vscode-cmake-tools/issues/3832)
+- Fix edge case where parsing tests fails when additional output is printed before tests json. [#3750](https://github.com/microsoft/vscode-cmake-tools/issues/3750)
+- Fix issue where `Configure with CMake Debugger` fails on restart because the previously used pipe to CMake Debugger is no longer available. [#3582](https://github.com/microsoft/vscode-cmake-tools/issues/3582)
+- Fix custom kit PATH being overriden. [#3849](https://github.com/microsoft/vscode-cmake-tools/issues/3849)
+- Fix debug variables being overriden. [#3806](https://github.com/microsoft/vscode-cmake-tools/issues/3806)
+- Fix issue in Quick Start where a C file was generated in place of a C++ file. [#3856](https://github.com/microsoft/vscode-cmake-tools/issues/3856)
+- Fix custom build tasks not showing up. [#3622](https://github.com/microsoft/vscode-cmake-tools/issues/3622)
+- Fix the bug where if a relative path specified for `installDir`, it is not calculated relative to the source directory, which is how it should be according to the CMake `installDir` docs [here](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html#configure-preset). [#3871](https://github.com/microsoft/vscode-cmake-tools/issues/3871)
+- Fix issue with CMakeLists.txt depth search. [#3901](https://github.com/microsoft/vscode-cmake-tools/issues/3901)
+- Fix localized file path for schema files. [#3872](https://github.com/microsoft/vscode-cmake-tools/issues/3872)
+- Disable annoy and invalid extenion message about fix windows sdk for MSVC 2022. [#3837](https://github.com/microsoft/vscode-cmake-tools/pull/3837)
+- Fix re-using a terminal for launching even when the environment has changed. [#3478](https://github.com/microsoft/vscode-cmake-tools/issues/3478)
+- Fix our keybindings for debug and run without debugging to better match VS Code. [#3507](https://github.com/microsoft/vscode-cmake-tools/issues/3507)
+- Allow success recovery in the configure precondition handler. [#3554](https://github.com/microsoft/vscode-cmake-tools/issues/3554)
+- Prevent second configure after `QuickStart` if the `automaticReconfigure` setting is enabled. [#3910](https://github.com/microsoft/vscode-cmake-tools/issues/3910)
+- Set usepresets context after manually creating a CMakePresets.json/CMakeUserPresets.json or using QuickStart to create it. [#3854](https://github.com/microsoft/vscode-cmake-tools/issues/3854)
 
 ## 1.18.43
 
