@@ -1,13 +1,13 @@
 {
+	"name": "pr-creator",
+	"scripts": {
+		"build": "tsc -p ./",
+		"clean": "rimraf ./dist"
+	},
 	"dependencies": {},
 	"devDependencies": {
 		"@types/node": "22.7.3",
 		"commander": "12.1.0",
 		"rimraf": "6.0.1"
-	},
-	"name": "pr-creator",
-	"scripts": {
-		"build": "tsc -p ./",
-		"clean": "rimraf ./dist"
 	}
 }
