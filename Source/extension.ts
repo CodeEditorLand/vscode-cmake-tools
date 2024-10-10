@@ -2397,6 +2397,20 @@ export class ExtensionManager implements vscode.Disposable {
 		}, folder);
 	}
 
+	launchTargetName(args?: FolderTargetNameArgsType) {
+		const [folder, targetName] = this.resolveFolderTargetNameArgs(args);
+
+		telemetry.logEvent("substitution", { command: "launchTargetName" });
+		return this.queryCMakeProject(async (cmakeProject) => {
+			if (targetName !== undefined && targetName !== null) {
+				await cmakeProject.setLaunchTargetByName(targetName);
+			}
+			const targetFilename =
+				await cmakeProject.launchTargetNameForSubstitution();
+			return targetFilename;
+		}, folder);
+	}
+
 	getLaunchTargetPath(args?: FolderTargetNameArgsType) {
 		const [folder, targetName] = this.resolveFolderTargetNameArgs(args);
 
@@ -2437,6 +2451,19 @@ export class ExtensionManager implements vscode.Disposable {
 				await cmakeProject.setLaunchTargetByName(targetName);
 			}
 			const targetFilename = await cmakeProject.getLaunchTargetFilename();
+			return targetFilename;
+		}, folder);
+	}
+
+	getLaunchTargetName(args?: FolderTargetNameArgsType) {
+		const [folder, targetName] = this.resolveFolderTargetNameArgs(args);
+
+		telemetry.logEvent("substitution", { command: "getLaunchTargetName" });
+		return this.queryCMakeProject(async (cmakeProject) => {
+			if (targetName !== undefined && targetName !== null) {
+				await cmakeProject.setLaunchTargetByName(targetName);
+			}
+			const targetFilename = await cmakeProject.getLaunchTargetName();
 			return targetFilename;
 		}, folder);
 	}
@@ -3224,9 +3251,11 @@ async function setup(
 		"launchTargetPath",
 		"launchTargetDirectory",
 		"launchTargetFilename",
+		"launchTargetName",
 		"getLaunchTargetPath",
 		"getLaunchTargetDirectory",
 		"getLaunchTargetFilename",
+		"getLaunchTargetName",
 		"buildTargetName",
 		"buildKit",
 		"buildType",
