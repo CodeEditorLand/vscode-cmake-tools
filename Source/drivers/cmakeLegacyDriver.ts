@@ -3,327 +3,240 @@
  * Can also talk to newer versions of CMake via the command line.
  */ /** */
 
-import { CacheEntry, CMakeCache } from "@cmt/cache";
-import { CMakeExecutable } from "@cmt/cmake/cmakeExecutable";
-import { ConfigureTrigger } from "@cmt/cmakeProject";
-import { ConfigurationReader } from "@cmt/config";
-import {
-	CMakeDriver,
-	CMakePreconditionProblemSolver,
-} from "@cmt/drivers/drivers";
-import { CMakeGenerator, Kit } from "@cmt/kit";
-import * as logging from "@cmt/logging";
-import { fs } from "@cmt/pr";
-import {
-	BuildPreset,
-	ConfigurePreset,
-	getValue,
-	PackagePreset,
-	TestPreset,
-	WorkflowPreset,
-} from "@cmt/preset";
-import * as proc from "@cmt/proc";
-import rollbar from "@cmt/rollbar";
-import { onConfigureSettingsChange } from "@cmt/ui/util";
-import * as util from "@cmt/util";
-import * as vscode from "vscode";
-import * as nls from "vscode-nls";
+import { CMakeExecutable } from '@cmt/cmake/cmakeExecutable';
+import * as vscode from 'vscode';
 
-import { CodeModelContent } from "./codeModel";
+import { CMakeCache, CacheEntry } from '@cmt/cache';
+import { CMakeDriver, CMakePreconditionProblemSolver } from '@cmt/drivers/drivers';
+import { Kit, CMakeGenerator } from '@cmt/kit';
+import * as logging from '@cmt/logging';
+import { fs } from '@cmt/pr';
+import * as proc from '@cmt/proc';
+import rollbar from '@cmt/rollbar';
+import * as util from '@cmt/util';
+import { ConfigurationReader } from '@cmt/config';
+import * as nls from 'vscode-nls';
+import { BuildPreset, ConfigurePreset, getValue, TestPreset, PackagePreset, WorkflowPreset } from '@cmt/preset';
+import { CodeModelContent } from './codeModel';
+import { ConfigureTrigger } from '@cmt/cmakeProject';
+import { onConfigureSettingsChange } from '@cmt/ui/util';
 
-nls.config({
-	messageFormat: nls.MessageFormat.bundle,
-	bundleFormat: nls.BundleFormat.standalone,
-})();
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-const log = logging.createLogger("legacy-driver");
+const log = logging.createLogger('legacy-driver');
 
 /**
  * The legacy driver.
  */
 export class CMakeLegacyDriver extends CMakeDriver {
-	get isCacheConfigSupported(): boolean {
-		return false;
-	}
 
-	async doCacheConfigure(): Promise<number> {
-		throw new Error("Method not implemented.");
-	}
+    get isCacheConfigSupported(): boolean {
+        return false;
+    }
 
-	private constructor(
-		cmake: CMakeExecutable,
-		readonly config: ConfigurationReader,
-		sourceDir: string,
-		isMultiProject: boolean,
-		workspaceFolder: string,
-		preconditionHandler: CMakePreconditionProblemSolver,
-	) {
-		super(
-			cmake,
-			config,
-			sourceDir,
-			isMultiProject,
-			workspaceFolder,
-			preconditionHandler,
-		);
-	}
+    async doCacheConfigure(): Promise<number> {
+        throw new Error('Method not implemented.');
+    }
 
-	private _needsReconfigure = true;
-	async doConfigureSettingsChange(): Promise<void> {
-		this._needsReconfigure = true;
-		await onConfigureSettingsChange();
-	}
-	async checkNeedsReconfigure(): Promise<boolean> {
-		return this._needsReconfigure;
-	}
+    private constructor(cmake: CMakeExecutable, readonly config: ConfigurationReader, sourceDir: string, isMultiProject: boolean, workspaceFolder: string, preconditionHandler: CMakePreconditionProblemSolver) {
+        super(cmake, config, sourceDir, isMultiProject, workspaceFolder, preconditionHandler);
+    }
 
-	async doSetKit(cb: () => Promise<void>): Promise<void> {
-		this._needsReconfigure = true;
-		await cb();
-	}
+    private _needsReconfigure = true;
+    async doConfigureSettingsChange(): Promise<void> {
+        this._needsReconfigure = true;
+        await onConfigureSettingsChange();
+    }
+    async checkNeedsReconfigure(): Promise<boolean> {
+        return this._needsReconfigure;
+    }
 
-	async doSetConfigurePreset(
-		need_clean: boolean,
-		cb: () => Promise<void>,
-	): Promise<void> {
-		this._needsReconfigure = true;
-		if (need_clean) {
-			await this._cleanPriorConfiguration();
-		}
-		await cb();
-	}
+    async doSetKit(cb: () => Promise<void>): Promise<void> {
+        this._needsReconfigure = true;
+        await cb();
+    }
 
-	doSetBuildPreset(cb: () => Promise<void>): Promise<void> {
-		return cb();
-	}
+    async doSetConfigurePreset(need_clean: boolean, cb: () => Promise<void>): Promise<void> {
+        this._needsReconfigure = true;
+        if (need_clean) {
+            await this._cleanPriorConfiguration();
+        }
+        await cb();
+    }
 
-	doSetTestPreset(cb: () => Promise<void>): Promise<void> {
-		return cb();
-	}
+    doSetBuildPreset(cb: () => Promise<void>): Promise<void> {
+        return cb();
+    }
 
-	doSetPackagePreset(cb: () => Promise<void>): Promise<void> {
-		return cb();
-	}
+    doSetTestPreset(cb: () => Promise<void>): Promise<void> {
+        return cb();
+    }
 
-	doSetWorkflowPreset(cb: () => Promise<void>): Promise<void> {
-		return cb();
-	}
+    doSetPackagePreset(cb: () => Promise<void>): Promise<void> {
+        return cb();
+    }
 
-	// Legacy disposal does nothing
-	async asyncDispose() {
-		this._cacheWatcher.dispose();
-	}
+    doSetWorkflowPreset(cb: () => Promise<void>): Promise<void> {
+        return cb();
+    }
 
-	async doConfigure(
-		args_: string[],
-		_trigger?: ConfigureTrigger,
-		outputConsumer?: proc.OutputConsumer,
-		showCommandOnly?: boolean,
-		defaultConfigurePresetName?: string,
-		configurePreset?: ConfigurePreset | null,
-		options?: proc.ExecutionOptions,
-	): Promise<number> {
-		// Ensure the binary directory exists
-		const binaryDir = configurePreset?.binaryDir ?? this.binaryDir;
-		await fs.mkdir_p(binaryDir);
+    // Legacy disposal does nothing
+    async asyncDispose() {
+        this._cacheWatcher.dispose();
+    }
 
-		// Dup args so we can modify them
-		const args = Array.from(args_);
-		args.push(util.lightNormalizePath(this.sourceDir));
+    async doConfigure(args_: string[], _trigger?: ConfigureTrigger, outputConsumer?: proc.OutputConsumer, showCommandOnly?: boolean, defaultConfigurePresetName?: string, configurePreset?: ConfigurePreset | null, options?: proc.ExecutionOptions): Promise<number> {
+        // Ensure the binary directory exists
+        const binaryDir = configurePreset?.binaryDir ?? this.binaryDir;
+        await fs.mkdir_p(binaryDir);
 
-		const generator = configurePreset
-			? {
-					name: configurePreset.generator,
-					platform: configurePreset.architecture
-						? getValue(configurePreset.architecture)
-						: undefined,
-					toolset: configurePreset.toolset
-						? getValue(configurePreset.toolset)
-						: undefined,
-				}
-			: this.generator;
-		if (generator) {
-			if (generator.name) {
-				args.push("-G");
-				args.push(generator.name);
-			}
-			if (generator.toolset) {
-				args.push("-T");
-				args.push(generator.toolset);
-			}
-			if (generator.platform) {
-				args.push("-A");
-				args.push(generator.platform);
-			}
-		}
+        // Dup args so we can modify them
+        const args = Array.from(args_);
+        args.push(util.lightNormalizePath(this.sourceDir));
 
-		const cmake = this.cmake.path;
-		if (showCommandOnly) {
-			log.showChannel();
-			log.info(proc.buildCmdStr(this.cmake.path, args));
-			return 0;
-		} else {
-			log.debug(
-				localize(
-					"invoking.cmake.with.arguments",
-					"Invoking CMake {0} with arguments {1}",
-					cmake,
-					JSON.stringify(args),
-				),
-			);
-			const child = this.executeCommand(cmake, args, outputConsumer, {
-				environment: await this.getConfigureEnvironment(
-					configurePreset,
-					options?.environment,
-				),
-				cwd: options?.cwd ?? binaryDir,
-			});
-			this.configureProcess = child;
-			const result = await child.result;
-			this.configureProcess = null;
-			log.trace(result.stderr);
-			log.trace(result.stdout);
-			if (
-				result.retc === 0 &&
-				(!configurePreset ||
-					(configurePreset &&
-						defaultConfigurePresetName &&
-						configurePreset.name === defaultConfigurePresetName))
-			) {
-				this._needsReconfigure = false;
-			}
-			if (!configurePreset) {
-				await this._reloadPostConfigure();
-			}
-			return result.retc === null ? -1 : result.retc;
-		}
-	}
+        const generator = (configurePreset) ? {
+            name: configurePreset.generator,
+            platform: configurePreset.architecture ? getValue(configurePreset.architecture) : undefined,
+            toolset: configurePreset.toolset ? getValue(configurePreset.toolset) : undefined
 
-	protected async doPreCleanConfigure(): Promise<void> {
-		await this._cleanPriorConfiguration();
-	}
+        } : this.generator;
+        if (generator) {
+            if (generator.name) {
+                args.push('-G');
+                args.push(generator.name);
+            }
+            if (generator.toolset) {
+                args.push('-T');
+                args.push(generator.toolset);
+            }
+            if (generator.platform) {
+                args.push('-A');
+                args.push(generator.platform);
+            }
+        }
 
-	async doPostBuild(): Promise<boolean> {
-		await this._reloadPostConfigure();
-		return true;
-	}
+        const cmake = this.cmake.path;
+        if (showCommandOnly) {
+            log.showChannel();
+            log.info(proc.buildCmdStr(this.cmake.path, args));
+            return 0;
+        } else {
+            log.debug(localize('invoking.cmake.with.arguments', 'Invoking CMake {0} with arguments {1}', cmake, JSON.stringify(args)));
+            const child = this.executeCommand(cmake, args, outputConsumer, {
+                environment: await this.getConfigureEnvironment(configurePreset, options?.environment),
+                cwd: options?.cwd ?? binaryDir
+            });
+            this.configureProcess = child;
+            const result = await child.result;
+            this.configureProcess = null;
+            log.trace(result.stderr);
+            log.trace(result.stdout);
+            if (result.retc === 0 && (!configurePreset || (configurePreset && defaultConfigurePresetName && configurePreset.name === defaultConfigurePresetName))) {
+                this._needsReconfigure = false;
+            }
+            if (!configurePreset) {
+                await this._reloadPostConfigure();
+            }
+            return result.retc === null ? -1 : result.retc;
+        }
+    }
 
-	async doInit() {
-		if (await fs.exists(this.cachePath)) {
-			await this._reloadPostConfigure();
-		}
-		this._cacheWatcher.onDidChange(() => {
-			log.debug(
-				localize(
-					"reload.cmake.cache",
-					"Reload CMake cache: {0} changed",
-					this.cachePath,
-				),
-			);
-			rollbar.invokeAsync(
-				localize("reloading.cmake.cache", "Reloading CMake Cache"),
-				() => this._reloadPostConfigure(),
-			);
-		});
-	}
+    protected async doPreCleanConfigure(): Promise<void> {
+        await this._cleanPriorConfiguration();
+    }
 
-	static async create(
-		cmake: CMakeExecutable,
-		config: ConfigurationReader,
-		sourceDir: string,
-		isMultiProject: boolean,
-		useCMakePresets: boolean,
-		kit: Kit | null,
-		configurePreset: ConfigurePreset | null,
-		buildPreset: BuildPreset | null,
-		testPreset: TestPreset | null,
-		packagePreset: PackagePreset | null,
-		workflowPreset: WorkflowPreset | null,
-		workspaceFolder: string,
-		preconditionHandler: CMakePreconditionProblemSolver,
-		preferredGenerators: CMakeGenerator[],
-	): Promise<CMakeLegacyDriver> {
-		log.debug(
-			localize(
-				"creating.instance.of",
-				"Creating instance of {0}",
-				"LegacyCMakeDriver",
-			),
-		);
-		return this.createDerived(
-			new CMakeLegacyDriver(
-				cmake,
-				config,
-				sourceDir,
-				isMultiProject,
-				workspaceFolder,
-				preconditionHandler,
-			),
-			useCMakePresets,
-			kit,
-			configurePreset,
-			buildPreset,
-			testPreset,
-			packagePreset,
-			workflowPreset,
-			preferredGenerators,
-		);
-	}
+    async doPostBuild(): Promise<boolean> {
+        await this._reloadPostConfigure();
+        return true;
+    }
 
-	get targets() {
-		return [];
-	}
-	get executableTargets() {
-		return [];
-	}
-	get uniqueTargets() {
-		return [];
-	}
-	get cmakeFiles() {
-		return [];
-	}
+    async doInit() {
+        if (await fs.exists(this.cachePath)) {
+            await this._reloadPostConfigure();
+        }
+        this._cacheWatcher.onDidChange(() => {
+            log.debug(localize('reload.cmake.cache', 'Reload CMake cache: {0} changed', this.cachePath));
+            rollbar.invokeAsync(localize('reloading.cmake.cache', 'Reloading CMake Cache'), () => this._reloadPostConfigure());
+        });
+    }
 
-	/**
-	 * Watcher for the CMake cache file on disk.
-	 */
-	private readonly _cacheWatcher = vscode.workspace.createFileSystemWatcher(
-		this.cachePath,
-	);
+    static async create(cmake: CMakeExecutable,
+        config: ConfigurationReader,
+        sourceDir: string,
+        isMultiProject: boolean,
+        useCMakePresets: boolean,
+        kit: Kit | null,
+        configurePreset: ConfigurePreset | null,
+        buildPreset: BuildPreset | null,
+        testPreset: TestPreset | null,
+        packagePreset: PackagePreset | null,
+        workflowPreset: WorkflowPreset | null,
+        workspaceFolder: string,
+        preconditionHandler: CMakePreconditionProblemSolver,
+        preferredGenerators: CMakeGenerator[]): Promise<CMakeLegacyDriver> {
+        log.debug(localize('creating.instance.of', 'Creating instance of {0}', "LegacyCMakeDriver"));
+        return this.createDerived(new CMakeLegacyDriver(cmake, config, sourceDir, isMultiProject, workspaceFolder, preconditionHandler),
+            useCMakePresets,
+            kit,
+            configurePreset,
+            buildPreset,
+            testPreset,
+            packagePreset,
+            workflowPreset,
+            preferredGenerators);
+    }
 
-	get cmakeCache() {
-		return this._cmakeCache;
-	}
-	private _cmakeCache: CMakeCache | null = null;
+    get targets() {
+        return [];
+    }
+    get executableTargets() {
+        return [];
+    }
+    get uniqueTargets() {
+        return [];
+    }
+    get cmakeFiles() {
+        return [];
+    }
 
-	private async _reloadPostConfigure() {
-		// Force await here so that any errors are thrown into rollbar
-		const new_cache = await CMakeCache.fromPath(this.cachePath);
-		this._cmakeCache = new_cache;
-	}
+    /**
+     * Watcher for the CMake cache file on disk.
+     */
+    private readonly _cacheWatcher = vscode.workspace.createFileSystemWatcher(this.cachePath);
 
-	get cmakeCacheEntries() {
-		let ret = new Map<string, CacheEntry>();
-		if (this.cmakeCache) {
-			ret = util.reduce(this.cmakeCache.allEntries, ret, (acc, entry) =>
-				acc.set(entry.key, entry),
-			);
-		}
-		return ret;
-	}
+    get cmakeCache() {
+        return this._cmakeCache;
+    }
+    private _cmakeCache: CMakeCache | null = null;
 
-	get generatorName(): string | null {
-		if (!this.cmakeCache) {
-			return null;
-		}
-		const gen = this.cmakeCache.get("CMAKE_GENERATOR");
-		return gen ? gen.as<string>() : null;
-	}
+    private async _reloadPostConfigure() {
+        // Force await here so that any errors are thrown into rollbar
+        const new_cache = await CMakeCache.fromPath(this.cachePath);
+        this._cmakeCache = new_cache;
+    }
 
-	get codeModelContent(): CodeModelContent | null {
-		return null;
-	}
-	get onCodeModelChanged() {
-		return new vscode.EventEmitter<null>().event;
-	}
+    get cmakeCacheEntries() {
+        let ret = new Map<string, CacheEntry>();
+        if (this.cmakeCache) {
+            ret = util.reduce(this.cmakeCache.allEntries, ret, (acc, entry) => acc.set(entry.key, entry));
+        }
+        return ret;
+    }
+
+    get generatorName(): string | null {
+        if (!this.cmakeCache) {
+            return null;
+        }
+        const gen = this.cmakeCache.get('CMAKE_GENERATOR');
+        return gen ? gen.as<string>() : null;
+    }
+
+    get codeModelContent(): CodeModelContent | null {
+        return null;
+    }
+    get onCodeModelChanged() {
+        return new vscode.EventEmitter<null>().event;
+    }
+
 }

@@ -2,8 +2,8 @@
  * Types and utilities for diagnostic parsing and handling
  */
 
-import { reduce } from "@cmt/util";
-import * as vscode from "vscode";
+import { reduce } from '@cmt/util';
+import * as vscode from 'vscode';
 
 /**
  * An association between a diagnostic and the path to a file. This is required
@@ -11,36 +11,36 @@ import * as vscode from "vscode";
  * within one.
  */
 export interface FileDiagnostic {
-	/**
-	 * The path to the file for which the diagnostic applies
-	 */
-	filepath: string;
+    /**
+     * The path to the file for which the diagnostic applies
+     */
+    filepath: string;
 
-	/**
-	 * The actual diagnostic itself
-	 */
-	diag: vscode.Diagnostic;
+    /**
+     * The actual diagnostic itself
+     */
+    diag: vscode.Diagnostic;
 }
 
 export enum FeedLineResult {
-	Ok,
-	NotMine,
+    Ok,
+    NotMine,
 }
 
 export interface RawRelated {
-	file: string;
-	location: vscode.Range;
-	message: string;
+    file: string;
+    location: vscode.Range;
+    message: string;
 }
 
 export interface RawDiagnostic {
-	full: string;
-	file: string;
-	location: vscode.Range;
-	severity: string;
-	message: string;
-	code?: string;
-	related: RawRelated[];
+    full: string;
+    file: string;
+    location: vscode.Range;
+    severity: string;
+    message: string;
+    code?: string;
+    related: RawRelated[];
 }
 
 /**
@@ -51,11 +51,11 @@ export interface RawDiagnostic {
  * @param num A number or string representing a number
  */
 export function oneLess(num: number | string): number {
-	if (typeof num === "string") {
-		return oneLess(parseInt(num));
-	} else {
-		return Math.max(0, num - 1);
-	}
+    if (typeof num === 'string') {
+        return oneLess(parseInt(num));
+    } else {
+        return Math.max(0, num - 1);
+    }
 }
 
 /**
@@ -65,64 +65,55 @@ export function oneLess(num: number | string): number {
  *
  * @note The `coll` collection will be cleared of all previous contents
  */
-export function populateCollection(
-	coll: vscode.DiagnosticCollection,
-	fdiags: Iterable<FileDiagnostic>,
-) {
-	// Clear the collection
-	coll.clear();
-	// Collect the diagnostics and associate them with their respective files
-	const diags_by_file = reduce(
-		fdiags,
-		new Map<string, vscode.Diagnostic[]>(),
-		(by_file, fdiag) => {
-			if (!by_file.has(fdiag.filepath)) {
-				by_file.set(fdiag.filepath, []);
-			}
-			by_file.get(fdiag.filepath)!.push(fdiag.diag);
-			return by_file;
-		},
-	);
-	// Insert the diags into the collection
-	diags_by_file.forEach((diags, filepath) => {
-		coll.set(vscode.Uri.file(filepath), diags);
-	});
+export function populateCollection(coll: vscode.DiagnosticCollection, fdiags: Iterable<FileDiagnostic>) {
+    // Clear the collection
+    coll.clear();
+    // Collect the diagnostics and associate them with their respective files
+    const diags_by_file = reduce(fdiags, new Map<string, vscode.Diagnostic[]>(), (by_file, fdiag) => {
+        if (!by_file.has(fdiag.filepath)) {
+            by_file.set(fdiag.filepath, []);
+        }
+        by_file.get(fdiag.filepath)!.push(fdiag.diag);
+        return by_file;
+    });
+    // Insert the diags into the collection
+    diags_by_file.forEach((diags, filepath) => {
+        coll.set(vscode.Uri.file(filepath), diags);
+    });
 }
 
 /**
  * Base class for parsing raw diagnostic information on a line-by-line basis
  */
 export abstract class RawDiagnosticParser {
-	/**
-	 * Get the diagnostics which have been parsed by this object
-	 */
-	get diagnostics(): readonly RawDiagnostic[] {
-		return this._diagnostics;
-	}
-	private readonly _diagnostics: RawDiagnostic[] = [];
+    /**
+     * Get the diagnostics which have been parsed by this object
+     */
+    get diagnostics(): readonly RawDiagnostic[] {
+        return this._diagnostics;
+    }
+    private readonly _diagnostics: RawDiagnostic[] = [];
 
-	/**
-	 * Push another line into the parser
-	 * @param line Another line to parse
-	 */
-	handleLine(line: string): boolean {
-		const result = this.doHandleLine(line);
-		if (result === FeedLineResult.Ok) {
-			return true;
-		} else if (result === FeedLineResult.NotMine) {
-			return false;
-		} else {
-			this._diagnostics.push(result);
-			return true;
-		}
-	}
+    /**
+     * Push another line into the parser
+     * @param line Another line to parse
+     */
+    handleLine(line: string): boolean {
+        const result = this.doHandleLine(line);
+        if (result === FeedLineResult.Ok) {
+            return true;
+        } else if (result === FeedLineResult.NotMine) {
+            return false;
+        } else {
+            this._diagnostics.push(result);
+            return true;
+        }
+    }
 
-	/**
-	 * Implement in derived classes to parse a line. Returns a new diagnostic, or
-	 * `undefined` if the give line does not complete a diagnostic
-	 * @param line The line to process
-	 */
-	protected abstract doHandleLine(
-		line: string,
-	): RawDiagnostic | FeedLineResult;
+    /**
+     * Implement in derived classes to parse a line. Returns a new diagnostic, or
+     * `undefined` if the give line does not complete a diagnostic
+     * @param line The line to process
+     */
+    protected abstract doHandleLine(line: string): RawDiagnostic | FeedLineResult;
 }
