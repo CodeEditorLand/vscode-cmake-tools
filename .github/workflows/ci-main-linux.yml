@@ -1,0 +1,80 @@
+name: CI (Linux)
+
+on:
+  push:
+    branches: [ main, 'release/**' ]
+  pull_request:
+    branches: [ main, 'release/**' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build the extension
+        run: yarn compile-production
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Install CMake/Ninja
+        uses: lukka/get-cmake@v3.30.3
+        with:
+            cmakeVersion: 3.18.3
+            ninjaVersion: 1.10.1
+
+      - name: Build fake compilers for tests
+        uses: urkle/action-cmake-build@v1.0.0
+        with:
+          source-dir: ${{ github.workspace }}/test/fakeOutputGenerator
+          configure-options: -DCMAKE_INSTALL_PREFIX:STRING=${{ github.workspace }}/test/fakebin
+          install-build: true
+
+      - name: Run backend tests
+        run: yarn backendTests
+
+      - name: Run smoke tests
+        uses: GabrielBB/xvfb-action@v1.6
+        with:
+          run: yarn smokeTests
+
+      - name: Run unit tests
+        uses: GabrielBB/xvfb-action@v1.6
+        with:
+          run: yarn unitTests
+
+      - name: Run successful-build test
+        uses: GabrielBB/xvfb-action@v1.6
+        with:
+          run: yarn endToEndTestsSuccessfulBuild
+
+      - name: Run single root test
+        uses: GabrielBB/xvfb-action@v1.6
+        with:
+          run: yarn endToEndTestsSingleRoot
+
+      - name: Run multi root test
+        uses: GabrielBB/xvfb-action@v1.6
+        with:
+          run: yarn endToEndTestsMultiRoot
+
+      - name: Upload test logs if tests failed
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: TestLogs
+          path: test/**/log.txt
+          if-no-files-found: warn
