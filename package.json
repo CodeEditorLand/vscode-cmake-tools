@@ -3682,7 +3682,7 @@
 		"rimraf": "6.0.1",
 		"string.prototype.matchall": "4.0.11",
 		"tmp": "0.2.3",
-		"uuid": "10.0.0",
+		"uuid": "11.0.1",
 		"which": "5.0.0",
 		"xml2js": "0.6.2"
 	},
@@ -3696,7 +3696,7 @@
 		"@types/js-yaml": "4.0.9",
 		"@types/json5": "2.2.0",
 		"@types/lodash": "4.17.12",
-		"@types/node": "22.7.9",
+		"@types/node": "22.8.1",
 		"@types/rimraf": "4.0.5",
 		"@types/sinon": "17.0.3",
 		"@types/tmp": "0.2.6",
