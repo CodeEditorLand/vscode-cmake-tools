@@ -1,9 +1,4 @@
 {
-	"name": "product-icon-font-generator",
-	"scripts": {
-		"build": "tsc -p ./",
-		"clean": "rimraf ./dist"
-	},
 	"dependencies": {
 		"fontagon": "1.1.1",
 		"ttf2woff2": "6"
@@ -13,5 +8,10 @@
 		"@types/node": "20.13",
 		"commander": "12.0.0",
 		"rimraf": "3.0.2"
+	},
+	"name": "product-icon-font-generator",
+	"scripts": {
+		"build": "tsc -p ./",
+		"clean": "rimraf ./dist"
 	}
 }
