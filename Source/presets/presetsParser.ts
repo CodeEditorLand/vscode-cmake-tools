@@ -10,6 +10,7 @@ import { expandString, ExpansionErrorHandler, MinimalPresetContextVars } from "@
 import { loadSchema } from "@cmt/schema";
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger("presetController");
@@ -143,13 +144,18 @@ export class PresetsParser {
                 file
             )
         );
+
         let schemaFile;
+
         const maxSupportedVersion = 9;
+
         const validationErrorsAreWarnings =
             presetsFile.version > maxSupportedVersion &&
             allowUnsupportedPresetsVersions;
+
         if (presetsFile.version < 2) {
             await this.showPresetsFileVersionError(file);
+
             return undefined;
         } else if (presetsFile.version === 2) {
             schemaFile = "./schemas/CMakePresets-schema.json";
@@ -169,7 +175,9 @@ export class PresetsParser {
         }
 
         const validator = await loadSchema(schemaFile);
+
         const is_valid = validator(presetsFile);
+
         if (!is_valid) {
             const showErrors = (logFunc: (x: string) => void) => {
                 const errors = validator.errors!;
@@ -181,6 +189,7 @@ export class PresetsParser {
                         maxSupportedVersion
                     )
                 );
+
                 for (const err of errors) {
                     if (err.params && "additionalProperty" in err.params) {
                         logFunc(
@@ -194,8 +203,10 @@ export class PresetsParser {
                     }
                 }
             };
+
             if (validationErrorsAreWarnings) {
                 showErrors((x) => log.warning(x));
+
                 return presetsFile;
             } else {
                 showErrors((x) => {
@@ -209,6 +220,7 @@ export class PresetsParser {
                         "'cmake.allowUnsupportedPresetsVersions'"
                     )
                 );
+
                 return undefined;
             }
         }
@@ -217,6 +229,7 @@ export class PresetsParser {
             const dupe = presetsFile?.buildPresets?.find(
                 (p) => pr.name === p.name && p !== pr
             );
+
             if (dupe) {
                 log.error(
                     localize(
@@ -225,6 +238,7 @@ export class PresetsParser {
                         pr.name
                     )
                 );
+
                 return undefined;
             }
         }
@@ -233,6 +247,7 @@ export class PresetsParser {
             const dupe = presetsFile?.testPresets?.find(
                 (p) => pr.name === p.name && p !== pr
             );
+
             if (dupe) {
                 log.error(
                     localize(
@@ -241,6 +256,7 @@ export class PresetsParser {
                         pr.name
                     )
                 );
+
                 return undefined;
             }
         }
@@ -249,6 +265,7 @@ export class PresetsParser {
             const dupe = presetsFile?.packagePresets?.find(
                 (p) => pr.name === p.name && p !== pr
             );
+
             if (dupe) {
                 log.error(
                     localize(
@@ -257,6 +274,7 @@ export class PresetsParser {
                         pr.name
                     )
                 );
+
                 return undefined;
             }
         }
@@ -265,6 +283,7 @@ export class PresetsParser {
             const dupe = presetsFile?.workflowPresets?.find(
                 (p) => pr.name === p.name && p !== pr
             );
+
             if (dupe) {
                 log.error(
                     localize(
@@ -273,6 +292,7 @@ export class PresetsParser {
                         pr.name
                     )
                 );
+
                 return undefined;
             }
         }
@@ -286,6 +306,7 @@ export class PresetsParser {
                         pr.name
                     )
                 );
+
                 return undefined;
             }
 
@@ -300,6 +321,7 @@ export class PresetsParser {
                             pr.steps[0].name
                         )
                     );
+
                     return undefined;
                 }
             }
@@ -312,6 +334,7 @@ export class PresetsParser {
                 file
             )
         );
+
         return presetsFile;
     }
 
@@ -369,7 +392,9 @@ export class PresetsParser {
         // CMakeUserPresets.json file should include CMakePresets.json file, by default.
         if (this.presetsFileExists && file === this.userPresetsPath) {
             presetsFile.include = presetsFile.include || [];
+
             const filteredIncludes = [];
+
             for (const include of presetsFile.include) {
                 const expandedInclude = await this.getExpandedInclude(
                     presetsFile,
@@ -378,6 +403,7 @@ export class PresetsParser {
                     hostSystemName,
                     expansionErrors
                 );
+
                 if (
                     path.normalize(
                         path.resolve(path.dirname(file), expandedInclude)
@@ -399,6 +425,7 @@ export class PresetsParser {
         // Merge the includes in reverse order so that the final presets order is correct
         for (let i = presetsFile.include.length - 1; i >= 0; i--) {
             const rawInclude = presetsFile.include[i];
+
             const includePath = await this.getExpandedInclude(
                 presetsFile,
                 rawInclude,
@@ -406,6 +433,7 @@ export class PresetsParser {
                 hostSystemName,
                 expansionErrors
             );
+
             const fullIncludePath = path.normalize(
                 path.resolve(path.dirname(file), includePath)
             );
@@ -414,6 +442,7 @@ export class PresetsParser {
             if (referencedFiles.has(fullIncludePath)) {
                 const referencedIncludeFile =
                     referencedFiles.get(fullIncludePath);
+
                 if (referencedIncludeFile) {
                     if (referencedIncludeFile.configurePresets) {
                         presetsFile.configurePresets = lodash.unionWith(
@@ -471,6 +500,7 @@ export class PresetsParser {
             const includeFileBuffer = await this.readPresetsFile(
                 fullIncludePath
             );
+
             if (!includeFileBuffer) {
                 log.error(
                     localize(
@@ -487,6 +517,7 @@ export class PresetsParser {
                     ),
                     file
                 ]);
+
                 continue;
             }
 
@@ -502,6 +533,7 @@ export class PresetsParser {
                 allowUnsupportedPresetsVersions,
                 expansionErrors
             );
+
             if (!includeFile) {
                 continue;
             }
@@ -594,6 +626,7 @@ export class PresetsParser {
         log.debug(
             localize("reading.presets.file", "Reading presets file {0}", file)
         );
+
         return fs.readFile(file);
     }
 
@@ -607,6 +640,7 @@ export class PresetsParser {
         }
 
         let presetsFile: preset.PresetsFile;
+
         try {
             if (allowCommentsInPresetsFile) {
                 presetsFile = json5.parse(fileContent.toLocaleString());
@@ -622,6 +656,7 @@ export class PresetsParser {
                     util.errorToString(e)
                 )
             );
+
             return undefined;
         }
         return presetsFile;
@@ -636,6 +671,7 @@ export class PresetsParser {
         }
 
         presetsFile.__path = file;
+
         const setFile = (presets?: preset.Preset[]) => {
             if (presets) {
                 for (const preset of presets) {
@@ -643,10 +679,15 @@ export class PresetsParser {
                 }
             }
         };
+
         setFile(presetsFile.configurePresets);
+
         setFile(presetsFile.buildPresets);
+
         setFile(presetsFile.testPresets);
+
         setFile(presetsFile.workflowPresets);
+
         setFile(presetsFile.packagePresets);
     }
 
@@ -671,6 +712,7 @@ export class PresetsParser {
         );
 
         const expandedConfigurePresets: preset.ConfigurePreset[] = [];
+
         for (const configurePreset of presetsFile?.configurePresets || []) {
             const inheritedPreset = await preset.getConfigurePresetInherits(
                 this.folderPath,
@@ -679,6 +721,7 @@ export class PresetsParser {
                 false,
                 expansionErrors
             );
+
             if (inheritedPreset) {
                 expandedConfigurePresets.push(
                     await preset.expandConfigurePresetVariables(
@@ -696,6 +739,7 @@ export class PresetsParser {
         }
 
         const expandedBuildPresets: preset.BuildPreset[] = [];
+
         for (const buildPreset of presetsFile?.buildPresets || []) {
             const inheritedPreset = await preset.getBuildPresetInherits(
                 this.folderPath,
@@ -709,6 +753,7 @@ export class PresetsParser {
                 false,
                 expansionErrors
             );
+
             if (inheritedPreset) {
                 expandedBuildPresets.push(
                     await preset.expandBuildPresetVariables(
@@ -723,6 +768,7 @@ export class PresetsParser {
         }
 
         const expandedTestPresets: preset.TestPreset[] = [];
+
         for (const testPreset of presetsFile?.testPresets || []) {
             const inheritedPreset = await preset.getTestPresetInherits(
                 this.folderPath,
@@ -735,6 +781,7 @@ export class PresetsParser {
                 false,
                 expansionErrors
             );
+
             if (inheritedPreset) {
                 expandedTestPresets.push(
                     await preset.expandTestPresetVariables(
@@ -749,6 +796,7 @@ export class PresetsParser {
         }
 
         const expandedPackagePresets: preset.PackagePreset[] = [];
+
         for (const packagePreset of presetsFile?.packagePresets || []) {
             const inheritedPreset = await preset.getPackagePresetInherits(
                 this.folderPath,
@@ -761,6 +809,7 @@ export class PresetsParser {
                 false,
                 expansionErrors
             );
+
             if (inheritedPreset) {
                 expandedPackagePresets.push(
                     await preset.expandPackagePresetVariables(
@@ -775,6 +824,7 @@ export class PresetsParser {
         }
 
         const expandedWorkflowPresets: preset.WorkflowPreset[] = [];
+
         for (const workflowPreset of presetsFile?.workflowPresets || []) {
             const inheritedPreset = await preset.getWorkflowPresetInherits(
                 this.folderPath,
@@ -786,6 +836,7 @@ export class PresetsParser {
                 false,
                 expansionErrors
             );
+
             if (inheritedPreset && inheritedPreset !== null) {
                 expandedWorkflowPresets.push(inheritedPreset);
             }
@@ -798,6 +849,7 @@ export class PresetsParser {
                     "Expansion errors found in the presets file."
                 )
             );
+
             return undefined;
         } else {
             log.info(
@@ -845,6 +897,7 @@ export class PresetsParser {
             allowCommentsInPresetsFile
         );
         referencedFiles.set(file, presetsFile);
+
         if (presetsFile) {
             setOriginalPresetsFile(this.folderPath, presetsFile);
         } else {
@@ -862,6 +915,7 @@ export class PresetsParser {
             allowUnsupportedPresetsVersions,
             expansionErrors
         );
+
         if (presetsFile) {
             // Private fields must be set after validation, otherwise validation would fail.
             this.populatePrivatePresetsFields(presetsFile, file);

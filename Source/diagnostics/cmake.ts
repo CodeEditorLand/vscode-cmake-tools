@@ -102,19 +102,25 @@ export class CMakeOutputConsumer implements OutputConsumer {
         switch (this._errorState.state) {
             case 'init': {
                 const re = /CMake (.*?)(?: \(dev\))? at (.*?):(\d+) \((.*?)\):/;
+
                 const result = re.exec(line);
+
                 if (result) {
                     // We have encountered and error
                     const [full, level, filename, linestr, command] = result;
+
                     const lineno = oneLess(linestr);
+
                     const diagmap: { [k: string]: vscode.DiagnosticSeverity } = {
                         'Deprecation Warning': vscode.DiagnosticSeverity.Warning,
                         Warning: vscode.DiagnosticSeverity.Warning,
                         Error: vscode.DiagnosticSeverity.Error
                     };
+
                     const vsdiag = new vscode.Diagnostic(new vscode.Range(lineno, 0, lineno, 9999), full, diagmap[level]);
                     vsdiag.source = `CMake (${command})`;
                     vsdiag.relatedInformation = [];
+
                     const filepath = util.resolvePath(filename, this.sourceDir);
                     this._errorState.diag = {
                         filepath,
@@ -127,11 +133,14 @@ export class CMakeOutputConsumer implements OutputConsumer {
             }
             case 'diag': {
                 console.assert(this._errorState.diag, 'No diagnostic?');
+
                 const call_stack_re = /^Call Stack \(most recent call first\):$/;
+
                 if (call_stack_re.test(line)) {
                     // We're in call stack mode!
                     this._errorState.state = 'stack';
                     this._errorState.blankLines = 0;
+
                     break;
                 }
                 if (line === '') {
@@ -168,11 +177,16 @@ export class CMakeOutputConsumer implements OutputConsumer {
                     this._commitDiag();
                 } else {
                     const stackElemRe = /^  (.*):(\d+) \((\w+)\)$/;
+
                     const mat = stackElemRe.exec(line);
+
                     if (mat) {
                         const [, filepath, lineNoStr, command] = mat;
+
                         const fileUri = vscode.Uri.file(util.resolvePath(filepath, this.sourceDir));
+
                         const lineNo = parseInt(lineNoStr) - 1;
+
                         const related = new vscode.DiagnosticRelatedInformation(
                             new vscode.Location(fileUri, new vscode.Range(lineNo, 0, lineNo, 999)),
                             `In call to '${command}' here`

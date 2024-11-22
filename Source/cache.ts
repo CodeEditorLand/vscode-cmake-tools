@@ -9,6 +9,7 @@ import * as util from '@cmt/util';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('cache');
@@ -64,6 +65,7 @@ export class CacheEntry {
         this.key = key;
         this.serializedKey = key; // may be overwritten later with quoted version of `key`
         this.type = type;
+
         if (type === CacheEntryType.Bool) {
             this.value = util.isTruthy(value);
         } else {
@@ -89,16 +91,22 @@ export class CMakeCache {
      */
     static async fromPath(path: string): Promise<CMakeCache> {
         log.debug(localize('reading.cmake.cache.file', 'Reading CMake cache file {0}', path));
+
         const exists = await fs.exists(path);
+
         if (exists) {
             log.trace(localize('file.exists', 'File exists'));
+
             const content = await fs.readFile(path);
             log.trace(localize('file.contents.read.successfully', 'File contents read successfully'));
+
             const entries = CMakeCache.parseCache(content.toString());
             log.trace(localize('parsed.entries.from', 'Parsed {0} entries from {1}', entries.size, path));
+
             return new CMakeCache(path, entries);
         } else {
             log.debug(localize('cache.file.does.not.exist', 'Cache file does not exist: Returning empty cache data'));
+
             return new CMakeCache(path, new Map());
         }
     }
@@ -123,6 +131,7 @@ export class CMakeCache {
      */
     getReloaded(): Promise<CMakeCache> {
         log.debug(localize('reloading.cache.file', 'Reloading Cache file {0}', this.path));
+
         return CMakeCache.fromPath(this.path);
     }
 
@@ -133,27 +142,37 @@ export class CMakeCache {
      */
     static parseCache(content: string): Map<string, CacheEntry> {
         log.debug(localize('parsing.cmake.cache.string', 'Parsing CMake cache string'));
+
         const lines = content.split(/\r\n|\n|\r/).filter(line => !!line.length).filter(line => !/^\s*#/.test(line));
 
         const entries = new Map<string, CacheEntry>();
+
         let docStringAccumulator = '';
+
         const advancedNames: string[] = [];
+
         const choices: Map<string, string[]> = new Map();
+
         for (const line of lines) {
             if (line.startsWith('//')) {
                 docStringAccumulator += /^\/\/(.*)/.exec(line)![1] + ' ';
             } else {
                 const match = /^("(.*?)"|(.*?)):([^:]*?)=(.*)/.exec(line);
+
                 if (!match) {
                     rollbar.error(localize('failed.to.read.line.from.cmake.cache.file', 'Failed to read a line from a CMake cache file {0}', line));
+
                     continue;
                 }
                 const [, serializedName, quotedName, unquotedName, typeName, value] = match;
+
                 const name = quotedName || unquotedName;
+
                 if (!name || !typeName) {
                     continue;
                 }
                 log.trace(localize('read.line.in.cache', 'Read line in cache with {0}={1}, {2}={3}, {4}={5}', 'name', name, 'typename', typeName, 'valuestr', value));
+
                 if (name.endsWith('-ADVANCED')) {
                     if (value === '1') {
                         const entryName = name.substr(0, name.lastIndexOf('-'));
@@ -165,6 +184,7 @@ export class CMakeCache {
                     choices.set(name.substr(0, name.lastIndexOf('-')), value.split(';'));
                 } else {
                     const key = name;
+
                     const typemap = {
                         BOOL: CacheEntryType.Bool,
                         STRING: CacheEntryType.String,
@@ -174,13 +194,18 @@ export class CMakeCache {
                         UNINITIALIZED: CacheEntryType.Uninitialized,
                         STATIC: CacheEntryType.Static
                     } as { [type: string]: CacheEntryType | undefined };
+
                     const type = typemap[typeName];
+
                     const docString = docStringAccumulator.trim();
+
                     docStringAccumulator = '';
+
                     if (type === undefined) {
                         rollbar.error(localize('cache.entry.unknown', 'Cache entry {0} has unknown type: {1}', `"${name}"`, `"${typeName}"`));
                     } else {
                         log.trace(localize('constructing.new.cache.entry', 'Constructing a new cache entry from the given line'));
+
                         const entry = new CacheEntry(key, value, type, docString, false);
                         entry.serializedKey = serializedName;
                         entries.set(name, entry);
@@ -192,6 +217,7 @@ export class CMakeCache {
         // Update `advanced` attribute
         advancedNames.forEach(name => {
             const entry = entries.get(name);
+
             if (entry) {
                 entry.advanced = true;
             } else {
@@ -201,6 +227,7 @@ export class CMakeCache {
         // update `choices`
         choices.forEach((list, name) => {
             const entry = entries.get(name);
+
             if (entry) {
                 entry.choices = list;
             } else {
@@ -209,6 +236,7 @@ export class CMakeCache {
         });
 
         log.trace(localize('parsed.cache.entries', 'Parsed {0} cache entries', entries.size));
+
         return entries;
     }
 
@@ -221,26 +249,32 @@ export class CMakeCache {
     private replace(content: string, key: string, value: string): string {
 
         const entry = this.cacheEntries.get(key);
+
         if (entry !== undefined) {
             // cmake variable name may contain characters with special meanings in regex
             const escapedKey = entry.serializedKey.replace(/[^A-Za-z0-9_]/g, '\\$&');
+
             const re = RegExp(`^${escapedKey}(:[^=]+=)(.*)`, 'm');
+
             const found = content.match(re);
 
             if (found && found.length >= 3) {
                 const line = found[0];
+
                 const type = found[1];
 
                 // FIXME: How can `value` be boolean desipte being marked as string in the signature?
 
                 if (util.isString(value)) {
                     const newlineIndex = value.search(/[\r\n]/);
+
                     if (newlineIndex >= 0) {
                         value = value.substring(0, newlineIndex);
                         log.warning(localize('cache.value.truncation.warning', 'Newline(s) found in cache entry {0}. Value has been truncated to {1}', `"${key}"`, `"${value}"`));
                     }
                 }
                 const newValueLine = entry.serializedKey + type + (util.isBoolean(value) ? (value ? "TRUE" : "FALSE") : value);
+
                 return content.replace(line, newValueLine);
             }
         }
@@ -254,8 +288,10 @@ export class CMakeCache {
      */
     async replaceOption(key: string, value: string): Promise<string> {
         const exists = await fs.exists(this.path);
+
         if (exists) {
             const content = (await fs.readFile(this.path)).toString();
+
             return this.replace(content, key, value);
         }
 
@@ -264,8 +300,10 @@ export class CMakeCache {
 
     async replaceOptions(options: { key: string; value: string }[]): Promise<string> {
         const exists = await fs.exists(this.path);
+
         if (exists) {
             let content = (await fs.readFile(this.path)).toString();
+
             for (const option of options) {
                 content = this.replace(content, option.key, option.value);
             }
@@ -276,6 +314,7 @@ export class CMakeCache {
 
     async save(key: string, value: string): Promise<void> {
         const content = await this.replaceOption(key, value);
+
         if (content) {
             if (await fs.exists(this.path)) {
                 await fs.writeFile(this.path, content);
@@ -285,6 +324,7 @@ export class CMakeCache {
 
     async saveAll(options: { key: string; value: string }[]): Promise<void> {
         const content = await this.replaceOptions(options);
+
         if (content) {
             if (await fs.exists(this.path)) {
                 await fs.writeFile(this.path, content);
@@ -299,6 +339,7 @@ export class CMakeCache {
      */
     get(key: string): CacheEntry | null {
         const ret = this.cacheEntries.get(key) || null;
+
         if (ret) {
             log.trace(localize('get.cache.key', 'Get cache key {0}={1}', key, ret.value));
         } else {

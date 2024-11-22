@@ -14,6 +14,7 @@ import { CppDebugConfiguration } from '@cmt/debug/debugger';
 import { Environment } from '@cmt/environmentVariables';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export function defaultNumJobs (): number {
     return os.cpus().length + 2;
@@ -86,6 +87,7 @@ export interface AdvancedOptionConfig {
         inheritDefault?: StatusBarInheritOptionVisibility;
         statusBarLength?: number;
     };
+
     variant?: {
         projectStatusVisibility?: ProjectStatusOptionVisibility;
         statusBarVisibility?: StatusBarOptionVisibility;
@@ -154,6 +156,7 @@ export interface OptionConfig {
 
 export interface ExtensionConfigurationSettings {
     autoSelectActiveFolder: boolean;
+
     defaultActiveFolder: string | null;
     cmakePath: string;
     buildDirectory: string;
@@ -177,6 +180,7 @@ export interface ExtensionConfigurationSettings {
     parseBuildDiagnostics: boolean;
     enabledOutputParsers: string[];
     debugConfig: CppDebugConfiguration;
+
     defaultVariants: object;
     ctestArgs: string[];
     ctestDefaultArgs: string[];
@@ -249,10 +253,12 @@ export class ConfigurationReader implements vscode.Disposable {
      */
     static create(folder?: vscode.WorkspaceFolder): ConfigurationReader {
         const configData = ConfigurationReader.loadConfig(folder);
+
         const reader = new ConfigurationReader(configData);
         reader.updateSubscription = vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('cmake', folder?.uri)) {
                 const newConfigData = ConfigurationReader.loadConfig(folder);
+
                 const updatedKeys = reader.update(newConfigData);
 
                 if (updatedKeys.length > 0) {
@@ -264,19 +270,24 @@ export class ConfigurationReader implements vscode.Disposable {
                 }
             }
         });
+
         return reader;
     }
 
     static loadConfig(folder?: vscode.WorkspaceFolder): ExtensionConfigurationSettings {
         const configData = vscode.workspace.getConfiguration('cmake', folder?.uri) as any as
             ExtensionConfigurationSettings;
+
         const platformMap = {
             win32: 'windows',
             darwin: 'osx',
             linux: 'linux'
         } as { [k: string]: string };
+
         const platform = platformMap[process.platform];
+
         const forPlatform = (configData as any)[platform] as ExtensionConfigurationSettings | undefined;
+
         return { ...configData, ...(forPlatform || {}) };
     }
 
@@ -286,20 +297,26 @@ export class ConfigurationReader implements vscode.Disposable {
 
     updatePartial(newConfigData: Partial<ExtensionConfigurationSettings>, fireEvent: boolean = true): string[] {
         const keys: string[] = [];
+
         const oldValues = { ...this.configData };
         Object.assign(this.configData, newConfigData);
+
         for (const keyObject of Object.getOwnPropertyNames(newConfigData)) {
             const key = keyObject as keyof ExtensionConfigurationSettings;
+
             if (!(key in this.emitters)) {
                 continue;  // Extension config we load has some additional properties we don't care about.
             }
             const newValue = this.configData[key];
+
             const oldValue = oldValues[key];
+
             if (util.compare(newValue, oldValue) !== util.Ordering.Equivalent) {
                 if (fireEvent) {
                     const em: vscode.EventEmitter<ExtensionConfigurationSettings[typeof key]> = this.emitters[key];
                     // The key is defined by this point.
                     const temp = newConfigData[key];
+
                     if (temp !== undefined) {
                         em.fire(temp);
                     }
@@ -474,6 +491,7 @@ export class ConfigurationReader implements vscode.Disposable {
 
     get cmakeCommunicationMode(): CMakeCommunicationMode {
         let communicationMode = this.configData.cmakeCommunicationMode;
+
         if (communicationMode === "automatic" && this.useCMakeServer) {
             log.warning(localize('please.upgrade.configuration', 'The setting {0} is replaced by {1}. Please upgrade your configuration.', '"useCMakeServer"', '"cmakeCommunicationMode"'));
             communicationMode = 'serverApi';
@@ -493,6 +511,7 @@ export class ConfigurationReader implements vscode.Disposable {
 
     get numCTestJobs(): number {
         const ctestJobs = this.ctestParallelJobs;
+
         if (!ctestJobs) {
             return this.numJobs || defaultNumJobs();
         }
@@ -503,6 +522,7 @@ export class ConfigurationReader implements vscode.Disposable {
         // mingwSearchDirs is deprecated, but we still use it if additionalCompilerSearchDirs is not set for backwards compatibility
         if (this.configData.additionalCompilerSearchDirs.length === 0 && this.configData.mingwSearchDirs.length > 0) {
             log.warning(localize('please.upgrade.configuration', 'The setting {0} is replaced by {1}. Please upgrade your configuration.', '"mingwSearchDirs"', '"additionalCompilerSearchDirs"'));
+
             return this.configData.mingwSearchDirs;
         }
         return this.configData.additionalCompilerSearchDirs;
@@ -641,15 +661,19 @@ export class ConfigurationReader implements vscode.Disposable {
         // Can't use vscode.EventEmitter<ExtensionConfigurationSettings[K]> here, potentially because K and keyof ExtensionConfigurationSettings
         // may not be the same...
         const emitter: vscode.EventEmitter<any> = this.emitters[setting];
+
         const awaitableCallback = (value: ExtensionConfigurationSettings[K]) => {
             activeChangeEvents.scheduleAndTrackTask(() => cb(value));
         };
+
         return emitter.event(awaitableCallback);
     }
 
     isDefaultValue<K extends keyof ExtensionConfigurationSettings>(setting: K, configurationScope?: vscode.ConfigurationScope) {
         const settings = vscode.workspace.getConfiguration('cmake', configurationScope);
+
         const value = settings.inspect(setting);
+
         return value?.globalValue === undefined && value?.workspaceValue === undefined && value?.workspaceFolderValue === undefined;
     }
 
@@ -670,6 +694,7 @@ class PromiseTracker {
     public scheduleAndTrackTask(cb: () => any): void {
         const selfDestructWrapper = util.scheduleTask(() => {
             const result = cb();
+
             return result;
         }).then(() => {
             this.promises.delete(selfDestructWrapper);

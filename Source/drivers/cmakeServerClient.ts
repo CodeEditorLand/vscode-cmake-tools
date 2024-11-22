@@ -13,6 +13,7 @@ import { Environment, EnvironmentUtils } from '@cmt/environmentVariables';
 import { ChildProcessWithoutNullStreams } from 'child_process';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('cms-client');
@@ -343,6 +344,7 @@ export interface ErrorMessage extends CookiedMessage {
 
 export class ServerError extends Error implements ErrorMessage {
     type: 'error' = 'error';
+
     constructor(e: ErrorMessage,
         public errorMessage = e.errorMessage,
         public cookie = e.cookie,
@@ -378,9 +380,12 @@ export class CMakeServerClient {
     private onMoreData(data: Uint8Array) {
         const str = data.toString();
         this.accInput += str;
+
         while (1) {
             const input = this.accInput;
+
             const mat = messageWrapperRegEx.exec(input);
+
             if (!mat) {
                 break;
             }
@@ -391,6 +396,7 @@ export class CMakeServerClient {
                 throw new global.Error(localize('protocol.error.cmake', 'Protocol error talking to CMake! Got this input: {0}', input));
             }
             this.accInput = mat[2];
+
             if (enableCMakeServerDebugProtocol) {
                 log.debug(localize('received.message.from.make-server', 'Received message from cmake-server: {0}', mat[1]));
             }
@@ -401,20 +407,25 @@ export class CMakeServerClient {
 
     private takePromiseForCookie(cookie: string): MessageResolutionCallbacks | undefined {
         const item = this.promisesResolvers.get(cookie);
+
         if (!item) {
             throw new global.Error(localize('invalid.cookie', 'Invalid cookie: {0}', cookie));
         }
         this.promisesResolvers.delete(cookie);
+
         return item;
     }
 
     private onMessage(some: SomeMessage): void {
         if ('cookie' in some) {
             const cookied = some as CookiedMessage;
+
             switch (some.type) {
                 case 'reply': {
                     const reply = cookied as SomeReplyMessage;
+
                     const pr = this.takePromiseForCookie(cookied.cookie);
+
                     if (pr) {
                         pr.resolve(reply);
                     } else {
@@ -424,7 +435,9 @@ export class CMakeServerClient {
                 }
                 case 'error': {
                     const err = new ServerError(cookied as ErrorMessage);
+
                     const pr = this.takePromiseForCookie(cookied.cookie);
+
                     if (pr) {
                         pr.reject(err);
                     } else {
@@ -437,6 +450,7 @@ export class CMakeServerClient {
                     this.params.onProgress(prog).catch(e => {
                         log.error(localize('unhandled.error.in', 'Unhandled error in {0}', 'onProgress'), e);
                     });
+
                     return;
                 }
             }
@@ -453,21 +467,25 @@ export class CMakeServerClient {
                 this.params.onHello(some as HelloMessage).catch(e => {
                     log.error(localize('unhandled.error.in', 'Unhandled error in {0}', 'onHello'), e);
                 });
+
                 return;
             }
             case 'message': {
                 this.params.onMessage(some as MessageMessage).catch(e => {
                     log.error(localize('unhandled.error.in', 'Unhandled error in {0}', 'onMessage'), e);
                 });
+
                 return;
             }
             case 'signal': {
                 const sig = some as SomeSignalMessage;
+
                 switch (sig.name) {
                     case 'dirty': {
                         this.params.onDirty().catch(e => {
                             log.error(localize('unhandled.error.in', 'Unhandled error in {0}', 'onDirty'), e);
                         });
+
                         return;
                     }
                     case 'fileChange': {
@@ -492,15 +510,20 @@ export class CMakeServerClient {
     private sendRequest(type: 'cache', params?: CacheParams): Promise<CacheContent>;
     private sendRequest(type: string, params: any = {}): Promise<any> {
         const cookiedMessage = { type, ...params };
+
         const cookie = cookiedMessage.cookie = Math.random().toString();
+
         const promise = new Promise((resolve, reject) => this.promisesResolvers.set(cookie, { resolve, reject }));
+
         const jsonMessage = JSON.stringify(cookiedMessage);
+
         if (enableCMakeServerDebugProtocol) {
             log.debug(localize('sending.message.to.cmake-server', 'Sending message to cmake-server: {0}', jsonMessage));
         }
         this.pipe.write('\n[== "CMake Server" ==[\n');
         this.pipe.write(jsonMessage);
         this.pipe.write('\n]== "CMake Server" ==]\n');
+
         return promise;
     }
 
@@ -555,14 +578,18 @@ export class CMakeServerClient {
 
     private constructor(params: ClientInitPrivate) {
         this.params = params;
+
         let pipeFile = path.join(params.tmpdir, '.cmserver-pipe');
+
         if (process.platform === 'win32') {
             pipeFile = '\\\\?\\pipe\\' + pipeFile;
         } else {
             pipeFile = `/tmp/cmake-server-${Math.random()}`;
         }
         this.pipeFilePath = pipeFile;
+
         const finalEnv = EnvironmentUtils.merge([process.env, params.environment]);
+
         const child = childProc.spawn(params.cmakePath, ['-E', 'server', '--experimental', `--pipe=${pipeFile}`], {
             env: finalEnv,
             cwd: params.binaryDir
@@ -584,12 +611,14 @@ export class CMakeServerClient {
                 });
             }
         });
+
         setTimeout(() => {
             const endPromise = new Promise<void>((resolve, reject) => {
                 const pipe = this.pipe = net.createConnection(pipeFile);
                 pipe.on('data', this.onMoreData.bind(this));
                 pipe.on('error', e => {
                     pipe.end();
+
                     if (!this.shutDownFlag) {
                         if (process.env.NODE_ENV === 'development') {
                             debugger;
@@ -607,6 +636,7 @@ export class CMakeServerClient {
                     resolve();
                 });
             });
+
             const exitPromise = new Promise<void>(resolve => {
                 child.on('exit', () => resolve());
             });
@@ -618,6 +648,7 @@ export class CMakeServerClient {
         let resolved = false;
         // Ensure the binary directory exists
         await fs.mkdir_p(params.binaryDir);
+
         return new Promise<CMakeServerClient>((resolve, reject) => {
             const client = new CMakeServerClient({
                 tmpdir: params.tmpdir,
@@ -646,6 +677,7 @@ export class CMakeServerClient {
                         const hsparams: HandshakeParams = { buildDirectory: params.binaryDir, protocolVersion: msg.supportedProtocolVersions[0] };
 
                         const cachePath = path.join(params.binaryDir, 'CMakeCache.txt');
+
                         const haveCache = await fs.exists(cachePath);
 
                         if (haveCache) {
@@ -662,10 +694,12 @@ export class CMakeServerClient {
                             // https://gitlab.kitware.com/cmake/cmake/issues/16948
                             // https://gitlab.kitware.com/cmake/cmake/issues/16736
                             const tempCache = await cache.CMakeCache.fromPath(cachePath);
+
                             const srcDir = tempCache.get('CMAKE_HOME_DIRECTORY');
 
                             if (srcDir) {
                                 const cachedDir = srcDir.as<string>();
+
                                 if (!util.platformPathEquivalent(cachedDir, params.sourceDir)) {
                                     // If srcDir is different, clean configure is required as CMake won't accept it anyways.
                                     throw new BadHomeDirectoryError(cachedDir, params.sourceDir, cachePath);
@@ -681,6 +715,7 @@ export class CMakeServerClient {
                             hsparams.toolset = generator.toolset;
 
                             const configureMessage: string = localize('configuring.using.generator', 'Configuring using the {0} CMake generator', `"${hsparams.generator}"`);
+
                             const extraMessage: string = hsparams.platform || hsparams.toolset ?
                                 localize('with.platform.and.toolset', ' with platform {0} and toolset {1}', `"${hsparams.platform}"`, JSON.stringify(`"${hsparams.toolset}"` || {})) :
                                 "";

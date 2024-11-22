@@ -47,6 +47,7 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
 
     postEvent(eventName: string, props: Map<string, string>): void {
         const event: Record<string, string> = {};
+
         for (const [key, value] of props) {
             event[key] = value;
         }
@@ -59,12 +60,14 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
 }
 
 let initializationPromise: Promise<IExperimentationService> | undefined;
+
 let experimentationTelemetry: ExperimentationTelemetry | undefined;
 
 export function activate(extensionContext: vscode.ExtensionContext): void {
     try {
         if (extensionContext) {
             const packageInfo: IPackageInfo = getPackageInfo();
+
             if (packageInfo) {
                 const targetPopulation: TargetPopulation = TargetPopulation.Public;
                 experimentationTelemetry = new ExperimentationTelemetry(new TelemetryReporter(appInsightsKey));
@@ -78,16 +81,23 @@ export function activate(extensionContext: vscode.ExtensionContext): void {
 
 export function sendOpenTelemetry(telemetryProperties: Properties): void {
     const targetPopulation: TargetPopulation = util.getCmakeToolsTargetPopulation();
+
     switch (targetPopulation) {
         case TargetPopulation.Public:
             telemetryProperties['targetPopulation'] = "Public";
+
             break;
+
         case TargetPopulation.Internal:
             telemetryProperties['targetPopulation'] = "Internal";
+
             break;
+
         case TargetPopulation.Insiders:
             telemetryProperties['targetPopulation'] = "Insiders";
+
             break;
+
         default:
             break;
     }
@@ -121,6 +131,7 @@ export function logEvent(eventName: string, properties?: Properties, measures?: 
     if (initializationPromise) {
         try {
             void initializationPromise.then(sendTelemetry);
+
             return;
         } catch (e) {
             // Send telemetry even if we were not able to initialize the experimentation platform.
@@ -133,6 +144,7 @@ const appInsightsKey: string =
     "0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255";
 function getPackageInfo(): IPackageInfo {
     const packageJSON: util.PackageJSON = util.thisExtensionPackage();
+
     return {
         name: `${packageJSON.publisher}.${packageJSON.name}`,
         version: packageJSON.version,

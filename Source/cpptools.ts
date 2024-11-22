@@ -17,6 +17,7 @@ import * as nls from 'vscode-nls';
 import { TargetTypeString } from '@cmt/drivers/drivers';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('cpptools');
@@ -66,6 +67,7 @@ interface TargetDefaults {
 
 function parseCppStandard(std: string, canUseGnu: boolean, canUseCxx23: boolean): StandardVersion {
     const isGnu = canUseGnu && std.startsWith('gnu');
+
     if (std.endsWith('++23') || std.endsWith('++2b') || std.endsWith('++latest')) {
         if (canUseCxx23) {
             return isGnu ? 'gnu++23' : 'c++23';
@@ -92,6 +94,7 @@ function parseCppStandard(std: string, canUseGnu: boolean, canUseCxx23: boolean)
 function parseCStandard(std: string, canUseGnu: boolean): StandardVersion {
     // GNU options from: https://gcc.gnu.org/onlinedocs/gcc/C-Dialect-Options.html#C-Dialect-Options
     const isGnu = canUseGnu && std.startsWith('gnu');
+
     if (/(c|gnu)(90|89|iso9899:(1990|199409))/.test(std)) {
         return isGnu ? 'gnu89' : 'c89';
     } else if (/(c|gnu)(99|9x|iso9899:(1999|199x))/.test(std)) {
@@ -119,21 +122,27 @@ function parseTargetArch(target: string): Architecture {
         } else {
             // Check if ARM version is 7 or earlier.
             const verStr = value.substr(5, 1);
+
             const verNum = +verStr;
+
             return verNum <= 7;
         }
     };
+
     switch (target) {
         case '-m32':
         case 'i686':
             return 'x86';
+
         case '-m64':
         case 'amd64':
         case 'x86_64':
             return 'x64';
+
         case 'aarch64':
         case 'arm64':
             return 'arm64';
+
         case 'arm':
             return 'arm';
     }
@@ -154,20 +163,29 @@ function parseTargetArch(target: string): Architecture {
 
 export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], lang?: string): CompileFlagInformation {
     const requireStandardTarget = (cptVersion < cpptools.Version.v5);
+
     const canUseGnuStd = (cptVersion >= cpptools.Version.v4);
+
     const canUseCxx23 = (cptVersion >= cpptools.Version.v6);
     // No need to parse language standard for CppTools API v6 and above
     const extractStdFlag = (cptVersion < cpptools.Version.v6);
+
     const iter = args[Symbol.iterator]();
+
     const extraDefinitions: string[] = [];
+
     let standard: StandardVersion;
+
     let targetArch: Architecture;
+
     while (1) {
         const { done, value } = iter.next();
+
         if (done) {
             break;
         }
         const lower = value.toLowerCase();
+
         if (requireStandardTarget && (lower === '-m32' || lower === '-m64')) {
             targetArch = parseTargetArch(lower);
         } else if (requireStandardTarget && (lower.startsWith('-arch=') || lower.startsWith('/arch:'))) {
@@ -175,6 +193,7 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
             targetArch = parseTargetArch(target);
         } else if (requireStandardTarget && lower === '-arch') {
             const { done, value } = iter.next();
+
             if (done) {
                 // TODO: add an allow list of architecture values and add telemetry
                 continue;
@@ -188,6 +207,7 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
             targetArch = parseTargetArch(target);
         } else if (requireStandardTarget && lower === '-target') {
             const { done, value } = iter.next();
+
             if (done) {
                 // TODO: add an allow list of architecture values and add telemetry
                 continue;
@@ -195,8 +215,10 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
             targetArch = parseTargetArch(value.toLowerCase());
         } else if (value === '-D' || value === '/D') {
             const { done, value } = iter.next();
+
             if (done) {
                 rollbar.error(localize('unexpected.end.of.arguments', 'Unexpected end of parsing command line arguments'));
+
                 continue;
             }
             extraDefinitions.push(value);
@@ -205,8 +227,10 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
             extraDefinitions.push(def);
         } else if (extractStdFlag && (value.startsWith('-std=') || lower.startsWith('-std:') || lower.startsWith('/std:'))) {
             const std = value.substring(5);
+
             if (lang === 'CXX' || lang === 'OBJCXX' || lang === 'CUDA') {
                 const s = parseCppStandard(std, canUseGnuStd, canUseCxx23);
+
                 if (!s) {
                     log.warning(localize('unknown.control.gflag.cpp', 'Unknown C++ standard control flag: {0}', value));
                 } else {
@@ -214,6 +238,7 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
                 }
             } else if (lang === 'C' || lang === 'OBJC') {
                 const s = parseCStandard(std, canUseGnuStd);
+
                 if (!s) {
                     log.warning(localize('unknown.control.gflag.c', 'Unknown C standard control flag: {0}', value));
                 } else {
@@ -221,6 +246,7 @@ export function parseCompileFlags(cptVersion: cpptools.Version, args: string[], 
                 }
             } else if (lang === undefined) {
                 let s = parseCppStandard(std, canUseGnuStd, canUseCxx23);
+
                 if (!s) {
                     s = parseCStandard(std, canUseGnuStd);
                 }
@@ -250,16 +276,22 @@ export function getIntelliSenseMode(cptVersion: cpptools.Version, compilerPath: 
         return undefined;
     }
     const canUseArm = (cptVersion >= cpptools.Version.v4);
+
     const compilerName = path.basename(compilerPath || "").toLocaleLowerCase();
+
     if (compilerName === 'cl.exe') {
         const clArch = path.basename(path.dirname(compilerPath)).toLocaleLowerCase();
+
         switch (clArch) {
             case 'arm64':
                 return canUseArm ? 'msvc-arm64' : 'msvc-x64';
+
             case 'arm':
                 return canUseArm ? 'msvc-arm' : 'msvc-x86';
+
             case 'x86':
                 return 'msvc-x86';
+
             case 'x64':
             default:
                 return 'msvc-x64';
@@ -268,6 +300,7 @@ export function getIntelliSenseMode(cptVersion: cpptools.Version, compilerPath: 
         switch (targetArch) {
             case 'arm64':
                 return canUseArm ? 'clang-arm64' : 'clang-x64';
+
             case 'arm':
             default:
                 return canUseArm ? 'clang-arm' : 'clang-x86';
@@ -276,10 +309,13 @@ export function getIntelliSenseMode(cptVersion: cpptools.Version, compilerPath: 
         switch (targetArch) {
             case 'arm64':
                 return canUseArm ? 'clang-arm64' : 'clang-x64';
+
             case 'arm':
                 return canUseArm ? 'clang-arm' : 'clang-x86';
+
             case 'x86':
                 return 'clang-x86';
+
             case 'x64':
             default:
                 return 'clang-x64';
@@ -294,12 +330,16 @@ export function getIntelliSenseMode(cptVersion: cpptools.Version, compilerPath: 
         switch (targetArch) {
             case 'x86':
                 return 'gcc-x86';
+
             case 'x64':
                 return 'gcc-x64';
+
             case 'arm64':
                 return canUseArm ? 'gcc-arm64' : 'gcc-x64';
+
             case 'arm':
                 return canUseArm ? 'gcc-arm' : 'gcc-x86';
+
             default:
                 return 'gcc-x64';
         }
@@ -346,7 +386,9 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
      */
     private getConfiguration(uri: vscode.Uri): cpptools.SourceFileConfigurationItem | undefined {
         const normalizedPath = util.platformNormalizePath(uri.fsPath);
+
         const configurations = this.fileIndex.get(normalizedPath);
+
         if (this.activeTarget && configurations?.has(this.activeTarget)) {
             return configurations!.get(this.activeTarget);
         } else {
@@ -360,6 +402,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
      */
     async canProvideConfiguration(uri: vscode.Uri) {
         this.requests.add(uri.toString());
+
         return !!this.getConfiguration(uri);
     }
 
@@ -376,6 +419,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
         configs.forEach(config => {
             this.responses.set(config.uri.toString(), config);
         });
+
         return configs;
     }
 
@@ -435,6 +479,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
         // First try to get toolchain values directly reported by CMake. Check the
         // group's language compiler, then the C++ compiler, then the C compiler.
         let compilerToolchains: CodeModelToolchain | undefined;
+
         if ("toolchains" in opts.codeModelContent) {
             compilerToolchains = opts.codeModelContent.toolchains?.get(lang ?? "")
             || opts.codeModelContent.toolchains?.get('CXX')
@@ -446,27 +491,38 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
             || opts.cache.get('CMAKE_C_COMPILER');
         // Try to get the path to the compiler we want to use
         const compilerPath = compilerToolchains ? compilerToolchains.path : (compilerCache ? compilerCache.as<string>() : opts.clCompilerPath);
+
         if (!compilerPath) {
             throw new MissingCompilerException();
         }
 
         const targetFromToolchains = compilerToolchains?.target;
+
         const targetArchFromToolchains = targetFromToolchains ? parseTargetArch(targetFromToolchains) : undefined;
 
         const normalizedCompilerPath = util.platformNormalizePath(compilerPath);
+
         let compileCommandFragments = useFragments ? (fileGroup.compileCommandFragments || target.compileCommandFragments) : [];
+
         const getAsFlags = (fragments?: string[]) => {
             if (!fragments) {
                 return [];
             }
             return [...util.flatMap(fragments, fragment => shlex.split(fragment))];
         };
+
         let flags: string[] = [];
+
         let extraDefinitions: string[] = [];
+
         let standard: StandardVersion;
+
         let targetArch: Architecture;
+
         let intelliSenseMode: IntelliSenseMode;
+
         let defines = (fileGroup.defines || target.defines || []);
+
         if (!useFragments) {
             // Send the intelliSenseMode and standard only for CppTools API v5 and below.
             flags = getAsFlags(fileGroup.compileCommandFragments || target.compileCommandFragments);
@@ -475,10 +531,13 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
             intelliSenseMode = getIntelliSenseMode(this.cpptoolsVersion, compilerPath, targetArchFromToolchains ?? targetArch);
         }
         const frameworkPaths = Array.from(new Set<string>((fileGroup.frameworks ?? []).map(f => path.dirname(f.path))));
+
         const includePath = (fileGroup.includePath ? fileGroup.includePath.map(p => p.path) : target.includePath || []).concat(frameworkPaths);
+
         const normalizedIncludePath = includePath.map(p => util.platformNormalizePath(p));
 
         const newBrowsePath = this.workspaceBrowseConfiguration.browsePath;
+
         for (const includePathItem of normalizedIncludePath) {
             if (newBrowsePath.indexOf(includePathItem) < 0) {
                 newBrowsePath.push(includePathItem);
@@ -536,9 +595,12 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
      */
     private updateFileGroup(sourceDir: string, fileGroup: CodeModelFileGroup, options: CodeModelParams, target: TargetDefaults, sysroot?: string) {
         const configuration = this.buildConfigurationData(fileGroup, options, target, sysroot);
+
         for (const src of fileGroup.sources) {
             const absolutePath = path.isAbsolute(src) ? src : path.join(sourceDir, src);
+
             const normalizedAbsolutePath = util.platformNormalizePath(absolutePath);
+
             if (this.fileIndex.has(normalizedAbsolutePath)) {
                 this.fileIndex.get(normalizedAbsolutePath)!.set(target.name, {
                     uri: vscode.Uri.file(absolutePath).toString(),
@@ -553,6 +615,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
                 this.fileIndex.set(normalizedAbsolutePath, data);
             }
             const dir = path.dirname(normalizedAbsolutePath);
+
             if (this.workspaceBrowseConfiguration.browsePath.indexOf(dir) < 0) {
                 this.workspaceBrowseConfiguration.browsePath.push(dir);
             }
@@ -581,6 +644,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
         this.workspaceBrowseConfiguration = { browsePath: [] };
         this.activeTarget = opts.activeTarget;
         this.activeBuildType = opts.activeBuildTypeVariant;
+
         for (const config of opts.codeModelContent.configurations) {
             this.buildTypesSeen.add(config.name);
         }
@@ -601,13 +665,20 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
                         // 2. Pass these "defaults" down when rebuilding the config data
                         // 3. Any `fileGroup` that does not have the associated attribute will receive the `default`
                         target.fileGroups?.reverse();
+
                         const grps = target.fileGroups || [];
+
                         const includePath = [...new Set(util.flatMap(grps, grp => grp.includePath || []))].map(item => item.path);
+
                         const compileCommandFragments = [...util.first(grps, grp => grp.compileCommandFragments || [])];
+
                         const defines = [...new Set(util.flatMap(grps, grp => grp.defines || []))];
+
                         const sysroot = target.sysroot;
                         this.targets.push({ name: target.name, type: target.type });
+
                         const filteredGroups = (target.fileGroups && target.fileGroups.filter(fg => !fg.isGenerated).length > 0) ? target.fileGroups.filter(fg => !fg.isGenerated) : target.fileGroups;
+
                         for (const grp of filteredGroups || []) {
                             try {
                                 this.updateFileGroup(
@@ -643,6 +714,7 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
     }
 
     private readyFlag: boolean = false;
+
     get ready(): boolean {
         return this.readyFlag;
     }
@@ -652,12 +724,17 @@ export class CppConfigurationProvider implements cpptools.CustomConfigurationPro
 
     getDiagnostics(): DiagnosticsCpptools {
         const partialMatches: DiagnosticsPartialMatch[] = [];
+
         for (const request of this.requests) {
             const uri = vscode.Uri.parse(request);
+
             const configuration = this.getConfiguration(uri);
+
             if (!configuration) {
                 const fileName = path.basename(uri.fsPath);
+
                 const matches = [];
+
                 for (const [key, _] of this.fileIndex) {
                     if (path.basename(key) === fileName) {
                         matches.push(key);

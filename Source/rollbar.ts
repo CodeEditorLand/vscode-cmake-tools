@@ -9,6 +9,7 @@ import { logEvent } from '@cmt/telemetry';
 import * as lodash from "lodash";
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('rollbar');
@@ -33,7 +34,9 @@ export function cleanStack(stack?: string): string {
     // Most source references are within parenthesis
     stack = stack.replace(/\(([^\n]+)\)/g, (match: string, fileInfo: string) => {
         const fileName = fileInfo.replace(/:\d+(:\d+)?$/, "");
+
         const name: string = path.basename(fileName);
+
         return match.replace(fileName, name);
     });
     // Some are direct references to main.js without parenthesis
@@ -43,6 +46,7 @@ export function cleanStack(stack?: string): string {
     strings.forEach((value, index, array) => {
         array[index] = cleanString(value);
     });
+
     return strings.join('\n');
 }
 
@@ -56,10 +60,14 @@ export function cleanString(message?: string): string {
         return 'No message provided';
     }
     const backSlash = message.indexOf('\\');
+
     const slash = message.indexOf('/');
+
     let first = backSlash === -1 ? slash : slash === -1 ? backSlash : backSlash < slash ? backSlash : slash;
+
     if (first > 0) {
         first = message.lastIndexOf(' ', first);
+
         return message.substr(0, first) + " <path removed>";
     }
     return message;
@@ -83,6 +91,7 @@ class RollbarController {
             log.fatal(localize('unhandled.exception', 'Unhandled exception: {0}', what), exception, lodash.toString(additional));
         }
         const callstack = cleanStack(exception.stack);
+
         const message = cleanString(exception.message);
         logEvent('exception2', { message, callstack });
         console.error(exception);
@@ -97,6 +106,7 @@ class RollbarController {
      */
     error(what: string, additional: object = {}): void {
         log.error(what, JSON.stringify(additional, (key, value) => stringifyReplacer(key, value)));
+
         if (process.env.NODE_ENV === 'development') {
             debugger;
         }
@@ -120,6 +130,7 @@ class RollbarController {
             additional = {};
         }
         log.trace(localize('invoking.async.function.rollbar', 'Invoking async function [{0}] with Rollbar wrapping [{1}]', func.name, what));
+
         const pr = func();
         this.takePromise(what, additional, pr);
     }
@@ -139,9 +150,11 @@ class RollbarController {
         }
         try {
             log.trace(localize('invoking.function.rollbar', 'Invoking function [${0}] with Rollbar wrapping [${1}]', func.name, what));
+
             return func();
         } catch (e) {
             this.exception(localize('unhandled.exception', 'Unhandled exception: {0}', what), e as Error, additional);
+
             throw e;
         }
     }

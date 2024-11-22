@@ -59,8 +59,10 @@ export class CMakeBuildRunner {
 
     public async getResult(): Promise<proc.Subprocess | undefined> {
         await this.currentBuildProcess?.result;
+
         const buildProcess = this.currentBuildProcess;
         this.currentBuildProcess = undefined;
+
         return buildProcess;
     }
 

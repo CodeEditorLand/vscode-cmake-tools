@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Helper functions
@@ -75,11 +76,14 @@ abstract class Button {
     update(): void {
         if (!this._isVisible() || this._forceHidden) {
             this.button.hide();
+
             return;
         }
         const text = this._getText(true);
+
         if (text === '') {
             this.button.hide();
+
             return;
         }
         this.button.text = text;
@@ -105,7 +109,9 @@ abstract class Button {
     }
     protected getTooltipShort(): string | null {
         const tooltip = this.getTooltipNormal();
+
         const text = this.getTextNormal();
+
         if (!tooltip && !text) {
             return null;
         }
@@ -152,29 +158,40 @@ abstract class Button {
 
     private _getTooltip(): string | null {
         const visibility = this._getVisibilitySetting();
+
         switch (visibility) {
             case 'hidden':
                 return null;
+
             case 'icon':
                 return this.getTooltipIcon();
+
             case 'compact':
                 return this.getTooltipShort();
+
             default:
                 return this.getTooltipNormal();
         }
     }
     private _getText(icon: boolean = false): string {
         const type = this._getVisibilitySetting();
+
         let text: string;
+
         switch (type) {
             case 'icon':
                 text = this.getTextIcon();
+
                 break;
+
             case 'compact':
                 text = this.getTextShort();
+
                 break;
+
             default:
                 text = this.getTextNormal();
+
                 break;
         }
         if (!icon) {
@@ -196,6 +213,7 @@ class FolderButton extends Button {
     // private static readonly _autoSelectToolTip = localize('active.folder.auto.tooltip', 'auto');
 
     settingsName = 'folder';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.selectActiveFolder';
@@ -204,6 +222,7 @@ class FolderButton extends Button {
     }
 
     // private _autoSelect: boolean = false;
+
     set autoSelect(v: boolean) {
         if (v) {}
         // this._autoSelect = v;
@@ -218,12 +237,15 @@ class FolderButton extends Button {
     }
     protected getTextShort(): string {
         let len = this.config.options.advanced?.folder?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -247,6 +269,7 @@ class VariantStatus extends Button {
     private _statusMessage: string = localize('loading.status', 'Loading...');
 
     settingsName = 'variant';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = true;
@@ -278,6 +301,7 @@ class KitSelection extends Button {
     private static readonly _noKitSelected = localize('no.kit.selected', 'No Kit Selected');
 
     settingsName = 'kit';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = true;
@@ -288,6 +312,7 @@ class KitSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text === SpecialKits.Unspecified) {
             return KitSelection._noActiveKit;
         }
@@ -299,12 +324,15 @@ class KitSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.kit?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -322,6 +350,7 @@ class KitSelection extends Button {
 
 class BuildTargetSelectionButton extends Button {
     settingsName = 'buildTarget';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -331,12 +360,15 @@ class BuildTargetSelectionButton extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.buildTarget?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -351,6 +383,7 @@ class BuildTargetSelectionButton extends Button {
 
 class LaunchTargetSelectionButton extends Button {
     settingsName = 'launchTarget';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.selectLaunchTarget';
@@ -363,12 +396,15 @@ class LaunchTargetSelectionButton extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.launchTarget?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -379,6 +415,7 @@ class LaunchTargetSelectionButton extends Button {
 
 class DebugButton extends Button {
     settingsName = 'debug';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.debugTarget';
@@ -407,6 +444,7 @@ class DebugButton extends Button {
 
 class LaunchButton extends Button {
     settingsName = 'launch';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.launchTarget';
@@ -431,6 +469,7 @@ class LaunchButton extends Button {
 
 class CTestButton extends Button {
     settingsName = 'ctest';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.ctest';
@@ -447,6 +486,7 @@ class CTestButton extends Button {
 
     update(): void {
         this.icon = 'beaker';
+
         if (this.config.options.advanced?.ctest?.color === true) {
             this.button.color = this._color;
         } else {
@@ -461,17 +501,21 @@ class CTestButton extends Button {
 
     protected getTextNormal(): string {
         this.button.color = '';
+
         return localize('run.ctest', 'Run CTest');
     }
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.ctest?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -489,6 +533,7 @@ class CTestButton extends Button {
 
 class CPackButton extends Button {
     settingsName = 'cpack';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.cpack';
@@ -505,6 +550,7 @@ class CPackButton extends Button {
 
     update(): void {
         this.icon = 'package';
+
         if (this.config.options.advanced?.cpack?.color === true) {
             this.button.color = this._color;
         } else {
@@ -519,17 +565,21 @@ class CPackButton extends Button {
 
     protected getTextNormal(): string {
         this.button.color = '';
+
         return localize('run.cpack', 'Run CPack');
     }
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.cpack?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -547,6 +597,7 @@ class CPackButton extends Button {
 
 class WorkflowButton extends Button {
     settingsName = 'workflow';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.workflow';
@@ -563,6 +614,7 @@ class WorkflowButton extends Button {
 
     update(): void {
         this.icon = 'run';
+
         if (this.config.options.advanced?.workflow?.color === true) {
             this.button.color = this._color;
         } else {
@@ -577,17 +629,21 @@ class WorkflowButton extends Button {
 
     protected getTextNormal(): string {
         this.button.color = '';
+
         return localize('run.workflow', 'Run Workflow');
     }
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.workflow?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -608,6 +664,7 @@ class BuildButton extends Button {
     private static readonly _stop = localize('stop', 'Stop');
 
     settingsName = 'build';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.command = 'cmake.build';
@@ -656,6 +713,7 @@ export class ConfigurePresetSelection extends Button {
     private static readonly _noPresetSelected = localize('no.configure.preset.selected', 'No Configure Preset Selected');
 
     settingsName = 'configurePreset';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -666,6 +724,7 @@ export class ConfigurePresetSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text.length === 0) {
             return ConfigurePresetSelection._noPresetSelected;
         }
@@ -674,12 +733,15 @@ export class ConfigurePresetSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.configurePreset?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -699,6 +761,7 @@ export class BuildPresetSelection extends Button {
     private static readonly _noPresetSelected = localize('no.build.preset.selected', 'No Build Preset Selected');
 
     settingsName = 'buildPreset';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -709,6 +772,7 @@ export class BuildPresetSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text.length === 0) {
             return BuildPresetSelection._noPresetSelected;
         }
@@ -717,12 +781,15 @@ export class BuildPresetSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.buildPreset?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -742,6 +809,7 @@ export class TestPresetSelection extends Button {
     private static readonly _noPresetSelected = localize('no.test.preset.selected', 'No Test Preset Selected');
 
     settingsName = 'testPreset';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -752,6 +820,7 @@ export class TestPresetSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text.length === 0) {
             return TestPresetSelection._noPresetSelected;
         }
@@ -760,12 +829,15 @@ export class TestPresetSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.testPreset?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -785,6 +857,7 @@ export class PackagePresetSelection extends Button {
     private static readonly _noPresetSelected = localize('no.package.preset.selected', 'No Package Preset Selected');
 
     settingsName = 'packagePreset';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -795,6 +868,7 @@ export class PackagePresetSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text.length === 0) {
             return PackagePresetSelection._noPresetSelected;
         }
@@ -803,12 +877,15 @@ export class PackagePresetSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.packagePreset?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }
@@ -828,6 +905,7 @@ export class WorkflowPresetSelection extends Button {
     private static readonly _noPresetSelected = localize('no.workflow.preset.selected', 'No Workflow Preset Selected');
 
     settingsName = 'workflowPreset';
+
     constructor(protected readonly config: ConfigurationReader, protected readonly priority: number) {
         super(config, priority);
         this.hidden = false;
@@ -838,6 +916,7 @@ export class WorkflowPresetSelection extends Button {
 
     protected getTextNormal(): string {
         const text = this.text;
+
         if (text.length === 0) {
             return WorkflowPresetSelection._noPresetSelected;
         }
@@ -846,12 +925,15 @@ export class WorkflowPresetSelection extends Button {
 
     protected getTextShort(): string {
         let len = this.config.options.advanced?.workflowPreset?.statusBarLength || 0;
+
         if (!Number.isInteger(len) || len <= 0) {
             len = 20;
         }
         let text = this.getTextNormal();
+
         if (len + 3 < text.length) {
             text = `${text.substr(0, len)}...`;
+
             if (text.startsWith('[')) {
                 text = `${text}]`;
             }

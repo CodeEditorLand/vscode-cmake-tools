@@ -24,7 +24,9 @@ function assertNotNull<T>(
 type Possibly<T> = T | undefined;
 
 const repoRoot: string = path.resolve(__dirname, "..", "..", "..");
+
 const parentRoot: string = path.resolve(repoRoot, "..");
+
 const sourceRepo: string = "vscode-cmake-tools";
 
 interface Settings {
@@ -48,6 +50,7 @@ function gitAuthHeader(token: string, redact?: boolean): string {
     const encodedPat = redact
         ? "**********"
         : Buffer.from(`:${token}`).toString("base64");
+
     return `http.extraHeader="Authorization: Basic ${encodedPat}"`;
 }
 
@@ -58,6 +61,7 @@ export function gitExtraArgs(
     redact?: boolean
 ): string {
     const args = [`-c user.email="${email}"`, `-c user.name="${username}"`];
+
     if (token) {
         args.push(`-c ${gitAuthHeader(token, redact)}`);
     }
@@ -73,12 +77,14 @@ class Session {
 
     private async getWebApi(): Promise<WebApi> {
         const authHandler = getPersonalAccessTokenHandler(this.settings.token);
+
         return new WebApi(this.settings.orgUrl, authHandler);
     }
 
     private async init(): Promise<void> {
         if (this.initialized) {
             console.warn("Already initialized");
+
             return;
         }
 
@@ -89,6 +95,7 @@ class Session {
 
     private async getRepos(): Promise<GitRepository[]> {
         assertNotNull(this.git);
+
         return this.git.getRepositories(this.settings.project);
     }
 
@@ -97,11 +104,13 @@ class Session {
             (repo) => repo.name === this.settings.repo
         );
         assertNotNull(repo);
+
         return repo;
     }
 
     private getRemoteUrl(): string {
         const { orgUrl, project, repo } = this.settings;
+
         return `${orgUrl}/${project}/_git/${repo}`;
     }
 
@@ -119,8 +128,10 @@ class Session {
             this.settings.email,
             withAuth ? this.settings.token : ""
         )} ${command}`;
+
         const result = cp.execSync(cliString).toString("utf8");
         console.log(result);
+
         return result;
     }
 
@@ -140,8 +151,11 @@ class Session {
     // https://github.com/microsoft/vscode-cmake-tools/blob/a057e5ceb3ce2f98c01f6eb8117d098101f5f234/translations_auto_pr.js#L56
     private hasStagedChanges(): boolean {
         console.log("Checking if any files have changed");
+
         const output = this.runGit("diff --staged --name-only");
+
         const lines = output.toString().split("\n");
+
         let anyChanges = false;
         lines.forEach((line) => {
             if (line !== "") {
@@ -162,6 +176,7 @@ class Session {
 
         // remember original branch
         const origBranch = this.runGit(`rev-parse --abbrev-ref HEAD`).trim();
+
         try {
             // create source branch
             this.runGit(`checkout -b ${this.settings.sourceBranch}`);
@@ -190,11 +205,14 @@ class Session {
 
     private async activePullRequestExists(): Promise<boolean> {
         assertNotNull(this.git);
+
         const repoId = (await this.getTargetRepo()).id;
         assertNotNull(repoId);
+
         const pullRequests = await this.git.getPullRequests(repoId, {
             status: PullRequestStatus.Active
         });
+
         return pullRequests.some((pr) => pr.title?.startsWith(this.settings.title.split(" ")[0]));
     }
 
@@ -206,14 +224,17 @@ class Session {
             description: "An automatic PR to share code between the CMake Tools repository and the target repo."
         };
         assertNotNull(this.git);
+
         const repoId = (await this.getTargetRepo()).id;
         assertNotNull(repoId);
         console.log("Creating Pull Request", request, repoId);
+
         const response = await this.git.createPullRequest(request, repoId);
 
         // Use the createdBy field in the response as the id of the autocompleter
         // https://developercommunity.visualstudio.com/t/how-to-get-identityref-for-the-current-user-or-arb/1129979#T-N1132219
         const createdBy = response.createdBy;
+
         const pullRequestId = response.pullRequestId;
         assertNotNull(
             createdBy,
@@ -248,10 +269,12 @@ class Session {
     public async run(): Promise<void> {
         try {
             await this.init();
+
             if (await this.activePullRequestExists()) {
                 console.warn(
                     "An active pull request already exists, exiting."
                 );
+
                 return;
             }
             this.prepareSourceBranch();
@@ -271,6 +294,7 @@ export function createPullRequest(settings: Settings): void {
 export function copyFiles(sourceLocation: string, targetRepo: string, targetLocation: string): void {
     // Copy files from source to target location
     const absoluteSourceLocation = path.resolve(parentRoot, `${sourceRepo}/${sourceLocation}/*`);
+
     const absoluteTargetLocation = path.resolve(parentRoot, `${targetRepo}/${targetLocation}`);
     console.log(absoluteSourceLocation);
     console.log(absoluteTargetLocation);

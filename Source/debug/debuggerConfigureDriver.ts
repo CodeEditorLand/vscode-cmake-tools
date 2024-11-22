@@ -27,6 +27,7 @@ export class DebugTrackerFactory implements vscode.DebugAdapterTrackerFactory {
 		_session: vscode.DebugSession,
 	): vscode.ProviderResult<vscode.DebugAdapterTracker> {
 		const onDisconnected = this.onDisconnected;
+
 		return {
 			async onDidSendMessage(message: {
 				event?: string;

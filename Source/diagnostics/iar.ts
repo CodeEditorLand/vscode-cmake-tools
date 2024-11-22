@@ -25,8 +25,10 @@ export class Parser extends RawDiagnosticParser {
             case 'Error':
             case 'Fatal error':
                 return 'error';
+
             case 'Warning':
                 return 'warning';
+
             default:
                 return 'info';
         }
@@ -42,23 +44,28 @@ export class Parser extends RawDiagnosticParser {
         switch (this.state) {
             case ParserState.init: {
                 const mat = POINTER_REGEX.exec(line);
+
                 if (!mat) {
                     return FeedLineResult.NotMine;
                 }
 
                 this.pending_column = mat[1].length - 2;
                 this.state = ParserState.pending_code;
+
                 return FeedLineResult.Ok;
             }
             case ParserState.pending_code: {
                 const mat = CODE_REGEX.exec(line);
+
                 if (!mat) {
                     // unexpected, reset state
                     this.reset();
+
                     return FeedLineResult.NotMine;
                 }
 
                 const [full, file, lineno = '1', severity, code, message_start] = mat;
+
                 if (file && severity) {
                     this.pending_diagnostic = {
                         full: full,
@@ -71,6 +78,7 @@ export class Parser extends RawDiagnosticParser {
                     };
 
                     this.state = ParserState.pending_message;
+
                     return FeedLineResult.Ok;
                 }
                 break;
@@ -81,11 +89,13 @@ export class Parser extends RawDiagnosticParser {
                 if (line === '' || line[0] !== ' ') {
                     diagnostic.message = diagnostic.message.trim();
                     this.reset();
+
                     return diagnostic;
                 }
 
                 diagnostic.message += line.trim() + '\n';
                 diagnostic.full += `\n${line}`;
+
                 return FeedLineResult.Ok;
             }
         }

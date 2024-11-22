@@ -50,15 +50,18 @@ export class StateManager {
 
     private async addCachedConfigurePreset(folderName: string, preset: string, isMultiProject: boolean) {
         const configurePresets = this.getCachedConfigurePresets(folderName, isMultiProject);
+
         if (configurePresets.indexOf(preset) >= 0) {
             return;
         }
         configurePresets.push(preset);
+
         return this._update('cachedConfigurePresets', configurePresets, folderName, isMultiProject);
     }
 
     private async clearCachedConfigurePresets(folderName: string, isMultiProject: boolean) {
         const configurePresets = this.getCachedConfigurePresets(folderName, isMultiProject);
+
         for (const preset of configurePresets) {
             await this.setBuildPresetName(folderName, preset, null, isMultiProject);
             await this.setTestPresetName(folderName, preset, null, isMultiProject);
@@ -139,6 +142,7 @@ export class StateManager {
      */
     getActiveVariantSettings(folderName: string, isMultiProject: boolean): Map<string, string> | null {
         const pairs = this._get<[string, string][]>('activeVariantSettings', folderName, isMultiProject);
+
         if (pairs) {
             return new Map<string, string>(pairs);
         } else {

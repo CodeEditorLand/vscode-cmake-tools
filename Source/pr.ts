@@ -4,6 +4,7 @@
  */ /** */
 
 import * as util from 'util';
+
 const promisify = util.promisify;
 
 import * as fs_ from 'fs';
@@ -15,6 +16,7 @@ import * as nls from 'vscode-nls';
 import * as pLimit from 'p-limit';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Limits the concurrent async access to the file system to avoid errors such as "EMFILE: too many open files".
@@ -23,6 +25,7 @@ const fsAccessLimiter = pLimit(50);
 // Wraps fsAccessLimiter around the PromiseLike function while preserving the original type.
 function limitify<T extends (...args: any[]) => any>(fn: T): T {
     const wrapper = (...args: Parameters<T>) => fsAccessLimiter(fn, ...args) as ReturnType<T>;
+
     return wrapper as T;
 }
 
@@ -35,6 +38,7 @@ export namespace fs {
 
     export async function exists(filePath: string): Promise<boolean> {
         const stat = await tryStat(filePath);
+
         return stat !== null;
     }
 
@@ -62,13 +66,21 @@ export namespace fs {
     }
 
     export const constants = fs_.constants;
+
     export const access = promisify(fs_.access);
+
     export const writeFile = limitify(promisify(fs_.writeFile));
+
     export const readdir = promisify(fs_.readdir);
+
     export const mkdir = promisify(fs_.mkdir);
+
     export const mkdtemp = promisify(fs_.mkdtemp);
+
     export const rename = promisify(fs_.rename);
+
     export const stat = promisify(fs_.stat);
+
     export const walk = promisify(walk_);
 
     /**
@@ -86,7 +98,9 @@ export namespace fs {
     }
 
     export const readlink = promisify(fs_.readlink);
+
     export const unlink = promisify(fs_.unlink);
+
     export const appendFile = limitify(promisify(fs_.appendFile));
 
     /**
@@ -96,6 +110,7 @@ export namespace fs {
      */
     export async function mkdir_p(fspath: string): Promise<void> {
         const parent = path.dirname(fspath);
+
         if (!await exists(parent)) {
             await mkdir_p(parent);
         } else {

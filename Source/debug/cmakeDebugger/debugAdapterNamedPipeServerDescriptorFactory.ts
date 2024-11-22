@@ -10,6 +10,7 @@ import { DebugOrigin, logCMakeDebuggerTelemetry} from "@cmt/debug/cmakeDebugger/
 import { ConfigureTrigger } from "@cmt/cmakeProject";
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const logger = logging.createLogger('debugger');
@@ -18,6 +19,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory implements vscode.Debu
     async createDebugAdapterDescriptor(session: vscode.DebugSession, _executable: vscode.DebugAdapterExecutable | undefined): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
         const pipeName =
             session.configuration.pipeName ?? getDebuggerPipeName();
+
         const origin =
             session.configuration.fromCommand ? DebugOrigin.originatedFromCommand : DebugOrigin.originatedFromLaunchConfiguration;
 
@@ -28,6 +30,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory implements vscode.Debu
         };
 
         const cmakeDebugType: "configure" | "script" | "external" = session.configuration.cmakeDebugType;
+
         if (cmakeDebugType === "configure" || cmakeDebugType === "script") {
             const promise = new Promise<void>((resolve) => {
                 debuggerInformation.debuggerIsReady = resolve;
@@ -35,10 +38,12 @@ export class DebugAdapterNamedPipeServerDescriptorFactory implements vscode.Debu
 
             if (cmakeDebugType === "script") {
                 const script = session.configuration.scriptPath;
+
                 if (!fs.existsSync(script)) {
                     throw new Error(localize("cmake.debug.scriptPath.does.not.exist", "The script path, \"{0}\", could not be found.", script));
                 }
                 const args: string[] = session.configuration.scriptArgs ?? [];
+
                 const env = new Map<string, string>(session.configuration.scriptEnv?.map((e: {name: string; value: string}) => [e.name, e.value])) ?? new Map();
                 logCMakeDebuggerTelemetry(origin, cmakeDebugType);
                 void executeScriptWithDebugger(script, args, env, debuggerInformation);
@@ -82,6 +87,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory implements vscode.Debu
         }
 
         logger.info(localize('debugger.create.descriptor', 'Connecting debugger on named pipe: \"{0}\"', pipeName));
+
         return new vscode.DebugAdapterNamedPipeServer(pipeName);
     }
 }

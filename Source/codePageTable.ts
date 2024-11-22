@@ -2,6 +2,7 @@ import { createLogger } from '@cmt/logging';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('code-pages');
@@ -190,12 +191,17 @@ export function getWindowsCodepage() {
  */
 async function getWindowsActiveCodePage(): Promise<string> {
     const proc = await import('@cmt/proc');
+
     const chcpResult = await proc.execute('chcp', []).result;
+
     if (chcpResult.retc !== 0) {
         log.error(localize('failed.to.execute', 'Failed to execute {0}', "chcp"), chcpResult.stderr);
+
         return 'utf-8';
     }
     const numberString = (chcpResult.stdout ?? '').replace(/[^0-9]/ig, '');
+
     const codePageNumber = parseInt(numberString);
+
     return getCodePageTable()[codePageNumber] || 'utf-8';
 }

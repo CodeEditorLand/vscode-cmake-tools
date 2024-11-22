@@ -34,6 +34,7 @@ import { ConfigureTrigger } from '@cmt/cmakeProject';
 import { onConfigureSettingsChange } from '@cmt/ui/util';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('cmakefileapi-driver');
@@ -70,6 +71,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
         preconditionHandler: CMakePreconditionProblemSolver,
         preferredGenerators: CMakeGenerator[]): Promise<CMakeFileApiDriver> {
         log.debug(localize('creating.instance.of', 'Creating instance of {0}', "CMakeFileApiDriver"));
+
         return this.createDerived(new CMakeFileApiDriver(cmake, config, sourceDir, isMultiProject, workspaceRootPath, preconditionHandler),
             useCMakePresets,
             kit,
@@ -124,9 +126,12 @@ export class CMakeFileApiDriver extends CMakeDriver {
         // We need to treat this case as if the cache is not present and let a reconfigure
         // refresh the cache information.
         const cacheExists: boolean = await fs.exists(this.cachePath);
+
         if (cacheExists && this.generator?.name === await this.getGeneratorFromCache(this.cachePath)) {
             await this.loadGeneratorInformationFromCache(this.cachePath);
+
             const code_model_exist = await this.updateCodeModel();
+
             if (!code_model_exist && this.config.configureOnOpen) {
                 await this.doConfigure([], undefined, undefined);
             }
@@ -139,6 +144,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
             if (cacheExists && this.config.configureOnOpen) {
                 // No need to remove the other CMake files for the generator change to work properly
                 log.info(localize('removing', 'Removing {0}', this.cachePath));
+
                 try {
                     await fs.unlink(this.cachePath);
                 } catch {
@@ -169,6 +175,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
     async doSetKit(cb: () => Promise<void>): Promise<void> {
         this._needsReconfigure = true;
         await cb();
+
         if (!(this.cmake.isDefaultGeneratorSupported && this.kit?.name === '__unspec__') && !this.generator) {
             throw new NoGeneratorError();
         }
@@ -176,6 +183,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
     async doSetConfigurePreset(need_clean: boolean, cb: () => Promise<void>): Promise<void> {
         this._needsReconfigure = true;
+
         if (need_clean) {
             await this._cleanPriorConfiguration();
         }
@@ -210,17 +218,21 @@ export class CMakeFileApiDriver extends CMakeDriver {
     async doCacheConfigure(): Promise<number> {
         this._needsReconfigure = true;
         await this.updateCodeModel();
+
         return 0;
     }
 
     async doConfigure(args_: string[], trigger?: ConfigureTrigger, outputConsumer?: proc.OutputConsumer, showCommandOnly?: boolean, defaultConfigurePresetName?: string, configurePreset?: ConfigurePreset | null, options?: proc.ExecutionOptions, debuggerInformation?: DebuggerInformation): Promise<number> {
         const binaryDir = configurePreset?.binaryDir ?? this.binaryDir;
+
         const api_path = this.getCMakeFileApiPath(binaryDir);
         await createQueryFileForApi(api_path);
 
         // Dup args so we can modify them
         const args = Array.from(args_);
+
         let has_gen = false;
+
         for (const arg of args) {
             if (arg.startsWith("-DCMAKE_GENERATOR:STRING=")) {
                 has_gen = true;
@@ -237,6 +249,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
                 toolset: configurePreset.toolset ? getValue(configurePreset.toolset) : undefined
 
             } : this.generator;
+
             if (generator) {
                 if (generator.name) {
                     args.push('-G');
@@ -254,10 +267,12 @@ export class CMakeFileApiDriver extends CMakeDriver {
         }
 
         const cmake = this.cmake.path;
+
         if (debuggerInformation) {
             args.push("--debugger");
             args.push("--debugger-pipe");
             args.push(`${debuggerInformation.pipeName}`);
+
             if (debuggerInformation.dapLog) {
                 args.push("--debugger-dap-log");
                 args.push(debuggerInformation.dapLog);
@@ -267,14 +282,17 @@ export class CMakeFileApiDriver extends CMakeDriver {
         if (showCommandOnly) {
             log.showChannel();
             log.info(proc.buildCmdStr(this.cmake.path, args));
+
             return 0;
         } else if (this.isMultiConfig && trigger === ConfigureTrigger.setVariant) {
             this._needsReconfigure = false;
             await this.updateCodeModel(binaryDir);
+
             return 0;
         } else {
             log.debug(`Configuring using ${this.useCMakePresets ? 'preset' : 'kit'}`);
             log.debug('Invoking CMake', cmake, 'with arguments', JSON.stringify(args));
+
             const env = await this.getConfigureEnvironment(configurePreset, options?.environment);
 
             const child = this.executeCommand(cmake, args, outputConsumer, {
@@ -299,6 +317,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
             this.configureProcess = null;
             log.trace(result.stderr);
             log.trace(result.stdout);
+
             if (result.retc === 0) {
                 if (!configurePreset || (configurePreset && defaultConfigurePresetName && configurePreset.name === defaultConfigurePresetName)) {
                     this._needsReconfigure = false;
@@ -311,6 +330,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
     async doPostBuild(): Promise<boolean> {
         await this.updateCodeModel();
+
         return true;
     }
 
@@ -319,19 +339,24 @@ export class CMakeFileApiDriver extends CMakeDriver {
     }
     private getCMakeReplyPath(binaryDir?: string) {
         const api_path = this.getCMakeFileApiPath(binaryDir);
+
         return path.join(api_path, 'reply');
     }
 
     private toolchainWarningProvided: boolean = false;
     private async updateCodeModel(binaryDir?: string): Promise<boolean> {
         const initialReplyPath = this.getCMakeReplyPath(binaryDir);
+
         const reply_path = process.platform === "linux" ? initialReplyPath.replace('~', process.env.HOME || "./") : initialReplyPath;
+
         const indexFile = await loadIndexFile(reply_path);
+
         if (indexFile) {
             this._generatorInformation = indexFile.cmake.generator;
 
             // load cache
             const cache_obj = indexFile.objects.find((value: Index.ObjectKind) => value.kind === 'cache');
+
             if (!cache_obj) {
                 throw Error('No cache object found');
             }
@@ -340,6 +365,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
             // load targets
             const codemodel_obj = indexFile.objects.find((value: Index.ObjectKind) => value.kind === 'codemodel');
+
             if (!codemodel_obj) {
                 throw Error('No code model object found');
             }
@@ -366,6 +392,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
             // load cmake files if available
             const cmakefiles_obj = indexFile.objects.find((value: Index.ObjectKind) => value.kind === 'cmakeFiles');
+
             if (cmakefiles_obj) {
                 this._cmakeFiles = await loadCMakeFiles(path.join(reply_path, cmakefiles_obj.jsonFile));
             } else {
@@ -378,6 +405,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
     }
 
     private _codeModelContent: codeModel.CodeModelContent | null = null;
+
     get codeModelContent() {
         return this._codeModelContent;
     }
@@ -390,6 +418,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
     }
     get targets(): Target[] {
         const targets = this._target_map.get(this.currentBuildType);
+
         if (targets) {
             const metaTargets = [{
                 type: 'rich' as 'rich',
@@ -397,6 +426,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
                 filepath: localize('build.all.target', 'A special target to build all available targets'),
                 targetType: 'META'
             }];
+
             return [...metaTargets, ...targets].filter((value, idx, self) => self.findIndex(e => value.name === e.name) === idx);
         } else {
             return [];
@@ -412,6 +442,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
     get executableTargets(): ExecutableTarget[] {
         const uniqueExecTargets = this.uniqueTargets.filter(t => t.type === 'rich' && (t as RichTarget).targetType === 'EXECUTABLE');
+
         const executableTargetsWithInstall = uniqueExecTargets.map(t => ({
             name: t.name,
             path: (t as RichTarget).filepath,
@@ -419,10 +450,13 @@ export class CMakeFileApiDriver extends CMakeDriver {
         }));
 
         const installLoc = localize("cmake.install.name", "Install");
+
         for (const t of uniqueExecTargets) {
             const target = t as RichTarget;
+
             if (target.installPaths && target.installPaths.length > 0) {
                 const includePath = target.installPaths.length > 1;
+
                 for (const installPath of target.installPaths) {
                     executableTargetsWithInstall.push({
                         name: `${target.name} (${installLoc}${includePath ? ` - ${installPath.subPath}` : ''})`,
@@ -440,6 +474,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
     }
 
     private readonly _codeModelChanged = new vscode.EventEmitter<null | codeModel.CodeModelContent>();
+
     get onCodeModelChanged() {
         return this._codeModelChanged.event;
     }
@@ -460,8 +495,10 @@ function targetReducer(set: Target[], t: Target): Target[] {
 
 function compareTargets(a: Target, b: Target): boolean {
     let same = false;
+
     if (a.type === b.type) {
         same = a.name === b.name;
+
         if (a.type === 'rich' && b.type === 'rich') {
             same = same && (a.filepath === b.filepath);
             same = same && (a.targetType === b.targetType);

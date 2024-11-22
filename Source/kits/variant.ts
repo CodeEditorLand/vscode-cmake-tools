@@ -17,6 +17,7 @@ import * as util from '@cmt/util';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('variant');
@@ -135,12 +136,14 @@ export function processVariantFileData(root: VarFileRoot): VariantCollection {
             ...opt_def!,
             key: opt_key
         }));
+
         return {
             name: setting_name,
             default: setting_def!.default,
             choices
         };
     });
+
     return { settings };
 }
 
@@ -211,6 +214,7 @@ export class VariantManager implements vscode.Disposable {
      */
     constructor(readonly workspaceFolder: vscode.WorkspaceFolder, readonly stateManager: StateManager, readonly config: ConfigurationReader, private isMultiProject: boolean) {
         log.debug(localize('constructing', 'Constructing {0}', 'VariantManager'));
+
         if (!vscode.workspace.workspaceFolders) {
             return;  // Nothing we can do. We have no directory open
         }
@@ -232,6 +236,7 @@ export class VariantManager implements vscode.Disposable {
 
     private loadVariantsFromSettings(): VarFileRoot {
         const collectionOfVariantsFromConfig = this.config.defaultVariants;
+
         if (collectionOfVariantsFromConfig) {
             return collectionOfVariantsFromConfig as VarFileRoot;
         } else {
@@ -241,10 +246,12 @@ export class VariantManager implements vscode.Disposable {
 
     private async _reloadVariantsFile(filepath?: string) {
         this.customVariantsFileExists = false;
+
         const validate = await loadSchema('./schemas/variants-schema.json');
 
         // Variants file should be one of these four options
         const workspaceFolder: string = this.workspaceFolder.uri.fsPath;
+
         const candidates = [
             path.join(workspaceFolder, 'cmake-variants.json'),
             path.join(workspaceFolder, 'cmake-variants.yaml'),
@@ -256,6 +263,7 @@ export class VariantManager implements vscode.Disposable {
             for (const testpath of candidates) {
                 if (await fs.exists(testpath)) {
                     filepath = testpath;
+
                     break;
                 }
             }
@@ -265,7 +273,9 @@ export class VariantManager implements vscode.Disposable {
         // Check once more that we have a file to read
         if (filepath && await fs.exists(filepath)) {
             this.customVariantsFileExists = true;
+
             const content = (await fs.readFile(filepath)).toString();
+
             try {
                 if (filepath.endsWith('.json')) {
                     new_variants = json5.parse(content);
@@ -278,9 +288,11 @@ export class VariantManager implements vscode.Disposable {
         }
 
         const is_valid = validate(new_variants);
+
         if (!is_valid) {
             const errors = validate.errors as ajv.ErrorObject[];
             log.error(localize('invalid.variants', 'Invalid variants specified:'));
+
             for (const err of errors) {
                 log.error(` >> ${err.dataPath}: ${err.message}`);
             }
@@ -299,17 +311,24 @@ export class VariantManager implements vscode.Disposable {
 
     variantConfigurationOptionsForKWs(keywordSetting: Map<string, string>): VariantOption[] | string {
         const vars = this._variants;
+
         let error: string | undefined;
+
         const data = Array.from(keywordSetting.entries()).map(([setting_key, opt_key]): VariantOption => {
             const unknown_choice: VariantOption = { short: 'Unknown', key: '__unknown__' };
+
             const found_setting = vars.settings.find(s => s.name === setting_key);
+
             if (!found_setting) {
                 error = localize('missing.setting.in.variant', 'Missing setting {0} in variant definition.', `"${setting_key}"`);
+
                 return unknown_choice;
             }
             const found_choice = found_setting.choices.find(o => o.key === opt_key);
+
             if (!found_choice) {
                 error = localize('missing.variant.choice', 'Missing variant choice {0} on {1} in variant definition.', `"${opt_key}"`, `"${setting_key}"`);
+
                 return unknown_choice;
             }
             return found_choice;
@@ -324,6 +343,7 @@ export class VariantManager implements vscode.Disposable {
 
     mergeVariantConfigurations(options: VariantOption[]): VariantOption {
         const init = { short: '', long: '', settings: {} } as any as VariantOption;
+
         return options.reduce((acc, el) => ({
             key: '__merged__',
             buildType: el.buildType || acc.buildType,
@@ -343,21 +363,26 @@ export class VariantManager implements vscode.Disposable {
             short: 'Unknown',
             long: 'Unknown'
         };
+
         const kws = this.stateManager.getActiveVariantSettings(this.folderName, this.isMultiProject);
+
         if (!kws) {
             return invalid_variant;
         }
         const vars = this._variants;
+
         if (!vars) {
             return invalid_variant;
         }
 
         let options_or_error = this.variantConfigurationOptionsForKWs(kws);
+
         if (typeof options_or_error === 'string') {
             log.warning(localize('incompatible.variant', 'Last variant selection is incompatible with present variant definition.'));
             log.warning('>> ' + options_or_error);
 
             log.warning(localize('using.default.variant.choices', 'Using default variant choices from variant definition.'));
+
             const defaultKws = this.findDefaultChoiceCombination();
             options_or_error = this.variantConfigurationOptionsForKWs(defaultKws);
         }
@@ -376,30 +401,37 @@ export class VariantManager implements vscode.Disposable {
             settingValue: opt.key,
             settings: opt
         })));
+
         const product = util.product(variants);
+
         const items: VariantCombination[] = product.map(optionset => ({
             label: optionset.map(o => o.settings.short).join(' + '),
             keywordSettings: this.transformChoiceCombinationToKeywordSettings(optionset),
             description: optionset.map(o => o.settings.long).join(' + ')
         }));
+
         if (name) {
             for (const item of items) {
                 if (name === item.label) {
                     await this.publishActiveKeywordSettings(item.keywordSettings);
+
                     return true;
                 }
             }
             return false;
         } else if (util.isTestMode()) {
             await this.publishActiveKeywordSettings(this.activeKeywordSetting ?? items[0].keywordSettings);
+
             return true;
         } else {
             const chosen = await vscode.window.showQuickPick(items, {placeHolder: localize('select.a.variant.placeholder', 'Select a build variant')});
+
             if (!chosen) {
                 return false;
             }
 
             const cfg = vscode.workspace.getConfiguration('cmake', this.workspaceFolder.uri).inspect<object>('defaultVariants');
+
             const telemetryProperties: telemetry.Properties = {
                 customFile: (this.customVariantsFileExists).toString(),
                 customSetting: (cfg?.globalValue !== undefined ||
@@ -410,6 +442,7 @@ export class VariantManager implements vscode.Disposable {
             telemetry.logEvent('variantSelection', telemetryProperties);
 
             await this.publishActiveKeywordSettings(chosen.keywordSettings);
+
             return true;
         }
     }
@@ -426,6 +459,7 @@ export class VariantManager implements vscode.Disposable {
     transformChoiceCombinationToKeywordSettings(choiceCombination: { settingKey: string; settingValue: string }[]): Map<string, string> {
         const keywords = new Map<string, string>();
         choiceCombination.forEach(kv => keywords.set(kv.settingKey, kv.settingValue));
+
         return keywords;
     }
 
@@ -434,13 +468,16 @@ export class VariantManager implements vscode.Disposable {
             settingKey: setting.name,
             settingValue: setting.default
         }));
+
         return this.transformChoiceCombinationToKeywordSettings(Array.from(defaults));
     }
 
     private folderName: string = "";
+
     async initialize(folderName: string) {
         await this._reloadVariantsFile();
         this.folderName = folderName;
+
         if (this.stateManager.getActiveVariantSettings(this.folderName, this.isMultiProject) === null) {
             const defaultChoices = this.findDefaultChoiceCombination();
             await this.publishActiveKeywordSettings(defaultChoices);

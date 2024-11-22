@@ -63,6 +63,7 @@ class WebfontGenerator {
      */
     public addFromDirectory(baseDir: string) {
         baseDir = path.resolve(baseDir);
+
         if (!fs.statSync(baseDir).isDirectory()) {
             return;
         }
@@ -70,9 +71,11 @@ class WebfontGenerator {
         for (let fp of fs.readdirSync(baseDir)) {
             // Full path, as well as replace backwards slashes as webfont requires forward slashes.
             fp = path.join(baseDir, fp).replace(/\\/g, '/');
+
             const parsed_fp = path.parse(fp);
 
             const match = this._FILE_MATCHER.exec(parsed_fp.base);
+
             if (match?.groups && fs.statSync(fp).isFile()) {
                 this._svgIcons.push(new SvgIcon({
                     fp: fp,
@@ -99,10 +102,12 @@ class WebfontGenerator {
     public async generate(outputDirectory: string, name: Optional<string> = undefined): Promise<void> {
         if (!this._enabledFormats.size) {
             console.warn("No enabled font formats to output; nothing to generate.");
+
             return;
         }
 
         outputDirectory = path.resolve(outputDirectory);
+
         if (!fs.existsSync(outputDirectory)) {
             throw Error(`Output directory does not exist '${outputDirectory}'`);
         }
@@ -115,17 +120,23 @@ class WebfontGenerator {
         // Enable formats to output, alongside any optional format options. Furthmore, Fontagon also outputs intermediate
         // font formats, so we'll keep track of the files by extension that we want to keep.
         const format_options: Fontagon.FormatOptions = {};
+
         const extensions: string[] = [];
+
         for (const format of this._enabledFormats) {
             switch (format) {
                 case FontFormat.WOFF:
                     format_options['woff'] = {};
                     extensions.push('.woff');
+
                     break;
+
                 case FontFormat.WOFF2:
                     format_options['woff2'] = {};
                     extensions.push('.woff2');
+
                     break;
+
                 default:
                     throw Error(`Unsupported font format '${FontFormat[format]}'.`);
             }
@@ -170,6 +181,7 @@ commander.program
     .option("--woff", "Enables WOFF font generation.")
     .option("--woff2", "Enables WOFF2 font generation.")
     .parse();
+
 const opts = commander.program.opts();
 
 try {

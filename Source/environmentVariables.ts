@@ -2,11 +2,13 @@ import * as os from 'os';
 import * as util from 'util';
 
 const inspect = util.inspect.custom;
+
 const envProperty = Symbol('envProperty');
 
 // alias of NodeJS.ProcessEnv, Record<string, string | undefined> === Dict<string>
 export type Environment = Record<string, string | undefined>;
 export type EnvironmentWithNull = Record<string, string | undefined | null>;
+
 const filter: RegExp = /\$\{.+?\}/;
 
 export interface EnvironmentOptions {
@@ -34,6 +36,7 @@ class EnvironmentPrivate {
     /* Using envProperty symbol is to provide valid implemention for [inspect]() */
     public [envProperty]: EnvironmentWithNull;
     protected options: EnvironmentOptions;
+
     constructor(options?: EnvironmentOptions) {
         this.keyMapping = new Map<string, string>();
         this[envProperty] = {};
@@ -41,6 +44,7 @@ class EnvironmentPrivate {
             preserveNull: options?.preserveNull,
             isWin32: options?.isWin32
         };
+
         if (this.options.preserveNull === undefined) {
             this.options.preserveNull = false;
         }
@@ -52,9 +56,12 @@ class EnvironmentPrivate {
     public getKey(key: string, updateKey: boolean): string {
         if (this.options.isWin32) {
             const normalizedKey = key.toUpperCase();
+
             let resultKey = this.keyMapping.get(normalizedKey);
+
             if (resultKey === undefined) {
                 resultKey = key;
+
                 if (updateKey) {
                     this.keyMapping.set(normalizedKey, resultKey);
                 }
@@ -71,6 +78,7 @@ class EnvironmentPrivate {
     public set(key: string | symbol, value?: string | null, receiver?: any): boolean {
         if (typeof key === 'string') {
             let deleteKey = false;
+
             if (value === undefined) {
                 deleteKey = true;
             } else if (value === null) {
@@ -83,6 +91,7 @@ class EnvironmentPrivate {
                 value = '' + value;
             }
             const existKey = this.getKey(key, true);
+
             if (deleteKey) {
                 return Reflect.deleteProperty(this[envProperty], existKey);
             } else {
@@ -105,6 +114,7 @@ export class EnvironmentUtils {
 
     public static create(from?: Map<string, string> | EnvironmentWithNull | null, options?: EnvironmentOptions): Environment {
         const env = new EnvironmentPrivate(options);
+
         const p = new Proxy(env, {
             defineProperty: (target, p, attributes) => Reflect.defineProperty(target[envProperty], p, attributes),
             deleteProperty: (target, p) => Reflect.deleteProperty(target[envProperty], p),
@@ -131,6 +141,7 @@ export class EnvironmentUtils {
             ownKeys: (target) => Reflect.ownKeys(target[envProperty]),
             set: (target, p, value, receiver): boolean => target.set(p, value, receiver)
         }) as unknown as Environment;
+
         if (from !== undefined && from !== null) {
             if (from instanceof Map) {
                 for (const [key, value] of from.entries()) {
@@ -149,6 +160,7 @@ export class EnvironmentUtils {
 
     public static merge(envs: (EnvironmentWithNull | null | undefined)[], options?: EnvironmentOptions): Environment {
         const newEnv = EnvironmentUtils.create(undefined, options);
+
         for (const env of envs) {
             if (env !== undefined && env !== null) {
                 Object.assign(newEnv, env);

@@ -8,9 +8,11 @@ import { expandString } from '@cmt/expand';
 import * as proc from '@cmt/proc';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 import * as logging from './logging';
+
 const log = logging.createLogger('cpack');
 
 class CPackOutputLogger implements OutputConsumer {
@@ -29,6 +31,7 @@ export class CPackDriver implements vscode.Disposable {
     // same as CTestTestfile.cmake looks to have on test presets. Remove if not necessary and also review testingEnabled in ctest.ts
     // (it is set/unset according to some logic but never queried).
     private _packagingEnabled: boolean = false;
+
     get packagingEnabled(): boolean {
         return this._packagingEnabled;
     }
@@ -46,6 +49,7 @@ export class CPackDriver implements vscode.Disposable {
 
     private async getCPackArgs(driver: CMakeDriver, packagePreset?: PackagePreset): Promise<string[] | undefined> {
         let cpackArgs: string[] = [];
+
         if (!packagePreset && driver.packagePreset) {
             packagePreset = driver.packagePreset;
         }
@@ -55,6 +59,7 @@ export class CPackDriver implements vscode.Disposable {
 
         // Note: in CMake Tools, we don't run cmake or cpack with --preset argument. We generate the equivalent command line from all the properties
         cpackArgs = [];
+
         if (packagePreset.vendorName) {
             cpackArgs.push("--vendor", `${packagePreset.vendorName}`);
         }
@@ -94,24 +99,32 @@ export class CPackDriver implements vscode.Disposable {
 
     public async runCPack(driver: CMakeDriver, packagePreset?: PackagePreset, consumer?: proc.OutputConsumer): Promise<number> {
         const cpackpath = await this.ws.getCPackPath(driver.cmakePathFromPreset);
+
         if (cpackpath === null) {
             log.info(localize('cpack.path.not.set', 'CPath path is not set'));
+
             return -2;
         }
 
         let cpackArgs: string[];
+
         if (driver.useCMakePresets && !driver.packagePreset) {
             log.error(localize('package.preset.not.set', 'Package preset is not set'));
+
             return -3;
         } else {
             const opts = driver.expansionOptions;
+
             const args = [];
+
             for (const value of this.ws.config.cpackArgs) {
                 args.push(await expandString(value, opts));
             }
 
             const configuration = driver.currentBuildType;
+
             const configs: string = packagePreset?.configurations?.join(";") || configuration;
+
             const presetArgs = await this.getCPackArgs(driver, packagePreset) || [];
             cpackArgs = [`-C`, configs].concat(presetArgs).concat(args);
         }
@@ -121,9 +134,12 @@ export class CPackDriver implements vscode.Disposable {
             cpackArgs,
             (consumer ? consumer : new CPackOutputLogger()),
             { environment: await driver.getCPackCommandEnvironment(), cwd: driver.binaryDir });
+
         const res = await child.result;
+
         if (res.retc === null) {
             log.info(localize('cpack.run.terminated', 'CPack run was terminated'));
+
             return -1;
         } else {
             log.info(localize('cpack.finished.with.code', 'CPack finished with return code {0}', res.retc));

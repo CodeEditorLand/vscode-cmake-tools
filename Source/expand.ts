@@ -11,6 +11,7 @@ import { EnvironmentWithNull, EnvironmentUtils } from '@cmt/environmentVariables
 import * as matchAll from 'string.prototype.matchall';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('expand');
@@ -122,14 +123,19 @@ export async function expandString<T>(input: string | T, opts: ExpansionOptions,
         return input;
     }
     const inputString = input as string;
+
     try {
 
         const maxRecursion = 10;
+
         let result = inputString;
+
         let didReplacement = false;
+
         let circularReference: string | undefined;
 
         let i = 0;
+
         do {
             // TODO: consider a full circular reference check?
             const expansion = await expandStringHelper(result, opts, errorHandler);
@@ -162,10 +168,14 @@ const varValueRegexp = ".+?";
 
 async function expandStringHelper(input: string, opts: ExpansionOptions, errorHandler?: ExpansionErrorHandler) {
     const envPreNormalize = opts.envOverride ? opts.envOverride : process.env;
+
     const env = EnvironmentUtils.create(envPreNormalize);
+
     const replacements = opts.vars;
     replacements.sourceDirectory = replacements.sourceDir;
+
     let circularReference: string | undefined;
+
     let expansionOccurred: boolean = false;
 
     // We accumulate a list of substitutions that we need to make, preventing
@@ -173,13 +183,18 @@ async function expandStringHelper(input: string, opts: ExpansionOptions, errorHa
     const subs = new Map<string, string>();
 
     const varRegex = /\$\{(\w+)\}/g;
+
     for (const mat of matchAll(input, varRegex)) {
         expansionOccurred = true;
+
         const full = mat[0];
+
         const key = mat[1];
+
         if (key !== 'dollar') {
             // Replace dollar sign at the very end of the expanding process
             const replacement = replacements[key];
+
             if (!replacement) {
                 log.warning(localize('invalid.variable.reference.full', 'Invalid variable reference {0} in string: {1}', full, input));
                 errorHandler?.tempErrorList.push([localize('invalid.variable.reference', 'Invalid variable reference'), input]);
@@ -190,36 +205,52 @@ async function expandStringHelper(input: string, opts: ExpansionOptions, errorHa
     }
 
     const envRegex1 = RegExp(`\\$\\{env:(${varValueRegexp})\\}`, "g");
+
     for (const mat of matchAll(input, envRegex1)) {
         expansionOccurred = true;
+
         const full = mat[0];
+
         const varName = mat[1];
+
         const replacement = fixPaths(env[varName]) || '';
         subs.set(full, replacement);
     }
 
     const envRegex2 = RegExp(`\\$\\{env\\.(${varValueRegexp})\\}`, "g");
+
     for (const mat of matchAll(input, envRegex2)) {
         expansionOccurred = true;
+
         const full = mat[0];
+
         const varName = mat[1];
+
         const replacement = fixPaths(env[varName]) || '';
         subs.set(full, replacement);
     }
 
     const envRegex3 = RegExp(`\\$env\\{(${varValueRegexp})\\}`, "g");
+
     for (const mat of matchAll(input, envRegex3)) {
         expansionOccurred = true;
+
         const full = mat[0];
+
         const varName = mat[1];
+
         const replacement: string = fixPaths(env[varName]) || '';
         // Avoid replacing an env variable by itself, e.g. PATH:env{PATH}.
         const envRegex4 = RegExp(`\\$env\\{(${varValueRegexp})\\}`, "g");
+
         const mat2 = envRegex4.exec(replacement);
+
         const varNameReplacement = mat2 ? mat2[1] : undefined;
+
         if (varNameReplacement && varNameReplacement === varName) {
             circularReference = `\"${varName}\" : \"${input}\"`;
             errorHandler?.tempErrorList.push([localize('circular.variable.reference', 'Circular variable reference'), full]);
+
             break;
         }
         subs.set(full, replacement);
@@ -229,10 +260,14 @@ async function expandStringHelper(input: string, opts: ExpansionOptions, errorHa
 
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         const folderRegex = RegExp(`\\$\\{workspaceFolder:(${varValueRegexp})\\}`, "g");
+
         for (const mat of matchAll(input, folderRegex)) {
             const full = mat[0];
+
             const folderName = mat[1];
+
             const f = vscode.workspace.workspaceFolders.find(folder => folder.name.toLocaleLowerCase() === folderName.toLocaleLowerCase());
+
             if (f) {
                 expansionOccurred = true;
                 subs.set(full, f.uri.fsPath);
@@ -242,29 +277,39 @@ async function expandStringHelper(input: string, opts: ExpansionOptions, errorHa
 
     if (opts.variantVars) {
         const variants = opts.variantVars;
+
         const variantRegex = RegExp(`\\$\\{variant:(${varValueRegexp})\\}`, "g");
+
         for (const mat of matchAll(input, variantRegex)) {
             expansionOccurred = true;
+
             const full = mat[0];
+
             const varName = mat[1];
+
             const replacement = variants[varName] || '';
             subs.set(full, replacement);
         }
     }
 
     const commandRegex = RegExp(`\\$\\{command:(${varValueRegexp})\\}`, "g");
+
     for (const mat of matchAll(input, commandRegex)) {
         if (opts.doNotSupportCommands) {
             log.warning(localize('command.not.supported', 'Commands are not supported for string: {0}', input));
+
             break;
         }
         const full = mat[0];
+
         const command = mat[1];
+
         if (subs.has(full)) {
             continue;  // Don't execute commands more than once per string
         }
         try {
             expansionOccurred = true;
+
             const result = await vscode.commands.executeCommand(command, opts.vars.workspaceFolder);
             subs.set(full, `${result}`);
         } catch (e) {
@@ -282,6 +327,7 @@ async function expandStringHelper(input: string, opts: ExpansionOptions, errorHa
 
 export async function expandStrings(inputs: string[], opts: ExpansionOptions): Promise<string[]> {
     const expandedInputs: string[] = [];
+
     for (const input of inputs) {
         const expandedInput: string = await expandString(input, opts);
         expandedInputs.push(expandedInput);
@@ -291,6 +337,7 @@ export async function expandStrings(inputs: string[], opts: ExpansionOptions): P
 
 export function substituteAll(input: string, subs: Map<string, string>) {
     let finalString = input;
+
     let didReplacement = false;
     subs.forEach((value, key) => {
         if (value !== key) {
@@ -298,15 +345,20 @@ export function substituteAll(input: string, subs: Map<string, string>) {
             didReplacement = true;
         }
     });
+
     return { result: finalString, didReplacement };
 }
 
 export function getParentEnvSubstitutions(input: string, subs: Map<string, string>, penvOverride?: EnvironmentWithNull): Map<string, string> {
     const parentEnvRegex = RegExp(`\\$penv\\{(${varValueRegexp})\\}`, "g");
+
     for (const mat of matchAll(input, parentEnvRegex)) {
         const full = mat[0];
+
         const varName = mat[1];
+
         const replacementValue = penvOverride ? penvOverride[varName] : process.env[varName];
+
         const replacement = fixPaths(replacementValue === null ? undefined : replacementValue) || '';
         subs.set(full, replacement);
     }

@@ -22,6 +22,7 @@ import { ConfigureTrigger } from '@cmt/cmakeProject';
 import { onConfigureSettingsChange } from '@cmt/ui/util';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('legacy-driver');
@@ -44,6 +45,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
     }
 
     private _needsReconfigure = true;
+
     async doConfigureSettingsChange(): Promise<void> {
         this._needsReconfigure = true;
         await onConfigureSettingsChange();
@@ -59,6 +61,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 
     async doSetConfigurePreset(need_clean: boolean, cb: () => Promise<void>): Promise<void> {
         this._needsReconfigure = true;
+
         if (need_clean) {
             await this._cleanPriorConfiguration();
         }
@@ -101,6 +104,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
             toolset: configurePreset.toolset ? getValue(configurePreset.toolset) : undefined
 
         } : this.generator;
+
         if (generator) {
             if (generator.name) {
                 args.push('-G');
@@ -117,21 +121,26 @@ export class CMakeLegacyDriver extends CMakeDriver {
         }
 
         const cmake = this.cmake.path;
+
         if (showCommandOnly) {
             log.showChannel();
             log.info(proc.buildCmdStr(this.cmake.path, args));
+
             return 0;
         } else {
             log.debug(localize('invoking.cmake.with.arguments', 'Invoking CMake {0} with arguments {1}', cmake, JSON.stringify(args)));
+
             const child = this.executeCommand(cmake, args, outputConsumer, {
                 environment: await this.getConfigureEnvironment(configurePreset, options?.environment),
                 cwd: options?.cwd ?? binaryDir
             });
             this.configureProcess = child;
+
             const result = await child.result;
             this.configureProcess = null;
             log.trace(result.stderr);
             log.trace(result.stdout);
+
             if (result.retc === 0 && (!configurePreset || (configurePreset && defaultConfigurePresetName && configurePreset.name === defaultConfigurePresetName))) {
                 this._needsReconfigure = false;
             }
@@ -148,6 +157,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 
     async doPostBuild(): Promise<boolean> {
         await this._reloadPostConfigure();
+
         return true;
     }
 
@@ -176,6 +186,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
         preconditionHandler: CMakePreconditionProblemSolver,
         preferredGenerators: CMakeGenerator[]): Promise<CMakeLegacyDriver> {
         log.debug(localize('creating.instance.of', 'Creating instance of {0}', "LegacyCMakeDriver"));
+
         return this.createDerived(new CMakeLegacyDriver(cmake, config, sourceDir, isMultiProject, workspaceFolder, preconditionHandler),
             useCMakePresets,
             kit,
@@ -218,6 +229,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 
     get cmakeCacheEntries() {
         let ret = new Map<string, CacheEntry>();
+
         if (this.cmakeCache) {
             ret = util.reduce(this.cmakeCache.allEntries, ret, (acc, entry) => acc.set(entry.key, entry));
         }
@@ -229,6 +241,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
             return null;
         }
         const gen = this.cmakeCache.get('CMAKE_GENERATOR');
+
         return gen ? gen.as<string>() : null;
     }
 

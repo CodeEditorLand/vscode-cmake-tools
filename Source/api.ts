@@ -36,6 +36,7 @@ export class CMakeToolsApiImpl implements api.CMakeToolsApi {
 
     async getProject(uri: vscode.Uri): Promise<CMakeProjectWrapper | undefined> {
         const project: CMakeProject | undefined = await this.manager.projectController.getProjectForFolder(uri.fsPath);
+
         return project ? new CMakeProjectWrapper(project) : undefined;
     }
 
@@ -47,10 +48,14 @@ export class CMakeToolsApiImpl implements api.CMakeToolsApi {
         switch (element) {
             case api.UIElement.StatusBarDebugButton:
                 await this.manager.hideDebugCommand(!visible);
+
                 break;
+
             case api.UIElement.StatusBarLaunchButton:
                 await this.manager.hideLaunchCommand(!visible);
+
                 break;
+
             default:
                 assertNever(element);
         }
@@ -59,6 +64,7 @@ export class CMakeToolsApiImpl implements api.CMakeToolsApi {
 
 async function withErrorCheck(name: string, action: () => Promise<number>): Promise<void> {
     const code = await action();
+
     if (code !== 0) {
         throw new Error(`${name} failed with code ${code}`);
     }

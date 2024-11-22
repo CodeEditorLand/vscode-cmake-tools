@@ -137,10 +137,12 @@ class Paths {
             return this.windows.LocalAppData!;
         } else {
             const xdg_dir = process.env['XDG_DATA_HOME'];
+
             if (xdg_dir) {
                 return xdg_dir;
             }
             const home = this.userHome;
+
             return path.join(home, '.local/share');
         }
     }
@@ -150,10 +152,12 @@ class Paths {
             return this.windows.AppData!;
         } else {
             const xdg_dir = process.env['XDG_CONFIG_HOME'];
+
             if (xdg_dir) {
                 return xdg_dir;
             }
             const home = this.userHome;
+
             return path.join(home, '.config');
         }
     }
@@ -204,16 +208,20 @@ class Paths {
 
     async getCTestPath(wsc: DirectoryContext, overWriteCMakePathSetting?: string): Promise<string | null> {
         const ctestPath = await this.expandStringPath(wsc.config.rawCTestPath, wsc);
+
         if (!ctestPath || ctestPath === 'auto' || overWriteCMakePathSetting) {
             const cmake = await this.getCMakePath(wsc, overWriteCMakePathSetting);
+
             if (cmake === null) {
                 return null;
             } else {
                 try {
                     // Check if CTest is a sibling executable in the same directory
                     const ctestName = process.platform === 'win32' ? 'ctest.exe' : 'ctest';
+
                     const ctestSibling = path.join(path.dirname(cmake), ctestName);
                     await fs.access(ctestSibling, fs.constants.X_OK);
+
                     return ctestSibling;
                 } catch {
                     // The best we can do.
@@ -227,16 +235,20 @@ class Paths {
 
     async getCPackPath(wsc: DirectoryContext, overWriteCMakePathSetting?: string): Promise<string | null> {
         const cpackPath = await this.expandStringPath(wsc.config.rawCPackPath, wsc);
+
         if (!cpackPath || cpackPath === 'auto' || overWriteCMakePathSetting) {
             const cmake = await this.getCMakePath(wsc, overWriteCMakePathSetting);
+
             if (cmake === null) {
                 return null;
             } else {
                 try {
                     // Check if CPack is a sibling executable in the same directory
                     const cpackName = process.platform === 'win32' ? 'cpack.exe' : 'cpack';
+
                     const cpackSibling = path.join(path.dirname(cmake), cpackName);
                     await fs.access(cpackSibling, fs.constants.X_OK);
+
                     return cpackSibling;
                 } catch {
                     // The best we can do.
@@ -252,6 +264,7 @@ class Paths {
         this._ninjaPath = undefined;
 
         let raw = overWriteCMakePathSetting;
+
         if (!raw) {
             raw = await this.expandStringPath(wsc.config.rawCMakePath, wsc);
         }
@@ -259,16 +272,19 @@ class Paths {
         if (raw === 'auto' || raw === 'cmake') {
             // We start by searching $PATH for cmake
             const on_path = await this.which('cmake');
+
             if (on_path) {
                 return on_path;
             }
             if (process.platform === 'win32') {
                 // We didn't find it on the $PATH. Try some good guesses
                 const cmake_relative_path = '\\CMake\\bin\\cmake.exe';
+
                 const default_cmake_paths = [
                     this.windows.ProgramFiles! + cmake_relative_path,
                     this.windows.ProgramFilesX86! + cmake_relative_path
                 ];
+
                 for (const cmake_path of default_cmake_paths) {
                     if (await fs.exists(cmake_path)) {
                         return cmake_path;
@@ -277,6 +293,7 @@ class Paths {
 
                 // Look for bundled CMake executables in Visual Studio install paths
                 const bundled_tools_paths = await this.vsCMakePaths();
+
                 if (bundled_tools_paths.cmake) {
                     this._ninjaPath = bundled_tools_paths.ninja;
 
@@ -318,6 +335,7 @@ class Paths {
         const vsCMakePaths: VSCMakePaths = {};
 
         const vs_installations = await vsInstallations();
+
         if (vs_installations.length > 0) {
             const bundled_tool_paths = [] as { cmake: string; ninja: string; instanceId: string; version: util.Version }[];
 

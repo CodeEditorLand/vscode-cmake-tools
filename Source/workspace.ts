@@ -35,6 +35,7 @@ export class DirectoryContext {
      */
     static createForDirectory(folder: vscode.WorkspaceFolder, state: StateManager): DirectoryContext {
         const config = ConfigurationReader.create(folder);
+
         return new DirectoryContext(folder, config, state);
     }
 

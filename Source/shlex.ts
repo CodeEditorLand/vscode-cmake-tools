@@ -6,14 +6,20 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
     opt = opt || {
         mode: process.platform === 'win32' ? 'windows' : 'posix'
     };
+
     const quoteChars = opt.mode === 'posix' ? '\'"' : '"';
+
     const escapeChars = '\\';
+
     let escapeChar: string | undefined;
+
     let token: string | undefined;
+
     let isSubQuote: boolean = false;
 
     for (let i = 0; i < str.length; ++i) {
         const char = str.charAt(i);
+
         if (escapeChar) {
             if (char === '\n') {
                 // Do nothing
@@ -24,12 +30,14 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
             }
             // We parsed an escape seq. Reset to no escape
             escapeChar = undefined;
+
             continue;
         }
 
         if (escapeChars.includes(char)) {
             // We're parsing an escape sequence.
             escapeChar = char;
+
             continue;
         }
 
@@ -38,10 +46,12 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
                 // Reached the end of a sub-quoted token.
                 isSubQuote = false;
                 token = (token || '') + char;
+
                 continue;
             }
             // Another quoted char
             token = (token || '') + char;
+
             continue;
         }
 
@@ -50,6 +60,7 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
             isSubQuote = true;
             // Accumulate
             token = (token || '') + char;
+
             continue;
         }
 
@@ -58,6 +69,7 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
                 yield token;
             }
             token = undefined;
+
             continue;
         }
 
@@ -74,11 +86,13 @@ export function quote(str: string, opt?: ShlexOptions): string {
     opt = opt || {
         mode: process.platform === 'win32' ? 'windows' : 'posix'
     };
+
     if (str === '') {
         return '""';
     }
     if (/[^\w@%\-+=:,./|><]/.test(str)) {
         str = str.replace(/"/g, '\\"');
+
         return `"${str}"`;
     } else {
         return str;

@@ -12,6 +12,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IOption {
@@ -34,6 +35,7 @@ export class ConfigurationWebview {
 
 	// The dirty state of the whole webview.
 	private dirtyFlag: boolean = false;
+
 	get isDirty(): boolean {
 		return this.dirtyFlag;
 	}
@@ -43,6 +45,7 @@ export class ConfigurationWebview {
 		if (this.panel.title) {
 			// The webview title should reflect the dirty state
 			this.panel.title = this.cmakeCacheEditorText;
+
 			if (d) {
 				this.panel.title += "*";
 			} else {
@@ -95,7 +98,9 @@ export class ConfigurationWebview {
 	async refreshPanel() {
 		if (this.isDirty) {
 			const newOptions = await this.getConfigurationOptions();
+
 			const mergedOptions: IOption[] = [];
+
 			let conflictsExist = false;
 			newOptions.forEach((option) => {
 				const index = this.options.findIndex(
@@ -150,6 +155,7 @@ export class ConfigurationWebview {
 			const fromUI = localize("from.UI", "From UI");
 			// Reload the CMake cache, losing the curent unsaved edits.
 			const fromCache = localize("from.cache", "From Cache");
+
 			if (conflictsExist) {
 				result = await vscode.window.showWarningMessage(
 					localize(
@@ -160,6 +166,7 @@ export class ConfigurationWebview {
 					fromCache,
 					fromUI,
 				);
+
 				if (result === fromUI) {
 					this.options = mergedOptions;
 					await this.persistCacheEntries();
@@ -200,9 +207,12 @@ export class ConfigurationWebview {
 
 		this.panel.onDidDispose(async (event) => {
 			console.log(`disposing webview ${event} - ${this.panel}`);
+
 			if (this.isDirty) {
 				const yes = localize("yes", "Yes");
+
 				const no = localize("no", "No");
+
 				const result = await vscode.window.showWarningMessage(
 					localize(
 						"unsaved.cache.edits",
@@ -211,6 +221,7 @@ export class ConfigurationWebview {
 					yes,
 					no,
 				);
+
 				if (result === yes) {
 					await this.persistCacheEntries();
 				}
@@ -228,6 +239,7 @@ export class ConfigurationWebview {
 				const index = this.options.findIndex(
 					(opt) => opt.key === option.key,
 				);
+
 				if (this.options[index].value !== option.value) {
 					this.isDirty = true;
 					this.options[index].dirty = true;
@@ -251,6 +263,7 @@ export class ConfigurationWebview {
 
 		// get cmake cache
 		const cmakeCache = await CMakeCache.fromPath(this.cachePath);
+
 		for (const entry of cmakeCache.allEntries) {
 			// Static cache entries are set automatically by CMake, overriding any value set by the user in this view.
 			// Not useful to show these entries in the list.
@@ -293,9 +306,13 @@ export class ConfigurationWebview {
 	 */
 	getWebviewMarkup() {
 		const key = "%TABLE_ROWS%";
+
 		const searchButtonText = localize("search", "Search");
+
 		const saveButtonText = localize("save", "Save");
+
 		const keyColumnText = localize("key", "Key");
+
 		const valueColumnText = localize("value", "Value");
 
 		let html = `
@@ -469,10 +486,12 @@ export class ConfigurationWebview {
           function toggleKey(checkbox) {
             updateCheckboxState(checkbox);
             vscode.postMessage({key: checkbox.id, type: "Bool", value: checkbox.checked});
+
             document.getElementById('not-saved').classList.remove('invisible');
           }
           function validateInput(editbox) {
             const list = editbox.list;
+
             if (list) {
               let found = false;
               for (const opt of list.options) {
@@ -487,6 +506,7 @@ export class ConfigurationWebview {
           function edit(editbox) {
             validateInput(editbox);
             vscode.postMessage({key: editbox.id, type: "String", value: editbox.value});
+
             document.getElementById('not-saved').classList.remove('invisible');
           }
           function save() {
@@ -495,6 +515,7 @@ export class ConfigurationWebview {
           }
           function search() {
             const filter = document.getElementById('search').value.toLowerCase();
+
             for (const tr of document.querySelectorAll('.content-tr')) {
               if (!tr.innerHTML.toLowerCase().includes(filter)) {
                 tr.classList.add('invisible');
@@ -509,6 +530,7 @@ export class ConfigurationWebview {
               updateCheckboxState(checkbox);
               checkbox.onclick = () => toggleKey(checkbox);
             });
+
             document.querySelectorAll('.cmake-input-text').forEach(editbox => {
               validateInput(editbox)
               editbox.oninput = () => edit(editbox);
@@ -547,6 +569,7 @@ export class ConfigurationWebview {
 					.replace(/ /g, "&nbsp;"); // we are usually dealing with single line entities - avoid unintential line breaks
 
 			const id = escapeAttribute(option.key);
+
 			let editControls = "";
 
 			if (option.type === "Bool") {
@@ -554,6 +577,7 @@ export class ConfigurationWebview {
           <label id="LABEL_${id}" for="${id}"/>`;
 			} else {
 				const hasChoices = option.choices.length > 0;
+
 				if (hasChoices) {
 					editControls = `<datalist id="CHOICES_${id}">
             ${option.choices.map((ch) => `<option value="${escapeAttribute(ch)}">`).join()}

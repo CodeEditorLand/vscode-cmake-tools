@@ -49,6 +49,7 @@ export class CompileOutputConsumer implements OutputConsumer {
     async resolvePath(file: string, basePaths: string[]): Promise<string> {
         for (const basePath of basePaths) {
             const resolved = util.resolvePath(file, basePath);
+
             if (await util.checkFileExists(resolved)) {
                 return resolved;
             }
@@ -63,10 +64,12 @@ export class CompileOutputConsumer implements OutputConsumer {
             switch (p) {
                 case 'warning':
                     return vscode.DiagnosticSeverity.Warning;
+
                 case 'catastrophic error':
                 case 'fatal error':
                 case 'error':
                     return vscode.DiagnosticSeverity.Error;
+
                 case 'note':
                 case 'info':
                 case 'remark':
@@ -74,6 +77,7 @@ export class CompileOutputConsumer implements OutputConsumer {
             }
             // tslint:disable-next-line
             console.warn('Unknown diagnostic severity level: ' + p);
+
             return undefined;
         };
 
@@ -85,18 +89,24 @@ export class CompileOutputConsumer implements OutputConsumer {
             GNULD: this.compilers.gnuld.diagnostics,
             IAR: this.compilers.iar.diagnostics
         };
+
         const parsers = util.objectPairs(by_source)
             .filter(([source, _]) => this.config.enableOutputParsers?.includes(source.toLowerCase()) ?? false);
+
         const arrs: FileDiagnostic[] = [];
+
         for (const [ source, diags ] of parsers) {
             for (const raw_diag of diags) {
                 const filepath = await this.resolvePath(raw_diag.file, basePaths);
+
                 const severity = severity_of(raw_diag.severity);
+
                 if (severity === undefined) {
                     continue;
                 }
                 const diag = new vscode.Diagnostic(raw_diag.location, raw_diag.message, severity);
                 diag.source = source;
+
                 if (raw_diag.code) {
                     diag.code = raw_diag.code;
                 }
@@ -104,8 +114,10 @@ export class CompileOutputConsumer implements OutputConsumer {
                     diags_by_file.set(filepath, []);
                 }
                 diag.relatedInformation = [];
+
                 for (const rel of raw_diag.related) {
                     const relFilePath = vscode.Uri.file(await this.resolvePath(rel.file, basePaths));
+
                     const related = new vscode.DiagnosticRelatedInformation(new vscode.Location(relFilePath, rel.location), rel.message);
                     diag.relatedInformation.push(related);
                 }
@@ -148,6 +160,7 @@ export class CMakeBuildConsumer implements OutputConsumer, vscode.Disposable {
 
     error(line: string) {
         this.compileConsumer.error(line);
+
         if (this.logger) {
             this.logger.error(line);
         }
@@ -155,10 +168,12 @@ export class CMakeBuildConsumer implements OutputConsumer, vscode.Disposable {
 
     output(line: string) {
         this.compileConsumer.output(line);
+
         if (this.logger) {
             this.logger.info(line);
         }
         const progress = this._percent_re.exec(line);
+
         if (progress) {
             const percent = progress[1];
             this._onProgressEmitter.fire({

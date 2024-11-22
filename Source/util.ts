@@ -16,7 +16,9 @@ import { ExtensionManager } from '@cmt/extension';
 import * as glob from "glob";
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 const parser = new contex.Parser({ regexParsingWithErrorRecovery: false });
 
 class Context implements contex.IContext {
@@ -28,6 +30,7 @@ class Context implements contex.IContext {
     }
     public getValue<T>(key: string): T | undefined {
         const ret = this._value[key];
+
         return ret;
     }
 }
@@ -48,7 +51,9 @@ export function escapeStringForRegex(str: string): string {
  */
 export function replaceAll(str: string, needle: string, what: string) {
     const pattern = escapeStringForRegex(needle);
+
     const re = new RegExp(pattern, 'g');
+
     return str.replace(re, what);
 }
 
@@ -62,10 +67,14 @@ export function fixPaths(str: string | undefined) {
         return undefined;
     }
     const fix_paths = /[A-Z]:(\\((?![<>:\"\/\\|\?\*]).)+)*\\?(?!\\)/gi;
+
     let pathmatch: RegExpMatchArray | null = null;
+
     let newstr = str;
+
     while ((pathmatch = fix_paths.exec(str))) {
         const pathfull = pathmatch[0];
+
         const fixslash = pathfull.replace(/\\/g, '/');
         newstr = newstr.replace(pathfull, fixslash);
     }
@@ -100,8 +109,11 @@ interface PathNormalizationOptions {
  */
 export function normalizePath(p: string, opt: PathNormalizationOptions): string {
     const normCase: NormalizationSetting = opt ? opt.normCase ? opt.normCase : 'never' : 'never';
+
     const normUnicode: NormalizationSetting = opt ? opt.normUnicode ? opt.normUnicode : 'never' : 'never';
+
     let norm = path.normalize(p);
+
     while (path.sep !== path.posix.sep && norm.includes(path.sep)) {
         norm = norm.replace(path.sep, path.posix.sep);
     }
@@ -109,24 +121,30 @@ export function normalizePath(p: string, opt: PathNormalizationOptions): string 
     switch (normCase) {
         case 'always':
             norm = norm.toLocaleLowerCase();
+
             break;
+
         case 'platform':
             if (process.platform === 'win32' || process.platform === 'darwin') {
                 norm = norm.toLocaleLowerCase();
             }
             break;
+
         case 'never':
             break;
     }
     switch (normUnicode) {
         case 'always':
             norm = norm.normalize();
+
             break;
+
         case 'platform':
             if (process.platform === 'darwin') {
                 norm = norm.normalize();
             }
             break;
+
         case 'never':
             break;
     }
@@ -166,15 +184,18 @@ export function splitPath(p: string): string[] {
         return [];
     }
     const pardir = path.dirname(p);
+
     if (pardir === p) {
         // We've reach a root path. (Might be a Windows drive dir)
         return [p];
     }
     const arr: string[] = [];
+
     if (p.startsWith(pardir)) {
         arr.push(...splitPath(pardir));
     }
     arr.push(path.basename(p));
+
     return arr;
 }
 
@@ -185,6 +206,7 @@ export function splitPath(p: string): string[] {
 export function isTruthy(value: (boolean | string | null | undefined | number)) {
     if (typeof value === 'string') {
         value = value.toUpperCase();
+
         return !(['', 'FALSE', 'OFF', '0', 'NOTFOUND', 'NO', 'N', 'IGNORE'].indexOf(value) >= 0
             || value.endsWith('-NOTFOUND'));
     }
@@ -274,6 +296,7 @@ export function cmakeify(value: (string | boolean | number | string[] | CMakeVal
         type: 'UNKNOWN',
         value: ''
     };
+
     if (value === true || value === false) {
         ret.type = 'BOOL';
         ret.value = value ? 'TRUE' : 'FALSE';
@@ -309,7 +332,9 @@ export async function termProc(child: child_process.ChildProcess) {
 async function _killTree(pid: number) {
     if (process.platform !== 'win32') {
         let children: number[] = [];
+
         const stdout = (await execute('pgrep', ['-P', pid.toString()], null, { silent: true }).result).stdout.trim();
+
         if (!!stdout.length) {
             children = stdout.split('\n').map(line => Number.parseInt(line));
         }
@@ -337,6 +362,7 @@ async function _killTree(pid: number) {
 
 export function splitCommandLine(cmd: string): string[] {
     const cmd_re = /('(\\'|[^'])*'|"(\\"|[^"])*"|(\\ |[^ ])+|[\w-]+)/g;
+
     const quoted_args = cmd.match(cmd_re);
     console.assert(quoted_args);
     // Our regex will parse escaped quotes, but they remain. We must
@@ -360,11 +386,14 @@ export interface Version {
 }
 export function parseVersion(str: string): Version {
     const version_re = /(\d+)\.(\d+)(\.(\d+))?(.*)/;
+
     const mat = version_re.exec(str);
+
     if (!mat) {
         throw new InvalidVersionString(localize('invalid.version.string', 'Invalid version string {0}', str));
     }
     const [, major, minor, , patch] = mat;
+
     return {
         major: parseInt(major ?? '0'),
         minor: parseInt(minor ?? '0'),
@@ -407,8 +436,11 @@ export function errorToString(e: any): string {
  */
 export function msToString(ms: number): string {
     const seconds = Math.floor(ms / 1000);
+
     const minutes = Math.floor(seconds / 60);
+
     const hours = Math.floor(minutes / 60);
+
     return `${pad(hours)}:${pad(minutes % 60)}:${pad(seconds % 60)}.${pad(ms % 1000, 3)}`;
 }
 
@@ -419,6 +451,7 @@ function pad(x: number, length?: number): string {
 export function* flatMap<In, Out>(rng: Iterable<In>, fn: (item: In) => Iterable<Out>): Iterable<Out> {
     for (const elem of rng) {
         const mapped = fn(elem);
+
         for (const other_elem of mapped) {
             yield other_elem;
         }
@@ -431,6 +464,7 @@ export function* flatMap<In, Out>(rng: Iterable<In>, fn: (item: In) => Iterable<
 export function first<In, Out>(array: Iterable<In>, fn: (item: In) => Out[]): Out[] {
     for (const item of array) {
         const result = fn(item);
+
         if (result?.length > 0) {
             return result;
         }
@@ -444,6 +478,7 @@ export function makeDebuggerEnvironmentVars(env?: Environment): DebuggerEnvironm
     }
     const filter: RegExp = /\$\{.+?\}|\n/; // Disallow env variables that have variable expansion values or newlines
     const converted_env: DebuggerEnvironmentVariable[] = [];
+
     for (const [key, value] of Object.entries(env)) {
         if (value !== undefined && !value.match(filter)) {
             converted_env.push({
@@ -457,6 +492,7 @@ export function makeDebuggerEnvironmentVars(env?: Environment): DebuggerEnvironm
 
 export function fromDebuggerEnvironmentVars(debug_env?: DebuggerEnvironmentVariable[]): Environment {
     const env = EnvironmentUtils.create();
+
     if (debug_env) {
         debug_env.forEach(envVar => {
             env[envVar.name] = envVar.value;
@@ -470,12 +506,14 @@ export function parseCompileDefinition(str: string): [string, string | null] {
         return [str, null];
     } else {
         const key = str.split('=', 1)[0];
+
         return [key, str.substr(key.length + 1)];
     }
 }
 
 export function thisExtension() {
     const extension = vscode.extensions.getExtension('ms-vscode.cmake-tools');
+
     if (!extension) {
         throw new Error(localize('extension.is.undefined', 'Extension is undefined!'));
     }
@@ -490,6 +528,7 @@ export interface PackageJSON {
 
 export function thisExtensionPackage(): PackageJSON {
     const pkg = thisExtension().packageJSON as PackageJSON;
+
     return {
         name: pkg.name,
         publisher: pkg.publisher,
@@ -499,11 +538,14 @@ export function thisExtensionPackage(): PackageJSON {
 
 export async function getExtensionLocalizedPackageJson(): Promise<{[key: string]: any}> {
     let localizedFilePath: string = path.join(thisExtensionPath(), `package.nls.${getLocaleId()}.json`);
+
     const fileExists: boolean = await checkFileExists(localizedFilePath);
+
     if (!fileExists) {
         localizedFilePath = path.join(thisExtensionPath(), "package.nls.json");
     }
     const localizedStrings = fs.readFileSync(localizedFilePath, "utf8");
+
     return JSON.parse(localizedStrings);
 }
 
@@ -524,23 +566,29 @@ function evaluateExpression(expression: string | null, context: contex.IContext)
 
     try {
         const constExpr = parser.parse(expression);
+
         return constExpr ? constExpr.evaluate(context) : false;
     } catch (e) {
         console.error("Invalid expression:", e);
+
         return false;
     }
 }
 
 export function thisExtensionActiveCommands(context: {[key: string]: any}): string [] {
     const pkg = thisExtension().packageJSON;
+
     const allCommands = pkg.contributes.menus.commandPalette as CommandPalette[];
+
     const contextObj = new Context(context);
+
     const activeCommands = allCommands.map((commandP) => {
         if (evaluateExpression(commandP.when, contextObj)) {
             return commandP.command;
         }
         return null;
     });
+
     return activeCommands.filter(x => x !== null) as string[];
 }
 
@@ -592,6 +640,7 @@ export function versionGreater(lhs: Version | string, rhs: Version | string): bo
 
 export function versionGreaterOrEquals(lhs: Version | string, rhs: Version | string): boolean {
     const ordering = compareVersions(lhs, rhs);
+
     return (Ordering.Greater === ordering) || (Ordering.Equivalent === ordering);
 }
 
@@ -605,12 +654,15 @@ export function versionLess(lhs: Version | string, rhs: Version | string): boole
 
 export function versionLessOrEquals(lhs: Version | string, rhs: Version | string): boolean {
     const ordering = compareVersions(lhs, rhs);
+
     return (Ordering.Less === ordering) || (Ordering.Equivalent === ordering);
 }
 
 export function compare(a: any, b: any): Ordering {
     const a_json = JSON.stringify(a);
+
     const b_json = JSON.stringify(b);
+
     if (a_json < b_json) {
         return Ordering.Less;
     } else if (a_json > b_json) {
@@ -645,10 +697,14 @@ export class DummyDisposable {
 
 export function lexicographicalCompare(a: Iterable<string>, b: Iterable<string>): number {
     const a_iter = a[Symbol.iterator]();
+
     const b_iter = b[Symbol.iterator]();
+
     while (1) {
         const a_res = a_iter.next();
+
         const b_res = b_iter.next();
+
         if (a_res.done) {
             if (b_res.done) {
                 return 0;  // Same elements
@@ -661,6 +717,7 @@ export function lexicographicalCompare(a: Iterable<string>, b: Iterable<string>)
             return 1;
         } else {
             const comp_res = a_res.value.localeCompare(b_res.value);
+
             if (comp_res !== 0) {
                 return comp_res;
             }
@@ -669,12 +726,14 @@ export function lexicographicalCompare(a: Iterable<string>, b: Iterable<string>)
     // Loop analysis can't help us. TS believes we run off the end of
     // the function.
     console.assert(false, 'Impossible code path');
+
     return 0;
 }
 
 export function getLocaleId(): string {
     if (typeof (process.env.VSCODE_NLS_CONFIG) === "string") {
         const vscodeNlsConfigJson: any = JSON.parse(process.env.VSCODE_NLS_CONFIG);
+
         if (typeof (vscodeNlsConfigJson.locale) === "string") {
             return vscodeNlsConfigJson.locale;
         }
@@ -786,8 +845,10 @@ export function makeHashString(str: string): string {
         str = normalizePath(str, {normCase: 'always'});
     }
     const crypto = require('crypto');
+
     const hash = crypto.createHash('sha256');
     hash.update(str);
+
     return hash.digest('hex');
 }
 
@@ -809,7 +870,9 @@ export function isWorkspaceFolder(x?: any): x is vscode.WorkspaceFolder {
 
 export async function normalizeAndVerifySourceDir(sourceDir: string, expansionOpts: ExpansionOptions): Promise<string> {
     sourceDir = await expandString(sourceDir, expansionOpts);
+
     let result = lightNormalizePath(sourceDir);
+
     if (process.platform === 'win32' && result.length > 1 && result.charCodeAt(0) > 97 && result.charCodeAt(0) <= 122 && result[1] === ':') {
         // Windows drive letter should be uppercase, for consistency with other tools like Visual Studio.
         result = result[0].toUpperCase() + result.slice(1);
@@ -837,14 +900,17 @@ export function isTestMode(): boolean {
 
 export async function getAllCMakeListsPaths(path: string): Promise<string[] | undefined> {
     const regex: RegExp = new RegExp(/(\/|\\)CMakeLists\.txt$/);
+
     return recGetAllFilePaths(path, regex, await readDir(path), []);
 }
 
 async function recGetAllFilePaths(dir: string, regex: RegExp, files: string[], result: string[]) {
     for (const item of files) {
         const file = path.join(dir, item);
+
         try {
             const status = await getLStat(file);
+
             if (status) {
                 if (status.isDirectory() && !status.isSymbolicLink()) {
                     result = await recGetAllFilePaths(file, regex, await readDir(file), result);
@@ -861,8 +927,11 @@ async function recGetAllFilePaths(dir: string, regex: RegExp, files: string[], r
 
 export function getRelativePath(file: string, dir: string): string {
     const fullPathDir: string = path.parse(file).dir;
+
     const relPathDir: string = lightNormalizePath(path.relative(dir, fullPathDir));
+
     const joinedPath = "${workspaceFolder}/".concat(relPathDir);
+
     return joinedPath;
 }
 
@@ -881,6 +950,7 @@ async function getHostSystemName(): Promise<string> {
         return "Windows";
     } else {
         const result = await execute('uname', ['-s']).result;
+
         if (result.retc === 0) {
             return result.stdout.trim();
         } else {
@@ -946,7 +1016,9 @@ export async function scheduleAsyncTask<T>(task: () => Promise<T>): Promise<T> {
 
 export function isFileInsideFolder(uri: vscode.Uri, folderPath: string): boolean {
     const parent = platformNormalizePath(folderPath);
+
     const file = platformNormalizePath(uri.fsPath);
+
     return file.startsWith(parent);
 }
 
@@ -960,13 +1032,16 @@ export function assertNever(value: never): never {
 
 export function getHostArchitecture() {
     const arch = os.arch();
+
     switch (arch) {
         case 'arm64':
         case 'arm':
             return arch;
+
         case 'x32':
         case 'ia32':
             return 'x86';
+
         default:
             return 'x64';
     }
@@ -979,6 +1054,7 @@ export function runCommand(key: keyof ExtensionManager, ...args: any[]) {
 
 export async function globForFileName(fileName: string, depth: number, cwd: string): Promise<boolean> {
     let starString = ".";
+
     for (let i = 0; i <= depth; i++) {
         if (await globWrapper(`${starString}/${fileName}`, cwd)) {
             return true;

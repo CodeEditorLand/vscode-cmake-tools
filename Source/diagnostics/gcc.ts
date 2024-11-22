@@ -39,31 +39,37 @@ export class Parser extends RawDiagnosticParser {
         // path/to/file:lineno:columnno:   required from here
         // path/to/file:lineno:columnno: severity: message
         let mat = /(.*): (In instantiation of.+)/.exec(line);
+
         if (mat) {
             const [, , message] = mat;
             this._pendingTemplateError = {
                 rootInstantiation: message,
                 requiredFrom: []
             };
+
             return FeedLineResult.Ok;
         }
         if (this._pendingTemplateError) {
             // Detect the second line of a pending C++ template error
             mat = /(.*):(\d+):(\d+):(  +required from.+)/.exec(line);
+
             if (mat) {
                 const [, file, linestr, column, message] = mat;
+
                 const lineNo = oneLess(linestr);
                 this._pendingTemplateError.requiredFrom.push({
                     file,
                     location: new vscode.Range(lineNo, parseInt(column), lineNo, 999),
                     message
                 });
+
                 return FeedLineResult.Ok;
             }
         }
 
         // Detect backtrace limit notes in GCC diagnostics and append them to the previous diagnostic if one exists
         mat = /note: \((.*backtrace-limit.*)\)/.exec(line);
+
         if (mat && this._prevDiag && this._prevDiag.related.length !== 0) {
             const prevRelated = this._prevDiag.related[0];
             this._prevDiag.related.push({
@@ -71,6 +77,7 @@ export class Parser extends RawDiagnosticParser {
                 location: prevRelated.location,
                 message: mat[1]
             });
+
             return FeedLineResult.Ok;
         }
 
@@ -78,10 +85,15 @@ export class Parser extends RawDiagnosticParser {
         let mat2 = null;
 
         let full = "";
+
         let file = "";
+
         let lineno = oneLess("1");
+
         let columnno = oneLess("1");
+
         let severity = 'error';
+
         let message = "";
 
         for (const [, regexPattern] of regexPatterns.entries()) {
@@ -93,22 +105,34 @@ export class Parser extends RawDiagnosticParser {
                     switch (regexPattern.matchTypes[i]) {
                         case MatchType.Full:
                             full = mat2[i];
+
                             break;
+
                         case MatchType.File:
                             file = mat2[i];
+
                             break;
+
                         case MatchType.Line:
                             lineno = oneLess(mat2[i]);
+
                             break;
+
                         case MatchType.Column:
                             columnno = oneLess(mat2[i]);
+
                             break;
+
                         case MatchType.Severity:
                             severity = mat2[i];
+
                             break;
+
                         case MatchType.Message:
                             message = mat2[i];
+
                             break;
+
                         default:
                             break;
                     }
@@ -128,10 +152,13 @@ export class Parser extends RawDiagnosticParser {
                     location: new vscode.Range(lineno, columnno, lineno, 999),
                     message
                 });
+
                 return FeedLineResult.Ok;
             } else {
                 const related: RawRelated[] = [];
+
                 const location = new vscode.Range(lineno, columnno, lineno, 999);
+
                 if (this._pendingTemplateError) {
                     // If the diagnostic is the third line of a pending C++ template error, finalize it here
                     related.push({

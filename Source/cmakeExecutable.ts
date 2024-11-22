@@ -5,6 +5,7 @@ import * as logging from '@cmt/logging';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('cmakeExecutable');
@@ -37,12 +38,15 @@ export async function getCMakeExecutableInformation(path: string): Promise<CMake
     // what causes 'path' to be undefined here.
     if (path && path.length !== 0) {
         const normalizedPath = util.platformNormalizePath(path);
+
         if (cmakeInfo.has(normalizedPath)) {
             const cmakeExe: CMakeExecutable = cmakeInfo.get(normalizedPath)!;
+
             if (cmakeExe.isPresent) {
                 await setCMakeDebuggerAvailableContext(
                     cmakeExe.isDebuggerSupported?.valueOf() ?? false
                 );
+
                 return cmakeExe;
             } else {
                 log.error(localize('cmake.exe.not.found.in.cache', 'CMake executable not found in cache. Checking again.'));
@@ -51,9 +55,12 @@ export async function getCMakeExecutableInformation(path: string): Promise<CMake
 
         try {
             const execOpt: proc.ExecutionOptions = { showOutputOnError: true };
+
             const execVersion = await proc.execute(path, ['--version'], null, execOpt).result;
+
             if (execVersion.retc === 0 && execVersion.stdout) {
                 console.assert(execVersion.stdout);
+
                 const regexVersion = /cmake.* version (.*?)\r?\n/;
                 cmake.version = util.parseVersion(regexVersion.exec(execVersion.stdout)![1]);
 
@@ -69,8 +76,10 @@ export async function getCMakeExecutableInformation(path: string): Promise<CMake
                 cmake.isDefaultGeneratorSupported = util.versionGreaterOrEquals(cmake.version, cmake.minimalDefaultGeneratorVersion);
             }
             const debuggerPresent = await proc.execute(path, ['-E', 'capabilities'], null, execOpt).result;
+
             if (debuggerPresent.retc === 0 && debuggerPresent.stdout) {
                 console.assert(debuggerPresent.stdout);
+
                 const stdoutJson = JSON.parse(debuggerPresent.stdout);
                 cmake.isDebuggerSupported = stdoutJson["debugger"];
                 await setCMakeDebuggerAvailableContext(

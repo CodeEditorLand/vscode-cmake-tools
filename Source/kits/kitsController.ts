@@ -26,6 +26,7 @@ import { chokidarOnAnyChange, ProgressHandle, reportProgress } from '@cmt/util';
 import { ConfigurationType } from 'vscode-cmake-tools';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('kitsController');
@@ -66,14 +67,18 @@ export class KitsController {
         }
 
         const expandedAdditionalKitFiles: string[] = await project.getExpandedAdditionalKitFiles();
+
         const folderKitsFiles: string[] = [KitsController._workspaceKitsPath(project.workspaceFolder)].concat(expandedAdditionalKitFiles);
+
         const kitsWatcher = chokidar.watch(folderKitsFiles, { ignoreInitial: true, followSymlinks: false });
+
         const kitsController = new KitsController(project, kitsWatcher);
         chokidarOnAnyChange(kitsWatcher, _ => rollbar.takePromise(localize('rereading.kits', 'Re-reading folder kits'), {},
             kitsController.readKits(KitsReadMode.folderKits)));
         project.workspaceContext.config.onChange('additionalKits', () => kitsController.readKits(KitsReadMode.folderKits));
 
         await kitsController.readKits(KitsReadMode.folderKits);
+
         return kitsController;
     }
 
@@ -86,6 +91,7 @@ export class KitsController {
 
     get availableKits() {
         console.assert(KitsController.length > 0, 'readKits should have been called at least once before.');
+
         if (this.project.workspaceContext.config.showSystemKits) {
             return KitsController.specialKits.concat(this.folderKits.concat(this.additionalKits.concat(KitsController.userKits)));
         } else {
@@ -151,10 +157,13 @@ export class KitsController {
         // If the current kit was selected from the set that is updated with this call to readKits,
         // load it again to ensure it is up to date.
         const current = this.project.activeKit;
+
         if (current) {
             const searchKits: Kit[] = (kitsReadMode === KitsReadMode.allAvailable) ? this.availableKits :
                 (kitsReadMode === KitsReadMode.userKits) ? KitsController.userKits : this.folderKits.concat(this.additionalKits);
+
             const already_active_kit = searchKits.find(kit => kit.name === current.name);
+
             if (already_active_kit) {
                 await this.setFolderActiveKit(already_active_kit);
             }
@@ -175,18 +184,24 @@ export class KitsController {
      */
     async setFolderActiveKit(k: Kit | null): Promise<string> {
         const inst = this.project;
+
         const raw_name = k ? k.name : SpecialKits.Unspecified;
+
         if (inst) {
             // Generate a message that we will show in the progress notification
             let message = '';
+
             switch (raw_name) {
                 case SpecialKits.Unspecified:
                     // Empty string/unspec is un-setting the kit:
                     message = localize('unsetting.kit', 'Unsetting kit');
+
                     break;
+
                 default:
                     // Everything else is just loading a kit:
                     message = localize('loading.kit', 'Loading kit {0}', raw_name);
+
                     break;
             }
             // Load the kit into the backend
@@ -203,6 +218,7 @@ export class KitsController {
 
     async checkHaveKits(): Promise<boolean> {
         const avail = this.availableKits;
+
         if (avail.length > SpecialKitsCount) {
             // We have kits. Okay.
             return true;
@@ -210,6 +226,7 @@ export class KitsController {
         if (!avail.find(kit => kit.name === SpecialKits.Unspecified)) {
             // We should _always_ have the 'UnspecifiedKit'.
             rollbar.error(localize('invalid.only.kit', 'Invalid only kit. Expected to find {0}', '"SpecialKits.Unspecified"'));
+
             return false;
         }
 
@@ -218,9 +235,11 @@ export class KitsController {
             KitsController.checkingHaveKits = true;
             await KitsController.scanForKits(await this.project.getCMakePathofProject());
             KitsController.checkingHaveKits = false;
+
             return true;
         } else {
             rollbar.error(localize('already.checking.kits', 'Already checking kits. Please try again later.'));
+
             return false;
         }
     }
@@ -233,6 +252,7 @@ export class KitsController {
     async selectKit(): Promise<boolean> {
         // Check that we have kits
         const state = await this.checkHaveKits();
+
         if (!state) {
             return false;
         }
@@ -249,12 +269,15 @@ export class KitsController {
             switch (kit.name) {
                 case SpecialKits.ScanForKits as string:
                     return `[${localize('scan.for.kits.button', 'Scan for kits')}]`;
+
                 case SpecialKits.Unspecified as string:
                     return `[${localize('unspecified.kit.name', 'Unspecified')}]`;
+
                 default:
                     return kit.name;
             }
         };
+
         const item_promises = avail.map(
             async (kit): Promise<KitItem> => ({
                 label: getKitName(kit),
@@ -262,12 +285,15 @@ export class KitsController {
                 kit
             })
         );
+
         const items = await Promise.all(item_promises);
+
         const chosen_kit = await vscode.window.showQuickPick(items,
             { placeHolder: localize('select.a.kit.placeholder', 'Select a Kit for {0}', this.project.folderName) },
             this._pickKitCancellationTokenSource.token);
         this._pickKitCancellationTokenSource.dispose();
         this._pickKitCancellationTokenSource = new vscode.CancellationTokenSource();
+
         if (chosen_kit === undefined) {
             log.debug(localize('user.cancelled.kit.selection', 'User cancelled Kit selection'));
             // No selection was made
@@ -275,10 +301,13 @@ export class KitsController {
         } else {
             if (chosen_kit.kit.name === SpecialKits.ScanForKits) {
                 await KitsController.scanForKits(await this.project.getCMakePathofProject());
+
                 return false;
             } else {
                 log.debug(localize('user.selected.kit', 'User selected kit {0}', JSON.stringify(chosen_kit)));
+
                 const kitChanged = chosen_kit.kit !== this.project.activeKit;
+
                 if (kitChanged) {
                     await this.setFolderActiveKit(chosen_kit.kit);
                     this.project.notifyOnSelectedConfigurationChanged(ConfigurationType.Kit);
@@ -339,6 +368,7 @@ export class KitsController {
                 exists: boolean;
             }
             const missing_paths_prs: Promise<FileInfo>[] = [];
+
             for (const lang in kit.compilers) {
                 const comp_path = kit.compilers[lang];
                 // Get a promise that resolve to whether the given path/name exists
@@ -352,6 +382,7 @@ export class KitsController {
             }
             const pr = Promise.all(missing_paths_prs).then(async infos => {
                 const missing = infos.find(i => !i.exists);
+
                 if (!missing) {
                     return;
                 }
@@ -373,12 +404,14 @@ export class KitsController {
                         title: localize('keep.it.button', 'Keep it')
                     }
                 );
+
                 if (chosen === undefined) {
                     return;
                 }
                 switch (chosen.action) {
                     case 'keep':
                         return KitsController._keepKit(cmakePath, kit);
+
                     case 'remove':
                         return KitsController._removeKit(cmakePath, kit);
                 }
@@ -401,6 +434,7 @@ export class KitsController {
             }
         });
         KitsController.userKits = new_kits;
+
         return KitsController._writeUserKitsFile(cmakePath, new_kits);
     }
 
@@ -411,6 +445,7 @@ export class KitsController {
     private static async _removeKit(cmakePath: string, kit: Kit) {
         const new_kits = KitsController.userKits.filter(k => k.name !== kit.name);
         KitsController.userKits = new_kits;
+
         return KitsController._writeUserKitsFile(cmakePath, new_kits);
     }
 
@@ -464,12 +499,14 @@ export class KitsController {
                     switch (choice.do) {
                         case 'retry':
                             return KitsController.scanForKits(cmakePath);
+
                         case 'cancel':
                             return false;
                     }
                 });
             // Don't block on writing re-trying the write
             rollbar.takePromise('retry-kit-save-fail', {}, pr);
+
             return false;
         }
     }
@@ -514,9 +551,12 @@ export class KitsController {
         });
 
         let duplicateRemoved: boolean = false;
+
         if (old_definition_vs_kits.length > 1) {
             log.info(localize('found.duplicate.kits', 'Found Visual Studio kits with the old ids saved in the cmake-tools-kits.json.'));
+
             const yesButtonTitle: string = localize('yes.button', 'Yes');
+
             const chosen = await vscode.window.showInformationMessage<vscode.MessageItem>(
                 localize('delete.duplicate.kits', 'Would you like to delete the duplicate Visual Studio kits from cmake-tools-kits.json?'),
                 {
@@ -581,16 +621,21 @@ export class KitsController {
         }
         if (newCompilers) {
             const newLangs = Object.keys(newCompilers);
+
             const existingLangs = Object.keys(existingCompilers);
+
             if (newLangs.length > existingLangs.length) {
                 return true;
             }
             const path = process.env["PATH"]?.split(process.platform === 'win32' ? ';' : ':');
+
             if (path && newLangs.length === existingLangs.length) {
                 // Prioritize compiler paths listed higher in the PATH environment variable.
                 for (const p of path) {
                     const newScore = newLangs.reduce((acc, lang) => newCompilers[lang]?.startsWith(p) ? 1 + acc : acc, 0);
+
                     const existingScore = existingLangs.reduce((acc, lang) => existingCompilers[lang]?.startsWith(p) ? 1 + acc : acc, 0);
+
                     if (newScore > existingScore) {
                         return true;
                     } else if (existingScore > newScore) {

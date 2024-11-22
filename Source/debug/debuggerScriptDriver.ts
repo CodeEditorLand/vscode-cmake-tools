@@ -12,9 +12,11 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const cmakeLogger = logging.createLogger("cmake");
+
 const scriptLogger = logging.createLogger("cmake-script");
 
 export async function executeScriptWithDebugger(
@@ -31,15 +33,19 @@ export async function executeScriptWithDebugger(
 	// This is dependent on there being an active project. This feels reasonable since we're expecting them to be in a CMake project.
 	// However, it could be safer to simply grab the cmake path directly from the settings.
 	const cmakeProject = extensionManager?.getActiveProject();
+
 	const cmakePath = await cmakeProject?.getCMakePathofProject();
+
 	if (cmakeProject && cmakePath) {
 		const cmakeExe = await getCMakeExecutableInformation(cmakePath);
+
 		if (cmakeExe.isDebuggerSupported) {
 			const concreteArgs = ["-P", scriptPath];
 			concreteArgs.push(...scriptArgs);
 			concreteArgs.push("--debugger");
 			concreteArgs.push("--debugger-pipe");
 			concreteArgs.push(`${debuggerInformation.pipeName}`);
+
 			if (debuggerInformation.dapLog) {
 				concreteArgs.push("--debugger-dap-log");
 				concreteArgs.push(debuggerInformation.dapLog);
@@ -57,6 +63,7 @@ export async function executeScriptWithDebugger(
 				process.env,
 				EnvironmentUtils.create(scriptEnv),
 			]);
+
 			const child = proc.execute(
 				cmakeExe.path,
 				concreteArgs,
@@ -77,6 +84,7 @@ export async function executeScriptWithDebugger(
 			}
 
 			const result = await child.result;
+
 			if (result.retc === 0) {
 				cmakeLogger.info(
 					localize(
@@ -93,6 +101,7 @@ export async function executeScriptWithDebugger(
 						scriptPath,
 					),
 				);
+
 				throw new Error("HEY");
 			}
 		} else {

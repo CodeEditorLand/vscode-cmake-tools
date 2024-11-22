@@ -29,6 +29,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger("preset");
@@ -86,6 +87,7 @@ export interface ErrorOptions {
 
 export interface DebugOptions {
 	output?: boolean;
+
 	tryCompile?: boolean;
 	find?: boolean;
 }
@@ -103,6 +105,7 @@ enum FormatMode {
 
 export interface TraceOptions {
 	mode?: string;
+
 	format?: string;
 	source?: string[];
 	redirect: string;
@@ -155,6 +158,7 @@ function validateConditionProperty(
 	propertyName: keyof Condition,
 ) {
 	const property: any = condition[propertyName];
+
 	if (property === undefined || property === null) {
 		throw new MissingConditionPropertyError(propertyName);
 	}
@@ -166,39 +170,57 @@ export function evaluateCondition(condition: Condition): boolean {
 	switch (condition.type) {
 		case "const":
 			validateConditionProperty(condition, "value");
+
 			return condition.value!;
+
 		case "equals":
 		case "notEquals":
 			validateConditionProperty(condition, "lhs");
 			validateConditionProperty(condition, "rhs");
+
 			const equals = condition.lhs === condition.rhs;
+
 			return condition.type === "equals" ? equals : !equals;
+
 		case "inList":
 		case "notInList":
 			validateConditionProperty(condition, "string");
 			validateConditionProperty(condition, "list");
+
 			const inList = condition.list!.includes(condition.string!);
+
 			return condition.type === "inList" ? inList : !inList;
+
 		case "matches":
 		case "notMatches":
 			validateConditionProperty(condition, "string");
 			validateConditionProperty(condition, "regex");
+
 			const regex = new RegExp(condition.regex!);
+
 			const matches = regex.test(condition.string!);
+
 			return condition.type === "matches" ? matches : !matches;
+
 		case "allOf":
 			validateConditionProperty(condition, "conditions");
+
 			return condition
 				.conditions!.map((c) => evaluateCondition(c))
 				.reduce((prev, current) => prev && current);
+
 		case "anyOf":
 			validateConditionProperty(condition, "conditions");
+
 			return condition
 				.conditions!.map((c) => evaluateCondition(c))
 				.reduce((prev, current) => prev || current);
+
 		case "not":
 			validateConditionProperty(condition, "condition");
+
 			return !evaluateCondition(condition.condition!);
+
 		default:
 			throw new InvalidConditionTypeError(condition.type);
 	}
@@ -222,6 +244,7 @@ function evaluateInheritedPresetConditions(
 					parentName,
 				),
 			);
+
 			return false;
 		}
 		if (parent && !references.has(parent.name)) {
@@ -236,6 +259,7 @@ function evaluateInheritedPresetConditions(
 	};
 
 	references.add(preset.name);
+
 	if (preset.inherits) {
 		// When looking up inherited presets, default to false if the preset does not exist since this wouldn't
 		// be a valid preset to use.
@@ -254,6 +278,7 @@ function evaluateInheritedPresetConditions(
 				`\"inherits\": "${preset.inherits}"`,
 			),
 		);
+
 		return false;
 	}
 	return true;
@@ -319,6 +344,7 @@ export function evaluatePresetCondition(
 			preset.name,
 		),
 	);
+
 	return undefined;
 }
 
@@ -467,6 +493,7 @@ export interface PackageOutputOptions {
 export interface PackagePreset extends InheritsConfigurePreset {
 	configurations?: string[];
 	generators?: string[];
+
 	variables?: { [key: string]: string | null | undefined };
 	configFile?: string;
 	output?: PackageOutputOptions;
@@ -553,11 +580,16 @@ export const defaultWorkflowPreset: WorkflowPreset = {
 
 // Map<fsPath, PresetsFile | undefined>
 const originalPresetsFiles: Map<string, PresetsFile | undefined> = new Map();
+
 const originalUserPresetsFiles: Map<string, PresetsFile | undefined> =
 	new Map();
+
 const presetsPlusIncluded: Map<string, PresetsFile | undefined> = new Map();
+
 const userPresetsPlusIncluded: Map<string, PresetsFile | undefined> = new Map();
+
 const expandedPresets: Map<string, PresetsFile | undefined> = new Map();
+
 const expandedUserPresets: Map<string, PresetsFile | undefined> = new Map();
 
 export function getOriginalPresetsFile(folder: string) {
@@ -668,7 +700,9 @@ export function updateCachedExpandedPreset(
 		| "workflowPresets",
 ) {
 	const clonedPreset = lodash.cloneDeep(preset);
+
 	const expanded = expandedPresets.get(folder);
+
 	const userExpanded = expandedUserPresets.get(folder);
 	updateCachedExpandedPresethelper(expanded, clonedPreset, presetType);
 	updateCachedExpandedPresethelper(userExpanded, clonedPreset, presetType);
@@ -699,6 +733,7 @@ function updateCachedExpandedPresethelper(
 
 	// Exit early if the cache doesn't contain the preset.
 	const index = cache[presetType]!.findIndex((p) => p.name === preset.name);
+
 	if (index === -1) {
 		return;
 	}
@@ -749,7 +784,9 @@ export function setExpandedUserPresetsFile(
 
 export function minCMakeVersion(folder: string) {
 	const min1 = presetsPlusIncluded.get(folder)?.cmakeMinimumRequired;
+
 	const min2 = presetsPlusIncluded.get(folder)?.cmakeMinimumRequired;
+
 	if (!min1) {
 		return min2;
 	}
@@ -977,6 +1014,7 @@ export function inheritsFromUserPreset(
 	const originalUserPresetsFile: PresetsFile = getOriginalUserPresetsFile(
 		folderPath,
 	) || { version: 8 };
+
 	const presetInherits = (
 		presets: Preset[] | undefined,
 		inherits: string | string[] | undefined,
@@ -1019,6 +1057,7 @@ export function inheritsFromUserPreset(
 function merge<T extends Object>(target: T, base: T) {
 	Object.keys(base).forEach((key) => {
 		const field = key as keyof T;
+
 		if (!target.hasOwnProperty(field)) {
 			target[field] = base[field] as never;
 		}
@@ -1041,6 +1080,7 @@ async function getVendorForConfigurePreset(
 	errorHandler?: ExpansionErrorHandler,
 ): Promise<VendorType | VendorVsSettings | null> {
 	const refs = referencedConfigurePresets.get(folder);
+
 	if (!refs) {
 		referencedConfigurePresets.set(folder, new Set());
 	} else {
@@ -1070,6 +1110,7 @@ async function getVendorForConfigurePresetImpl(
 		configurePresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		return getVendorForConfigurePresetHelper(
 			folder,
@@ -1087,6 +1128,7 @@ async function getVendorForConfigurePresetImpl(
 			userConfigurePresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getVendorForConfigurePresetHelper(
 				folder,
@@ -1134,6 +1176,7 @@ async function getVendorForConfigurePresetHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -1154,6 +1197,7 @@ async function getVendorForConfigurePresetHelper(
 				usePresetsPlusIncluded,
 				allowUserPreset,
 			);
+
 			if (parentVendor) {
 				for (const key in parentVendor) {
 					if (preset.vendor[key] === undefined) {
@@ -1232,6 +1276,7 @@ async function expandCondition(
 	}
 	if (condition.type) {
 		const result: Condition = { type: condition.type };
+
 		if (condition.lhs) {
 			result.lhs = await expandString(
 				condition.lhs,
@@ -1255,6 +1300,7 @@ async function expandCondition(
 		}
 		if (condition.list) {
 			result.list = [];
+
 			for (const value of condition.list) {
 				result.list.push(
 					await expandString(value, expansionOpts, errorHandler),
@@ -1266,20 +1312,24 @@ async function expandCondition(
 				condition.condition,
 				expansionOpts,
 			);
+
 			if (!util.isBoolean(expanded)) {
 				result.condition = expanded;
 			}
 		}
 		if (condition.conditions) {
 			result.conditions = [];
+
 			for (const value of condition.conditions) {
 				const expanded = await expandCondition(value, expansionOpts);
+
 				if (expanded && !util.isBoolean(expanded)) {
 					result.conditions.push(expanded);
 				}
 			}
 		}
 		merge(result, condition); // Copy the remaining fields;
+
 		return result;
 	}
 	return undefined;
@@ -1300,11 +1350,13 @@ export function getArchitecture(preset: ConfigurePreset) {
 			fallbackArchitecture,
 		),
 	);
+
 	return fallbackArchitecture;
 }
 
 export function getToolset(preset: ConfigurePreset): Toolset {
 	let result: Toolset | undefined;
+
 	if (util.isString(preset.toolset)) {
 		result = parseToolset(preset.toolset);
 	} else if (preset.toolset && util.isString(preset.toolset.value)) {
@@ -1312,12 +1364,14 @@ export function getToolset(preset: ConfigurePreset): Toolset {
 	}
 
 	const fallbackArchitecture = util.getHostArchitecture();
+
 	const noToolsetArchWarning = localize(
 		"no.cl.toolset.arch",
 		"Configure preset {0}: No toolset architecture specified for cl.exe, using {1} by default",
 		preset.name,
 		`"host=${fallbackArchitecture}"`,
 	);
+
 	if (result) {
 		if (result.name === "x86" || result.name === "x64") {
 			log.warning(
@@ -1360,6 +1414,7 @@ const toolsetToVersion: { [key: string]: string } = {
 	// don't include the latest version - the compiler version changes frequently and it will be picked by default anyway.
 	// NOTE: the latest toolset name (below) should be kept up to date.
 };
+
 const latestToolsetName = "v143";
 
 // We don't support all of these options for Kit lookup right now, but might in the future.
@@ -1367,9 +1422,11 @@ function parseToolset(toolset: string): Toolset {
 	const toolsetOptions = toolset.split(",");
 
 	const result: Toolset = {};
+
 	for (const option of toolsetOptions) {
 		if (option.indexOf("=") < 0) {
 			const version = toolsetToVersion[option];
+
 			if (version) {
 				result.version = version;
 			} else {
@@ -1377,19 +1434,28 @@ function parseToolset(toolset: string): Toolset {
 			}
 		} else {
 			const keyValue = option.split("=");
+
 			switch (keyValue[0].toLowerCase()) {
 				case "cuda":
 					result.cuda = keyValue[1];
+
 					break;
+
 				case "host":
 					result.host = keyValue[1];
+
 					break;
+
 				case "version":
 					result.version = keyValue[1];
+
 					break;
+
 				case "vctargetspath":
 					result.VCTargetsPath = keyValue[1];
+
 					break;
+
 				default:
 					log.warning(
 						localize(
@@ -1398,6 +1464,7 @@ function parseToolset(toolset: string): Toolset {
 							option,
 						),
 					);
+
 					break;
 			}
 		}
@@ -1419,6 +1486,7 @@ async function getVsDevEnv(
 	opts: VsDevEnvOptions,
 ): Promise<EnvironmentWithNull | undefined> {
 	const arch = getArchitecture(opts.preset);
+
 	const toolset = getToolset(opts.preset);
 
 	// Get version info for all VS instances.
@@ -1435,16 +1503,21 @@ async function getVsDevEnv(
 	// vscode from the dev prompt of their desired instance.
 	// https://cmake.org/cmake/help/latest/variable/CMAKE_GENERATOR_INSTANCE.html
 	let vsGeneratorVersion: number | undefined;
+
 	const matches = opts.preset.generator?.match(
 		/Visual Studio (?<version>\d+)/,
 	);
+
 	if (opts.preset.cacheVariables && matches && matches.groups?.version) {
 		vsGeneratorVersion = parseInt(matches.groups.version);
+
 		const useCMakeGeneratorInstance =
 			!isNaN(vsGeneratorVersion) && vsGeneratorVersion >= 15;
+
 		const cmakeGeneratorInstance = getStringValueFromCacheVar(
 			opts.preset.cacheVariables["CMAKE_GENERATOR_INSTANCE"],
 		);
+
 		if (useCMakeGeneratorInstance && cmakeGeneratorInstance) {
 			const cmakeGeneratorInstanceNormalized = path.normalize(
 				cmakeGeneratorInstance,
@@ -1502,6 +1575,7 @@ async function getVsDevEnv(
 						)
 					) {
 						vsInstall = vs;
+
 						break;
 					}
 				} else if (
@@ -1512,6 +1586,7 @@ async function getVsDevEnv(
 				) {
 					// If no toolset version specified then choose the latest VS instance for the given generator
 					vsInstall = vs;
+
 					break;
 				}
 			}
@@ -1555,16 +1630,19 @@ async function getVsDevEnv(
 				`"${vsInstall.installationPath}"`,
 			),
 		);
+
 		const vsEnv = await varsForVSInstallation(
 			vsInstall,
 			toolset.host!,
 			arch,
 			toolset.version,
 		);
+
 		const compilerEnv = vsEnv ?? EnvironmentUtils.create();
 
 		if (opts.shouldInterrogateForNinja) {
 			const vsCMakePaths = await paths.vsCMakePaths(vsInstall.instanceId);
+
 			if (vsCMakePaths.ninja) {
 				log.warning(
 					localize(
@@ -1597,8 +1675,10 @@ export async function tryApplyVsDevEnv(
 	const useVsDeveloperEnvironmentMode = vscode.workspace
 		.getConfiguration("cmake", vscode.Uri.file(workspaceFolder))
 		.get("useVsDeveloperEnvironment") as UseVsDeveloperEnvironment;
+
 	if (useVsDeveloperEnvironmentMode === "never") {
 		preset.__parentEnvironment = process.env;
+
 		return;
 	}
 
@@ -1610,6 +1690,7 @@ export async function tryApplyVsDevEnv(
 				const cxxCompiler = getStringValueFromCacheVar(
 					preset.cacheVariables["CMAKE_CXX_COMPILER"],
 				)?.toLowerCase();
+
 				const cCompiler = getStringValueFromCacheVar(
 					preset.cacheVariables["CMAKE_C_COMPILER"],
 				)?.toLowerCase();
@@ -1637,6 +1718,7 @@ export async function tryApplyVsDevEnv(
 
 				if (whereOutput.stdout) {
 					const locations = whereOutput.stdout.split("\r\n");
+
 					if (locations.length > 0) {
 						whereExecutable = locations[0];
 					}
@@ -1649,6 +1731,7 @@ export async function tryApplyVsDevEnv(
 						process.env,
 						preset.environment,
 					]);
+
 					const expansionOpts: ExpansionOptions =
 						await getExpansionOptions(
 							workspaceFolder,
@@ -1658,6 +1741,7 @@ export async function tryApplyVsDevEnv(
 						);
 
 					const presetEnv = lodash.cloneDeep(preset.environment);
+
 					if (presetEnv) {
 						for (const key in presetEnv) {
 							if (presetEnv[key]) {
@@ -1697,6 +1781,7 @@ export async function tryApplyVsDevEnv(
 					const generatorIsNinja = preset.generator
 						?.toLowerCase()
 						.includes("ninja");
+
 					const shouldInterrogateForNinja =
 						(generatorIsNinja ?? false) && !ninjaLoc.stdout;
 
@@ -1742,6 +1827,7 @@ export async function getConfigurePresetInherits(
 ): Promise<ConfigurePreset | null> {
 	// TODO: We likely need to refactor to include these refs, for configure, build, test, etc Presets.
 	const refs = referencedConfigurePresets.get(folder);
+
 	if (!refs) {
 		referencedConfigurePresets.set(folder, new Set());
 	} else {
@@ -1772,13 +1858,16 @@ async function getConfigurePresetInheritsImpl(
 		configurePresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		const presetList = inheritedByPreset
 			? inheritedByPreset.__file!.configurePresets
 			: configurePresets(folder, usePresetsPlusIncluded);
+
 		const validInherit =
 			presetList !== undefined &&
 			presetList.filter((p) => p.name === name).length > 0;
+
 		if (validInherit) {
 			return getConfigurePresetInheritsHelper(
 				folder,
@@ -1795,6 +1884,7 @@ async function getConfigurePresetInheritsImpl(
 			userConfigurePresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getConfigurePresetInheritsHelper(
 				folder,
@@ -1817,6 +1907,7 @@ async function getConfigurePresetInheritsImpl(
 		localize("config.preset.not.found", "Could not find configure preset"),
 		name,
 	]);
+
 	return null;
 }
 
@@ -1851,6 +1942,7 @@ async function getConfigurePresetInheritsHelper(
 					),
 					preset.name,
 				]);
+
 				return null;
 			}
 			if (preset.installDir) {
@@ -1869,6 +1961,7 @@ async function getConfigurePresetInheritsHelper(
 					),
 					preset.name,
 				]);
+
 				return null;
 			}
 		}
@@ -1892,6 +1985,7 @@ async function getConfigurePresetInheritsHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -1907,6 +2001,7 @@ async function getConfigurePresetInheritsHelper(
 
 	// Expand inherits
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
+
 	if (preset.inherits) {
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
@@ -1920,6 +2015,7 @@ async function getConfigurePresetInheritsHelper(
 				errorHandler,
 				preset,
 			);
+
 			if (parent) {
 				// Inherit environment
 				inheritedEnv = EnvironmentUtils.mergePreserveNull([
@@ -1935,6 +2031,7 @@ async function getConfigurePresetInheritsHelper(
 				}
 				// Inherit other fields
 				let key: keyof ConfigurePreset;
+
 				for (key in parent) {
 					if (isInheritable(key) && preset[key] === undefined) {
 						// 'as never' to bypass type check
@@ -1951,6 +2048,7 @@ async function getConfigurePresetInheritsHelper(
 	]);
 
 	preset.__expanded = true;
+
 	return preset;
 }
 
@@ -1976,6 +2074,7 @@ export async function expandConfigurePresetVariables(
 	// Expand strings under the context of current preset, also, pass preset.__parentEnvironment as a penvOverride so we include devenv if present.
 	// `preset.__parentEnvironment` is allowed to be undefined here because in expansion, it will default to process.env.
 	const expandedPreset: ConfigurePreset = { name };
+
 	const expansionOpts: ExpansionOptions = await getExpansionOptions(
 		workspaceFolder,
 		sourceDir,
@@ -1987,6 +2086,7 @@ export async function expandConfigurePresetVariables(
 	// Expand environment vars first since other fields may refer to them
 	if (preset.environment) {
 		expandedPreset.environment = EnvironmentUtils.createPreserveNull();
+
 		for (const key in preset.environment) {
 			if (preset.environment[key]) {
 				expandedPreset.environment[key] = await expandString(
@@ -2032,6 +2132,7 @@ export async function expandConfigurePresetVariables(
 				errorHandler,
 			),
 		);
+
 		if (!path.isAbsolute(expandedPreset.binaryDir)) {
 			expandedPreset.binaryDir = util.resolvePath(
 				expandedPreset.binaryDir,
@@ -2069,8 +2170,10 @@ export async function expandConfigurePresetVariables(
 
 	if (preset.cacheVariables) {
 		expandedPreset.cacheVariables = {};
+
 		for (const cacheVarName in preset.cacheVariables) {
 			const cacheVar = preset.cacheVariables[cacheVarName];
+
 			if (typeof cacheVar === "boolean") {
 				expandedPreset.cacheVariables[cacheVarName] = cacheVar;
 			} else if (cacheVar || cacheVar === "") {
@@ -2180,6 +2283,7 @@ function getConfigurePresetForPreset(
 ): string | null {
 	if (presetType === "build") {
 		const refs = referencedBuildPresets.get(folder);
+
 		if (!refs) {
 			referencedBuildPresets.set(folder, new Set());
 		} else {
@@ -2187,6 +2291,7 @@ function getConfigurePresetForPreset(
 		}
 	} else if (presetType === "test") {
 		const refs = referencedTestPresets.get(folder);
+
 		if (!refs) {
 			referencedTestPresets.set(folder, new Set());
 		} else {
@@ -2194,6 +2299,7 @@ function getConfigurePresetForPreset(
 		}
 	} else if (presetType === "package") {
 		const refs = referencedPackagePresets.get(folder);
+
 		if (!refs) {
 			referencedPackagePresets.set(folder, new Set());
 		} else {
@@ -2201,6 +2307,7 @@ function getConfigurePresetForPreset(
 		}
 	} else if (presetType === "workflow") {
 		const refs = referencedWorkflowPresets.get(folder);
+
 		if (!refs) {
 			referencedWorkflowPresets.set(folder, new Set());
 		} else {
@@ -2228,6 +2335,7 @@ function getConfigurePresetForPresetImpl(
 		| PackagePreset
 		| WorkflowPreset
 		| null = null;
+
 	if (presetType === "build") {
 		preset = getPresetByName(buildPresets(folder), name);
 	} else if (presetType === "test") {
@@ -2277,6 +2385,7 @@ function getConfigurePresetForPresetHelper(
 
 	if (presetType === "build") {
 		const refs = referencedBuildPresets.get(folder)!;
+
 		if (refs.has(preset.name)) {
 			// Referenced this preset before, but it doesn't have a configure preset. This is a circular inheritance.
 			log.error(
@@ -2286,12 +2395,14 @@ function getConfigurePresetForPresetHelper(
 					preset.name,
 				),
 			);
+
 			return null;
 		}
 
 		refs.add(preset.name);
 	} else if (presetType === "test") {
 		const refs = referencedTestPresets.get(folder)!;
+
 		if (refs.has(preset.name)) {
 			log.error(
 				localize(
@@ -2300,12 +2411,14 @@ function getConfigurePresetForPresetHelper(
 					preset.name,
 				),
 			);
+
 			return null;
 		}
 
 		refs.add(preset.name);
 	} else if (presetType === "package") {
 		const refs = referencedPackagePresets.get(folder)!;
+
 		if (refs.has(preset.name)) {
 			log.error(
 				localize(
@@ -2314,12 +2427,14 @@ function getConfigurePresetForPresetHelper(
 					preset.name,
 				),
 			);
+
 			return null;
 		}
 
 		refs.add(preset.name);
 	} else if (presetType === "workflow") {
 		const refs = referencedWorkflowPresets.get(folder)!;
+
 		if (refs.has(preset.name)) {
 			log.error(
 				localize(
@@ -2328,6 +2443,7 @@ function getConfigurePresetForPresetHelper(
 					preset.name,
 				),
 			);
+
 			return null;
 		}
 
@@ -2345,8 +2461,10 @@ function getConfigurePresetForPresetHelper(
 				presetType,
 				allowUserPreset,
 			);
+
 			if (parentConfigurePreset) {
 				preset.configurePreset = parentConfigurePreset;
+
 				return parentConfigurePreset;
 			}
 		}
@@ -2369,6 +2487,7 @@ export async function getBuildPresetInherits(
 	inheritedByPreset?: BuildPreset,
 ): Promise<BuildPreset | null> {
 	const refs = referencedBuildPresets.get(folder);
+
 	if (!refs) {
 		referencedBuildPresets.set(folder, new Set());
 	} else {
@@ -2410,13 +2529,16 @@ async function getBuildPresetInheritsImpl(
 		buildPresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		const presetList = inheritedByPreset
 			? inheritedByPreset.__file!.buildPresets
 			: buildPresets(folder, usePresetsPlusIncluded);
+
 		const validInherit =
 			presetList !== undefined &&
 			presetList.filter((p) => p.name === name).length > 0;
+
 		if (validInherit) {
 			return getBuildPresetInheritsHelper(
 				folder,
@@ -2437,6 +2559,7 @@ async function getBuildPresetInheritsImpl(
 			userBuildPresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getBuildPresetInheritsHelper(
 				folder,
@@ -2461,6 +2584,7 @@ async function getBuildPresetInheritsImpl(
 			jobs: parallelJobs || defaultNumJobs(),
 			configurePreset,
 		};
+
 		return getBuildPresetInheritsHelper(
 			folder,
 			preset,
@@ -2485,6 +2609,7 @@ async function getBuildPresetInheritsImpl(
 		localize("build.preset.not.found", "Could not find build preset"),
 		name,
 	]);
+
 	return null;
 }
 
@@ -2523,6 +2648,7 @@ async function getBuildPresetInheritsHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -2533,6 +2659,7 @@ async function getBuildPresetInheritsHelper(
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
+
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
 
 	// Expand inherits
@@ -2554,6 +2681,7 @@ async function getBuildPresetInheritsHelper(
 				errorHandler,
 				preset,
 			);
+
 			if (parent) {
 				// Inherit environment
 				inheritedEnv = EnvironmentUtils.mergePreserveNull([
@@ -2566,6 +2694,7 @@ async function getBuildPresetInheritsHelper(
 				]);
 				// Inherit other fields
 				let key: keyof BuildPreset;
+
 				for (key in parent) {
 					if (isInheritable(key) && preset[key] === undefined) {
 						// 'as never' to bypass type check
@@ -2582,6 +2711,7 @@ async function getBuildPresetInheritsHelper(
 			configurePresets(folder),
 			preset.configurePreset,
 		);
+
 		if (!expandedConfigurePreset && allowUserPreset) {
 			expandedConfigurePreset = getPresetByName(
 				userConfigurePresets(folder),
@@ -2604,6 +2734,7 @@ async function getBuildPresetInheritsHelper(
 				),
 				preset.configurePreset,
 			]);
+
 			return null;
 		}
 
@@ -2635,6 +2766,7 @@ async function getBuildPresetInheritsHelper(
 	]);
 
 	preset.__expanded = true;
+
 	return preset;
 }
 
@@ -2652,6 +2784,7 @@ export async function expandBuildPresetVariables(
 
 	// Expand strings under the context of current preset
 	const expandedPreset: BuildPreset = { name };
+
 	const expansionOpts: ExpansionOptions = await getExpansionOptions(
 		workspaceFolder,
 		sourceDir,
@@ -2663,6 +2796,7 @@ export async function expandBuildPresetVariables(
 	// Expand environment vars first since other fields may refer to them
 	if (preset.environment) {
 		expandedPreset.environment = EnvironmentUtils.createPreserveNull();
+
 		for (const key in preset.environment) {
 			if (preset.environment[key]) {
 				expandedPreset.environment[key] = await expandString(
@@ -2689,6 +2823,7 @@ export async function expandBuildPresetVariables(
 			);
 		} else {
 			expandedPreset.targets = [];
+
 			for (let index = 0; index < preset.targets.length; index++) {
 				expandedPreset.targets[index] = await expandString(
 					preset.targets[index],
@@ -2700,6 +2835,7 @@ export async function expandBuildPresetVariables(
 	}
 	if (preset.nativeToolOptions) {
 		expandedPreset.nativeToolOptions = [];
+
 		for (let index = 0; index < preset.nativeToolOptions.length; index++) {
 			expandedPreset.nativeToolOptions[index] = await expandString(
 				preset.nativeToolOptions[index],
@@ -2741,6 +2877,7 @@ export async function getTestPresetInherits(
 	inheritedByPreset?: TestPreset,
 ): Promise<TestPreset | null> {
 	const refs = referencedTestPresets.get(folder);
+
 	if (!refs) {
 		referencedTestPresets.set(folder, new Set());
 	} else {
@@ -2780,13 +2917,16 @@ async function getTestPresetInheritsImpl(
 		testPresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		const presetList = inheritedByPreset
 			? inheritedByPreset.__file!.testPresets
 			: testPresets(folder, usePresetsPlusIncluded);
+
 		const validInherit =
 			presetList !== undefined &&
 			presetList.filter((p) => p.name === name).length > 0;
+
 		if (validInherit) {
 			return getTestPresetInheritsHelper(
 				folder,
@@ -2806,6 +2946,7 @@ async function getTestPresetInheritsImpl(
 			userTestPresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getTestPresetInheritsHelper(
 				folder,
@@ -2828,6 +2969,7 @@ async function getTestPresetInheritsImpl(
 			description: defaultTestPreset.description,
 			configurePreset,
 		};
+
 		return getTestPresetInheritsHelper(
 			folder,
 			preset,
@@ -2851,6 +2993,7 @@ async function getTestPresetInheritsImpl(
 		localize("test.preset.not.found", "Could not find test preset"),
 		name,
 	]);
+
 	return null;
 }
 
@@ -2886,6 +3029,7 @@ async function getTestPresetInheritsHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -2896,6 +3040,7 @@ async function getTestPresetInheritsHelper(
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
+
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
 
 	// Expand inherits
@@ -2916,6 +3061,7 @@ async function getTestPresetInheritsHelper(
 				errorHandler,
 				preset,
 			);
+
 			if (parent) {
 				// Inherit environment
 				inheritedEnv = EnvironmentUtils.mergePreserveNull([
@@ -2928,6 +3074,7 @@ async function getTestPresetInheritsHelper(
 				]);
 				// Inherit other fields
 				let key: keyof TestPreset;
+
 				for (key in parent) {
 					if (isInheritable(key) && preset[key] === undefined) {
 						// 'as never' to bypass type check
@@ -2944,6 +3091,7 @@ async function getTestPresetInheritsHelper(
 			configurePresets(folder),
 			preset.configurePreset,
 		);
+
 		if (!expandedConfigurePreset && allowUserPreset) {
 			expandedConfigurePreset = getPresetByName(
 				userConfigurePresets(folder),
@@ -2966,6 +3114,7 @@ async function getTestPresetInheritsHelper(
 				),
 				preset.configurePreset,
 			]);
+
 			return null;
 		}
 
@@ -2997,6 +3146,7 @@ async function getTestPresetInheritsHelper(
 	]);
 
 	preset.__expanded = true;
+
 	return preset;
 }
 
@@ -3013,6 +3163,7 @@ export async function expandTestPresetVariables(
 	]);
 
 	const expandedPreset: TestPreset = { name };
+
 	const expansionOpts: ExpansionOptions = await getExpansionOptions(
 		workspaceFolder,
 		sourceDir,
@@ -3024,6 +3175,7 @@ export async function expandTestPresetVariables(
 	// Expand environment vars first since other fields may refer to them
 	if (preset.environment) {
 		expandedPreset.environment = EnvironmentUtils.createPreserveNull();
+
 		for (const key in preset.environment) {
 			if (preset.environment[key]) {
 				expandedPreset.environment[key] = await expandString(
@@ -3043,6 +3195,7 @@ export async function expandTestPresetVariables(
 	// Expand other fields
 	if (preset.overwriteConfigurationFile) {
 		expandedPreset.overwriteConfigurationFile = [];
+
 		for (
 			let index = 0;
 			index < preset.overwriteConfigurationFile.length;
@@ -3082,8 +3235,10 @@ export async function expandTestPresetVariables(
 	}
 	if (preset.filter) {
 		expandedPreset.filter = {};
+
 		if (preset.filter.include) {
 			expandedPreset.filter.include = {};
+
 			if (preset.filter.include.name) {
 				expandedPreset.filter.include.name = await expandString(
 					preset.filter.include.name,
@@ -3102,6 +3257,7 @@ export async function expandTestPresetVariables(
 		}
 		if (preset.filter.exclude) {
 			expandedPreset.filter.exclude = {};
+
 			if (preset.filter.exclude.label) {
 				expandedPreset.filter.exclude.label = await expandString(
 					preset.filter.exclude.label,
@@ -3118,6 +3274,7 @@ export async function expandTestPresetVariables(
 			}
 			if (preset.filter.exclude.fixtures) {
 				expandedPreset.filter.exclude.fixtures = {};
+
 				if (preset.filter.exclude.fixtures.any) {
 					expandedPreset.filter.exclude.fixtures.any =
 						await expandString(
@@ -3196,6 +3353,7 @@ export async function getPackagePresetInherits(
 	inheritedByPreset?: PackagePreset,
 ): Promise<PackagePreset | null> {
 	const refs = referencedPackagePresets.get(folder);
+
 	if (!refs) {
 		referencedPackagePresets.set(folder, new Set());
 	} else {
@@ -3235,13 +3393,16 @@ async function getPackagePresetInheritsImpl(
 		packagePresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		const presetList = inheritedByPreset
 			? inheritedByPreset.__file!.packagePresets
 			: packagePresets(folder, usePresetsPlusIncluded);
+
 		const validInherit =
 			presetList !== undefined &&
 			presetList.filter((p) => p.name === name).length > 0;
+
 		if (validInherit) {
 			return getPackagePresetInheritsHelper(
 				folder,
@@ -3261,6 +3422,7 @@ async function getPackagePresetInheritsImpl(
 			userPackagePresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getPackagePresetInheritsHelper(
 				folder,
@@ -3283,6 +3445,7 @@ async function getPackagePresetInheritsImpl(
 			description: defaultPackagePreset.description,
 			configurePreset,
 		};
+
 		return getPackagePresetInheritsHelper(
 			folder,
 			preset,
@@ -3306,6 +3469,7 @@ async function getPackagePresetInheritsImpl(
 		localize("package.preset.not.found", "Could not find package preset"),
 		name,
 	]);
+
 	return null;
 }
 
@@ -3341,6 +3505,7 @@ async function getPackagePresetInheritsHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -3351,6 +3516,7 @@ async function getPackagePresetInheritsHelper(
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
+
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
 
 	// Expand inherits
@@ -3371,6 +3537,7 @@ async function getPackagePresetInheritsHelper(
 				errorHandler,
 				preset,
 			);
+
 			if (parent) {
 				// Inherit environment
 				inheritedEnv = EnvironmentUtils.mergePreserveNull([
@@ -3383,6 +3550,7 @@ async function getPackagePresetInheritsHelper(
 				]);
 				// Inherit other fields
 				let key: keyof PackagePreset;
+
 				for (key in parent) {
 					if (isInheritable(key) && preset[key] === undefined) {
 						// 'as never' to bypass type check
@@ -3399,6 +3567,7 @@ async function getPackagePresetInheritsHelper(
 			configurePresets(folder),
 			preset.configurePreset,
 		);
+
 		if (!expandedConfigurePreset && allowUserPreset) {
 			expandedConfigurePreset = getPresetByName(
 				userConfigurePresets(folder),
@@ -3421,6 +3590,7 @@ async function getPackagePresetInheritsHelper(
 				),
 				preset.configurePreset,
 			]);
+
 			return null;
 		}
 
@@ -3452,6 +3622,7 @@ async function getPackagePresetInheritsHelper(
 	]);
 
 	preset.__expanded = true;
+
 	return preset;
 }
 
@@ -3481,6 +3652,7 @@ export async function expandPackagePresetVariables(
 	// Expand environment vars first since other fields may refer to them
 	if (preset.environment) {
 		expandedPreset.environment = EnvironmentUtils.createPreserveNull();
+
 		for (const key in preset.environment) {
 			if (preset.environment[key]) {
 				expandedPreset.environment[key] = await expandString(
@@ -3526,6 +3698,7 @@ export async function getWorkflowPresetInherits(
 	errorHandler?: ExpansionErrorHandler,
 ): Promise<WorkflowPreset | null> {
 	const refs = referencedWorkflowPresets.get(folder);
+
 	if (!refs) {
 		referencedWorkflowPresets.set(folder, new Set());
 	} else {
@@ -3542,6 +3715,7 @@ export async function getWorkflowPresetInherits(
 		usePresetsPlusIncluded,
 		errorHandler,
 	);
+
 	if (!preset) {
 		return null;
 	}
@@ -3556,6 +3730,7 @@ export async function getWorkflowPresetInherits(
 	// According to CMake docs, no other fields support macro expansion in a workflow preset.
 	merge(expandedPreset, preset);
 	expandedPreset.steps = preset.steps;
+
 	return expandedPreset;
 }
 
@@ -3574,13 +3749,16 @@ async function getWorkflowPresetInheritsImpl(
 		workflowPresets(folder, usePresetsPlusIncluded),
 		name,
 	);
+
 	if (preset) {
 		const presetList = inheritedByPreset
 			? inheritedByPreset.__file!.workflowPresets
 			: workflowPresets(folder, usePresetsPlusIncluded);
+
 		const validInherit =
 			presetList !== undefined &&
 			presetList.filter((p) => p.name === name).length > 0;
+
 		if (validInherit) {
 			return getWorkflowPresetInheritsHelper(
 				folder,
@@ -3599,6 +3777,7 @@ async function getWorkflowPresetInheritsImpl(
 			userWorkflowPresets(folder, usePresetsPlusIncluded),
 			name,
 		);
+
 		if (preset) {
 			return getWorkflowPresetInheritsHelper(
 				folder,
@@ -3627,6 +3806,7 @@ async function getWorkflowPresetInheritsImpl(
 				},
 			],
 		};
+
 		return getWorkflowPresetInheritsHelper(
 			folder,
 			preset,
@@ -3648,6 +3828,7 @@ async function getWorkflowPresetInheritsImpl(
 		localize("workflow.preset.not.found", "Could not find workflow preset"),
 		name,
 	]);
+
 	return null;
 }
 
@@ -3682,6 +3863,7 @@ async function getWorkflowPresetInheritsHelper(
 			),
 			preset.name,
 		]);
+
 		return null;
 	}
 
@@ -3689,9 +3871,11 @@ async function getWorkflowPresetInheritsHelper(
 
 	// Expand configure preset. Evaluate this after inherits since it may come from parents
 	const workflowConfigurePreset = preset.steps[0].name;
+
 	if (workflowConfigurePreset) {
 		// We need to still do this for workflow presets because the configure preset could be different than the one selected for the project.
 		let expandedConfigurePreset: ConfigurePreset | null = null;
+
 		if (enableTryApplyDevEnv) {
 			const configurePresetInherits = await getConfigurePresetInherits(
 				folder,
@@ -3700,6 +3884,7 @@ async function getWorkflowPresetInheritsHelper(
 				true,
 				errorHandler,
 			);
+
 			if (!configurePresetInherits) {
 				return null;
 			}
@@ -3740,6 +3925,7 @@ async function getWorkflowPresetInheritsHelper(
 				),
 				workflowConfigurePreset,
 			]);
+
 			return null;
 		}
 		// The below is critical when the workflow step0 configure preset is different than the
@@ -3753,6 +3939,7 @@ async function getWorkflowPresetInheritsHelper(
 						allBuildPresets(folder),
 						step.name,
 					);
+
 					if (buildStepPr) {
 						buildStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
@@ -3760,11 +3947,13 @@ async function getWorkflowPresetInheritsHelper(
 							expandedConfigurePreset.generator;
 					}
 					break;
+
 				case "test":
 					const testStepPr = getPresetByName(
 						allTestPresets(folder),
 						step.name,
 					);
+
 					if (testStepPr) {
 						testStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
@@ -3772,11 +3961,13 @@ async function getWorkflowPresetInheritsHelper(
 							expandedConfigurePreset.generator;
 					}
 					break;
+
 				case "package":
 					const packageStepPr = getPresetByName(
 						allPackagePresets(folder),
 						step.name,
 					);
+
 					if (packageStepPr) {
 						packageStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
@@ -3789,6 +3980,7 @@ async function getWorkflowPresetInheritsHelper(
 	}
 
 	preset.__expanded = true;
+
 	return preset;
 }
 
@@ -3900,6 +4092,7 @@ export function buildArgs(
 	}
 
 	tempOverrideArgs && result.push(...tempOverrideArgs);
+
 	if (preset.nativeToolOptions || tempOverrideBuildToolArgs) {
 		result.push("--");
 		preset.nativeToolOptions && result.push(...preset.nativeToolOptions);
@@ -3913,6 +4106,7 @@ export function testArgs(preset: TestPreset): string[] {
 	const result: string[] = [];
 
 	preset.configuration && result.push("--build-config", preset.configuration);
+
 	if (preset.overwriteConfigurationFile) {
 		for (const config of preset.overwriteConfigurationFile) {
 			result.push("--overwrite", config);
@@ -3964,13 +4158,17 @@ export function testArgs(preset: TestPreset): string[] {
 		preset.filter.include.label &&
 			result.push("--label-regex", preset.filter.include.label);
 		preset.filter.include.useUnion && result.push("--union");
+
 		if (preset.filter.include.index) {
 			if (util.isString(preset.filter.include.index)) {
 				result.push("--tests-information", preset.filter.include.index);
 			} else {
 				const start = preset.filter.include.index.start || "";
+
 				const end = preset.filter.include.index.end || "";
+
 				const stride = preset.filter.include.index.stride || "";
+
 				const specificTests = preset.filter.include.index.specificTests
 					? `,${preset.filter.include.index.specificTests.join(",")}`
 					: "";
@@ -4077,13 +4275,17 @@ export function configurePresetChangeNeedsClean(
 				"Clean not needed: No prior configure preset selected",
 			),
 		);
+
 		return false;
 	}
 	const important_params = (preset: ConfigurePreset) => ({
 		preferredGenerator: preset.generator,
 	});
+
 	const new_imp = important_params(newPreset);
+
 	const old_imp = important_params(oldPreset);
+
 	if (util.compare(new_imp, old_imp) !== util.Ordering.Equivalent) {
 		log.debug(
 			localize(
@@ -4091,6 +4293,7 @@ export function configurePresetChangeNeedsClean(
 				"Need clean: configure preset changed",
 			),
 		);
+
 		return true;
 	} else {
 		return false;

@@ -23,11 +23,15 @@ export class Property<T> {
     get changeEvent(): SubscriberFunction<T> {
         return (policy, cb) => {
             const event = this._emitter.event;
+
             const ret = event(cb);
+
             switch (policy) {
                 case FireNow:
                     cb(this._value);
+
                     break;
+
                 case FireLate:
                     break;
             }

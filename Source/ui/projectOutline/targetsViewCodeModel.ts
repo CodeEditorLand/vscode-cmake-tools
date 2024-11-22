@@ -18,6 +18,7 @@ export function populateViewCodeModel(model: CodeModelContent): ProjectOutlineCo
 
     // Flatten the list of targets into a single list.
     const targets: CodeModel.Target[] = [];
+
     for (const projects of configuration.projects) {
         for (const t of projects.targets) {
             targets.push(t);
@@ -31,5 +32,6 @@ export function populateViewCodeModel(model: CodeModelContent): ProjectOutlineCo
         sourceDirectory: originalProject.sourceDirectory,
         hasInstallRule: originalProject.hasInstallRule
     };
+
     return { project };
 }

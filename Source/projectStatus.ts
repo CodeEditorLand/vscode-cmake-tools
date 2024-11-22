@@ -16,24 +16,31 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 const noKitSelected = localize("no.kit.selected", "[No Kit Selected]");
+
 const noConfigPresetSelected = localize(
 	"no.configure.preset.selected",
 	"[No Configure Preset Selected]",
 );
+
 const noBuildPresetSelected = localize(
 	"no.build.preset.selected",
 	"[No Build Preset Selected]",
 );
+
 const noTestPresetSelected = localize(
 	"no.test.preset.selected",
 	"[No Test Preset Selected]",
 );
+
 const noPackagePresetSelected = localize(
 	"no.package.preset.selected",
 	"[No Package Preset Selected]",
 );
+
 const noWorkflowPresetSelected = localize(
 	"no.workflow.preset.selected",
 	"[No Workflow Preset Selected]",
@@ -385,6 +392,7 @@ class TreeDataProvider
 
 	clear(): Promise<any> {
 		this.activeCMakeProject = undefined;
+
 		return this.refresh();
 	}
 
@@ -402,9 +410,11 @@ class TreeDataProvider
 		} else {
 			// Initializing the tree for the first time
 			const nodes: Node[] = [];
+
 			if (!this.isFolderButtonHidden) {
 				const folderNode = new FolderNode();
 				await folderNode.initialize();
+
 				if (this.isBusy) {
 					folderNode.convertToStopCommand();
 				}
@@ -414,6 +424,7 @@ class TreeDataProvider
 				const configNode = new ConfigNode();
 				this.configNode = configNode;
 				await configNode.initialize();
+
 				if (this.isBusy) {
 					configNode.convertToStopCommand();
 				}
@@ -423,6 +434,7 @@ class TreeDataProvider
 				const buildNode = new BuildNode();
 				this.buildNode = buildNode;
 				await buildNode.initialize();
+
 				if (this.isBusy) {
 					buildNode.convertToStopCommand();
 				}
@@ -432,6 +444,7 @@ class TreeDataProvider
 				const testNode = new TestNode();
 				this.testNode = testNode;
 				await testNode.initialize();
+
 				if (this.isBusy) {
 					testNode.convertToStopCommand();
 				}
@@ -442,6 +455,7 @@ class TreeDataProvider
 					const packageNode = new PackageNode();
 					this.packageNode = packageNode;
 					await packageNode.initialize();
+
 					if (this.isBusy) {
 						packageNode.convertToStopCommand();
 					}
@@ -451,6 +465,7 @@ class TreeDataProvider
 					const workflowNode = new WorkflowNode();
 					this.workflowNode = workflowNode;
 					await workflowNode.initialize();
+
 					if (this.isBusy) {
 						workflowNode.convertToStopCommand();
 					}
@@ -460,6 +475,7 @@ class TreeDataProvider
 			if (!this.isDebugButtonHidden) {
 				const debugNode = new DebugNode();
 				await debugNode.initialize();
+
 				if (this.isBusy) {
 					debugNode.convertToStopCommand();
 				}
@@ -468,6 +484,7 @@ class TreeDataProvider
 			if (!this.isLaunchButtonHidden) {
 				const launchNode = new LaunchNode();
 				await launchNode.initialize();
+
 				if (this.isBusy) {
 					launchNode.convertToStopCommand();
 				}
@@ -480,9 +497,11 @@ class TreeDataProvider
 	// TODO: get rid of undefined?
 	public async doStatusChange(options: OptionConfig | undefined) {
 		let didChange: boolean = false;
+
 		if (this.activeCMakeProject) {
 			const folderVisibility =
 				options?.advanced?.folder?.projectStatusVisibility !== "hidden";
+
 			if (folderVisibility === this.isFolderButtonHidden) {
 				didChange = true;
 				this.isFolderButtonHidden = !folderVisibility;
@@ -490,24 +509,28 @@ class TreeDataProvider
 			const configureVisibility =
 				options?.advanced?.configure?.projectStatusVisibility !==
 				"hidden";
+
 			if (configureVisibility === this.isConfigButtonHidden) {
 				didChange = true;
 				this.isConfigButtonHidden = !configureVisibility;
 			}
 			const buildVisibility =
 				options?.advanced?.build?.projectStatusVisibility !== "hidden";
+
 			if (buildVisibility === this.isBuildButtonHidden) {
 				didChange = true;
 				this.isBuildButtonHidden = !buildVisibility;
 			}
 			const testVisibility =
 				options?.advanced?.ctest?.projectStatusVisibility !== "hidden";
+
 			if (testVisibility === this.isTestButtonHidden) {
 				didChange = true;
 				this.isTestButtonHidden = !testVisibility;
 			}
 			const packageVisibility =
 				options?.advanced?.cpack?.projectStatusVisibility !== "hidden";
+
 			if (packageVisibility === this.isPackageButtonHidden) {
 				didChange = true;
 				this.isPackageButtonHidden = !packageVisibility;
@@ -515,18 +538,21 @@ class TreeDataProvider
 			const workflowVisibility =
 				options?.advanced?.workflow?.projectStatusVisibility !==
 				"hidden";
+
 			if (workflowVisibility === this.isWorkflowButtonHidden) {
 				didChange = true;
 				this.isWorkflowButtonHidden = !workflowVisibility;
 			}
 			const debugVisibility =
 				options?.advanced?.debug?.projectStatusVisibility !== "hidden";
+
 			if (debugVisibility === this.isDebugButtonHidden) {
 				didChange = true;
 				this.isDebugButtonHidden = !debugVisibility;
 			}
 			const launchVisibility =
 				options?.advanced?.launch?.projectStatusVisibility !== "hidden";
+
 			if (launchVisibility === this.isLaunchButtonHidden) {
 				didChange = true;
 				this.isLaunchButtonHidden = !launchVisibility;
@@ -641,6 +667,7 @@ class ConfigNode extends Node {
 
 	convertToStopCommand(): void {
 		this.label = localize("configure.running", "Configure (Running)");
+
 		const title: string = localize("Stop", "Stop");
 		this.tooltip = title;
 		this.contextValue = "stop";
@@ -695,6 +722,7 @@ class BuildNode extends Node {
 
 	convertToStopCommand(): void {
 		this.label = localize("build.running", "Build (Running)");
+
 		const title: string = localize("Stop", "Stop");
 		this.tooltip = title;
 		this.contextValue = "stop";
@@ -790,6 +818,7 @@ class PackageNode extends Node {
 
 	convertToStopCommand(): void {
 		this.label = localize("cpack.running", "CPack (packaging)");
+
 		const title: string = localize("Stop", "Stop");
 		this.tooltip = title;
 		this.contextValue = "stop";
@@ -841,6 +870,7 @@ class WorkflowNode extends Node {
 
 	convertToStopCommand(): void {
 		this.label = localize("workflow.running", "Workflow (Running)");
+
 		const title: string = localize("Stop", "Stop");
 		this.tooltip = title;
 		this.contextValue = "stop";
@@ -979,6 +1009,7 @@ class ConfigPreset extends Node {
 		const config = (
 			await treeDataProvider.cmakeProject.getCMakeDriverInstance()
 		)?.config;
+
 		if (config && checkConfigureOverridesPresent(config)) {
 			this.description = localize(
 				"override.settings.applied",
@@ -1004,6 +1035,7 @@ class BuildPreset extends Node {
 			treeDataProvider.cmakeProject.buildPreset?.displayName ||
 			treeDataProvider.cmakeProject.buildPreset?.name ||
 			noBuildPresetSelected;
+
 		if (this.label === preset.defaultBuildPreset.name) {
 			this.label = preset.defaultBuildPreset.displayName;
 		}
@@ -1032,6 +1064,7 @@ class BuildPreset extends Node {
 		const config = (
 			await treeDataProvider.cmakeProject.getCMakeDriverInstance()
 		)?.config;
+
 		if (config && checkBuildOverridesPresent(config)) {
 			this.description = localize(
 				"override.settings.applied",
@@ -1057,6 +1090,7 @@ class TestPreset extends Node {
 			treeDataProvider.cmakeProject.testPreset?.displayName ||
 			treeDataProvider.cmakeProject.testPreset?.name ||
 			noTestPresetSelected;
+
 		if (this.label === preset.defaultTestPreset.name) {
 			this.label = preset.defaultTestPreset.displayName;
 		}
@@ -1085,6 +1119,7 @@ class TestPreset extends Node {
 		const config = (
 			await treeDataProvider.cmakeProject.getCMakeDriverInstance()
 		)?.config;
+
 		if (config && checkTestOverridesPresent(config)) {
 			this.description = localize(
 				"override.settings.applied",
@@ -1110,6 +1145,7 @@ class PackagePreset extends Node {
 			treeDataProvider.cmakeProject.packagePreset?.displayName ||
 			treeDataProvider.cmakeProject.packagePreset?.name ||
 			noPackagePresetSelected;
+
 		if (this.label === preset.defaultPackagePreset.name) {
 			this.label = preset.defaultPackagePreset.displayName;
 		}
@@ -1142,6 +1178,7 @@ class PackagePreset extends Node {
 		const config = (
 			await treeDataProvider.cmakeProject.getCMakeDriverInstance()
 		)?.config;
+
 		if (config && checkPackageOverridesPresent(config)) {
 			this.description = localize(
 				"override.settings.applied",
@@ -1167,6 +1204,7 @@ class WorkflowPreset extends Node {
 			treeDataProvider.cmakeProject.workflowPreset?.displayName ||
 			treeDataProvider.cmakeProject.workflowPreset?.name ||
 			noWorkflowPresetSelected;
+
 		if (this.label === preset.defaultWorkflowPreset.name) {
 			this.label = preset.defaultWorkflowPreset.displayName;
 		}
@@ -1207,6 +1245,7 @@ class Kit extends Node {
 		}
 		this.label =
 			treeDataProvider.cmakeProject.activeKit?.name || noKitSelected;
+
 		return this;
 	}
 }
@@ -1261,6 +1300,7 @@ class DebugTarget extends Node {
 		this.label =
 			treeDataProvider.cmakeProject.launchTargetName ||
 			(await treeDataProvider.cmakeProject.allTargetName);
+
 		const title: string = localize("set.debug.target", "Set Debug Target");
 		this.tooltip = title;
 		this.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -1285,6 +1325,7 @@ class LaunchTarget extends Node {
 		this.label =
 			treeDataProvider.cmakeProject.launchTargetName ||
 			(await treeDataProvider.cmakeProject.allTargetName);
+
 		const title: string = localize(
 			"set.launch.target",
 			"Set Launch Target",
@@ -1310,6 +1351,7 @@ class Project extends Node {
 			return;
 		}
 		this.label = treeDataProvider.cmakeProject.folderName;
+
 		const title: string = localize(
 			"select.active.folder",
 			"Select Active Folder",

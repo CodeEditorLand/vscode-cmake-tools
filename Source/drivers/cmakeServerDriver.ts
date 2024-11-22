@@ -29,6 +29,7 @@ import { ConfigureTrigger } from '@cmt/cmakeProject';
 import { onConfigureSettingsChange } from '@cmt/ui/util';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('cms-driver');
@@ -56,6 +57,7 @@ export class CMakeServerDriver extends CMakeDriver {
     private _cmakeInputFileSet = InputFileSet.createEmpty();
 
     private readonly _progressEmitter = new vscode.EventEmitter<ProgressMessage>();
+
     get onProgress() {
         return this._progressEmitter.event;
     }
@@ -70,8 +72,10 @@ export class CMakeServerDriver extends CMakeDriver {
     private convertServerCodeModel(serverCodeModel: null | ServerCodeModelContent): CodeModelContent | null {
         if (serverCodeModel) {
             const codeModel: CodeModelContent = { configurations: [] };
+
             for (const config of serverCodeModel.configurations) {
                 const newConfig: CodeModelConfiguration = { name: config.name, projects: [] };
+
                 for (const project of config.projects) {
                     const newProject: CodeModelProject = {
                         name: project.name,
@@ -79,6 +83,7 @@ export class CMakeServerDriver extends CMakeDriver {
                         hasInstallRule: project.hasInstallRule,
                         targets: []
                     };
+
                     for (const target of project.targets) {
                         const newTarget: CodeModelTarget = {
                             name: target.name,
@@ -89,9 +94,12 @@ export class CMakeServerDriver extends CMakeDriver {
                             sysroot: target.sysroot,
                             fileGroups: []
                         };
+
                         const linkLanguageFlags: string | undefined = target.linkLanguageFlags;
+
                         if (target.fileGroups) {
                             newTarget.fileGroups = [];
+
                             for (const group of target.fileGroups) {
                                 const newGroup: CodeModelFileGroup = {
                                     sources: group.sources,
@@ -116,6 +124,7 @@ export class CMakeServerDriver extends CMakeDriver {
     }
 
     private readonly _codeModelChanged = new vscode.EventEmitter<null | CodeModelContent>();
+
     get onCodeModelChanged() {
         return this._codeModelChanged.event;
     }
@@ -129,6 +138,7 @@ export class CMakeServerDriver extends CMakeDriver {
 
     private async shutdownClient() {
         const cl = await this._cmsClient;
+
         if (cl) {
             await cl.shutdownAsync();
         }
@@ -140,6 +150,7 @@ export class CMakeServerDriver extends CMakeDriver {
         }
 
         const client_started = await this._cmsClient;
+
         if (!(client_started)) {
             throw Error('Unable to start cms client');
         } else {
@@ -155,13 +166,16 @@ export class CMakeServerDriver extends CMakeDriver {
                 await old_cl.shutdownAsync();
             }
             await this._cleanPriorConfiguration();
+
             return this._startNewClient();
         })();
     }
 
     protected async doConfigure(args: string[], _trigger?: ConfigureTrigger, consumer?: proc.OutputConsumer, showCommandOnly?: boolean, _defaultConfigurePresetName?: string, configurePreset?: ConfigurePreset | null, _options?: proc.ExecutionOptions) {
         await this._clientChangeInProgress;
+
         const cl = await this.getClient();
+
         const sub = this.onMessage(msg => {
             if (consumer) {
                 for (const line of msg.split('\n')) {
@@ -183,6 +197,7 @@ export class CMakeServerDriver extends CMakeDriver {
             } catch (e) {
                 if (e instanceof ServerError) {
                     log.error(localize('cmake.configure.error', 'Error during CMake configure: {0}', errorToString(e)));
+
                     return 1;
                 } else {
                     throw e;
@@ -201,15 +216,18 @@ export class CMakeServerDriver extends CMakeDriver {
 
     protected async doPostBuild(): Promise<boolean> {
         await this._refreshPostConfigure();
+
         return true;
     }
 
     async _refreshPostConfigure(): Promise<void> {
         const client = await this.getClient();
+
         const cmake_inputs = await client.cmakeInputs();  // <-- 1. This line generates the error
         // Scan all the CMake inputs and capture their mtime so we can check for
         // out-of-dateness later
         this._cmakeInputFileSet = await InputFileSet.create(cmake_inputs);
+
         const clcache = await client.getCMakeCacheContent();
         this._cacheEntries = clcache.cache.reduce((acc, el) => {
             const entry_map: { [key: string]: cache.CacheEntryType | undefined } = {
@@ -221,13 +239,17 @@ export class CMakeServerDriver extends CMakeDriver {
                 UNINITIALIZED: cache.CacheEntryType.Uninitialized,
                 STATIC: cache.CacheEntryType.Static
             };
+
             const type = entry_map[el.type];
+
             if (type === undefined) {
                 rollbar.error(localize('unknown.cache.entry.type', 'Unknown cache entry type {0}', el.type));
+
                 return acc;
             }
             acc.set(el.key,
                 new cache.CacheEntry(el.key, el.value, type, el.properties.HELPSTRING, el.properties.ADVANCED === '1'));
+
             return acc;
         }, new Map<string, cache.CacheEntry>());
         // Convert ServerCodeModel to general CodeModel.
@@ -237,13 +259,17 @@ export class CMakeServerDriver extends CMakeDriver {
 
     async doRefreshExpansions(cb: () => Promise<void>): Promise<void> {
         log.debug('Run doRefreshExpansions');
+
         const bindir_before = this.binaryDir;
+
         const srcdir_before = this.sourceDir;
         await cb();
+
         if (!bindir_before.length || !srcdir_before.length) {
             return;
         }
         const new_env = JSON.stringify(await this.getConfigureEnvironment());
+
         if (bindir_before !== this.binaryDir || srcdir_before !== this.sourceDir || new_env !== this._prevConfigureEnv) {
             // Directories changed. We need to restart the driver
             await this._restartClient();
@@ -256,8 +282,10 @@ export class CMakeServerDriver extends CMakeDriver {
             return [];
         }
         const build_config = this.codeModel.configurations.find(conf => conf.name === this.currentBuildType);
+
         if (!build_config) {
             log.error(localize('found.no.matching.code.model', 'Found no matching code model for the current build type. This shouldn\'t be possible'));
+
             return [];
         }
         const metaTargets = [{
@@ -266,6 +294,7 @@ export class CMakeServerDriver extends CMakeDriver {
             filepath: localize('build.all.target', 'A special target to build all available targets'),
             targetType: 'META'
         }];
+
         if (build_config.projects.some(project => (project.hasInstallRule) ? project.hasInstallRule : false)) {
             metaTargets.push({
                 type: 'rich' as 'rich',
@@ -330,7 +359,9 @@ export class CMakeServerDriver extends CMakeDriver {
 
     private async _setKitAndRestart(need_clean: boolean, cb: () => Promise<void>) {
         this._cmakeInputFileSet = InputFileSet.createEmpty();
+
         const client = await this._cmsClient;
+
         if (client) {
             await client.shutdownAsync();
         }
@@ -338,6 +369,7 @@ export class CMakeServerDriver extends CMakeDriver {
             await this._cleanPriorConfiguration();
         }
         await cb();
+
         if (!this.generator) {
             throw new NoGeneratorError();
         }
@@ -347,11 +379,13 @@ export class CMakeServerDriver extends CMakeDriver {
 
     doSetKit(cb: () => Promise<void>): Promise<void> {
         this._clientChangeInProgress = this._setKitAndRestart(false, cb);
+
         return this._clientChangeInProgress;
     }
 
     doSetConfigurePreset(need_clean: boolean, cb: () => Promise<void>): Promise<void> {
         this._clientChangeInProgress = this._setKitAndRestart(need_clean, cb);
+
         return this._clientChangeInProgress;
     }
 
@@ -373,12 +407,14 @@ export class CMakeServerDriver extends CMakeDriver {
 
     private async _restartClient(): Promise<void> {
         this._cmsClient = this._doRestartClient();
+
         const client = await this.getClient();
         this._globalSettings = await client.getGlobalSettings();
     }
 
     private async _doRestartClient(): Promise<CMakeServerClient> {
         const old_client = await this._cmsClient;
+
         if (old_client) {
             await old_client.shutdownAsync();
         }
@@ -413,12 +449,14 @@ export class CMakeServerDriver extends CMakeDriver {
     }
 
     private readonly _onMessageEmitter = new vscode.EventEmitter<string>();
+
     get onMessage() {
         return this._onMessageEmitter.event;
     }
 
     async onStop(): Promise<void> {
         const client = await this._cmsClient;
+
         if (client) {
             if (this.configInProgress()) {
                 client.shutdownServer();

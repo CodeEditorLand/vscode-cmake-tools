@@ -5,6 +5,7 @@ import * as util from '@cmt/util';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('compdb');
@@ -19,6 +20,7 @@ export interface CompileCommand {
 
 export class CompilationDatabase {
     private readonly infoByFilePath: Map<string, CompileCommand>;
+
     constructor(infos: CompileCommand[]) {
         this.infoByFilePath = infos.reduce(
             (acc, cur) => acc.set(util.platformNormalizePath(cur.file), {
@@ -45,11 +47,13 @@ export class CompilationDatabase {
             }
 
             const fileContent = await fs.readFile(path);
+
             try {
                 const content = JSON.parse(fileContent.toString()) as CompileCommand[];
                 database.push(...content);
             } catch (e) {
                 log.warning(localize('error.parsing.compilation.database', 'Error parsing compilation database {0}: {1}', `"${path}"`, util.errorToString(e)));
+
                 return null;
             }
         }

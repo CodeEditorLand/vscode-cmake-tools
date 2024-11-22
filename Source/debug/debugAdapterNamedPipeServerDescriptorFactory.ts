@@ -19,6 +19,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const logger = logging.createLogger("debugger");
@@ -32,6 +33,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 	): Promise<vscode.ProviderResult<vscode.DebugAdapterDescriptor>> {
 		const pipeName =
 			session.configuration.pipeName ?? getDebuggerPipeName();
+
 		const origin = session.configuration.fromCommand
 			? DebugOrigin.originatedFromCommand
 			: DebugOrigin.originatedFromLaunchConfiguration;
@@ -44,6 +46,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 
 		const cmakeDebugType: "configure" | "script" | "external" =
 			session.configuration.cmakeDebugType;
+
 		if (cmakeDebugType === "configure" || cmakeDebugType === "script") {
 			const promise = new Promise<void>((resolve) => {
 				debuggerInformation.debuggerIsReady = resolve;
@@ -51,6 +54,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 
 			if (cmakeDebugType === "script") {
 				const script = session.configuration.scriptPath;
+
 				if (!fs.existsSync(script)) {
 					throw new Error(
 						localize(
@@ -61,6 +65,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 					);
 				}
 				const args: string[] = session.configuration.scriptArgs ?? [];
+
 				const env =
 					new Map<string, string>(
 						session.configuration.scriptEnv?.map(
@@ -130,6 +135,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 				pipeName,
 			),
 		);
+
 		return new vscode.DebugAdapterNamedPipeServer(pipeName);
 	}
 }

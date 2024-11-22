@@ -12,6 +12,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger("debugger");
@@ -45,6 +46,7 @@ export interface CppDebugConfiguration {
 	MIMode?: MIModes;
 	miDebuggerPath?: string;
 	stopAtEntry?: boolean;
+
 	setupCommands?: SetupCommand[];
 	customLaunchSetupCommands?: SetupCommand[];
 	launchCompleteCommand?: string;
@@ -85,6 +87,7 @@ async function createGDBDebugConfiguration(
 ): Promise<VSCodeDebugConfiguration> {
 	if (!(await checkDebugger(debuggerPath))) {
 		debuggerPath = "gdb";
+
 		if (!(await checkDebugger(debuggerPath))) {
 			throw new Error(
 				localize(
@@ -182,8 +185,10 @@ const debuggerGenerators: DebuggerGenerators = {
 
 function searchForCompilerPathInCache(cache: CMakeCache): string | null {
 	const languages = ["CXX", "C", "CUDA"];
+
 	for (const lang of languages) {
 		const entry = cache.get(`CMAKE_${lang}_COMPILER`);
+
 		if (!entry) {
 			continue;
 		}
@@ -200,10 +205,13 @@ export async function getDebugConfigurationFromCache(
 	debuggerPathOverride?: string,
 ): Promise<VSCodeDebugConfiguration | null> {
 	const entry = cache.get("CMAKE_LINKER");
+
 	if (entry !== null && !modeOverride && !debuggerPathOverride) {
 		const linker = entry.value as string;
+
 		const isMsvcLinker =
 			linker.endsWith("link.exe") || linker.endsWith("ld.lld.exe");
+
 		if (isMsvcLinker) {
 			return createMsvcDebugConfiguration(target);
 		}
@@ -211,6 +219,7 @@ export async function getDebugConfigurationFromCache(
 
 	const debuggerName =
 		modeOverride || (platform === "darwin" ? "lldb" : "gdb");
+
 	const description = debuggerGenerators[debuggerName];
 
 	if (debuggerPathOverride) {
@@ -232,6 +241,7 @@ export async function getDebugConfigurationFromCache(
 	}
 
 	const compilerPath = searchForCompilerPathInCache(cache);
+
 	if (compilerPath === null) {
 		throw Error(
 			localize(
@@ -248,10 +258,13 @@ export async function getDebugConfigurationFromCache(
 	// Look for a debugger, in the following order:
 	// 1. LLDB-MI
 	const clangCompilerRegex = /(clang[\+]{0,2})+(?!-cl)/gi;
+
 	let miDebuggerPath = compilerPath.replace(clangCompilerRegex, "lldb-mi");
+
 	if (modeOverride !== MIModes.gdb) {
 		const lldbMIReplaced =
 			miDebuggerPath.search(new RegExp("lldb-mi")) !== -1;
+
 		if (lldbMIReplaced) {
 			// 1a. lldb-mi in the compiler path
 			if (await checkDebugger(miDebuggerPath)) {
@@ -262,6 +275,7 @@ export async function getDebugConfigurationFromCache(
 			// 1b. lldb-mi installed by CppTools
 			const cppToolsExtension =
 				vscode.extensions.getExtension("ms-vscode.cpptools");
+
 			const cpptoolsDebuggerPath = cppToolsExtension
 				? path.join(
 						cppToolsExtension.extensionPath,
@@ -271,6 +285,7 @@ export async function getDebugConfigurationFromCache(
 						"lldb-mi",
 					)
 				: undefined;
+
 			if (
 				cpptoolsDebuggerPath &&
 				(await checkDebugger(cpptoolsDebuggerPath))
@@ -285,6 +300,7 @@ export async function getDebugConfigurationFromCache(
 
 	// 2. gdb in the compiler path
 	miDebuggerPath = compilerPath.replace(clangCompilerRegex, "gdb");
+
 	if (
 		modeOverride !== MIModes.lldb &&
 		miDebuggerPath.search(new RegExp("gdb")) !== -1 &&
@@ -295,6 +311,7 @@ export async function getDebugConfigurationFromCache(
 
 	// 3. lldb in the compiler path
 	miDebuggerPath = compilerPath.replace(clangCompilerRegex, "lldb");
+
 	if (
 		modeOverride !== MIModes.gdb &&
 		miDebuggerPath.search(new RegExp("lldb")) !== -1 &&
@@ -304,10 +321,12 @@ export async function getDebugConfigurationFromCache(
 	}
 
 	const gccCompilerRegex = /([cg]\+\+|g?cc)(?=[^\/\\]*$)/gi;
+
 	let gdbDebuggerPath = compilerPath.replace(
 		gccCompilerRegex,
 		description.miMode,
 	);
+
 	if (
 		path.isAbsolute(gdbDebuggerPath) &&
 		!(await fs.exists(gdbDebuggerPath))
@@ -316,6 +335,7 @@ export async function getDebugConfigurationFromCache(
 			path.dirname(compilerPath),
 			description.miMode,
 		);
+
 		if (process.platform === "win32") {
 			gdbDebuggerPath = gdbDebuggerPath + ".exe";
 		}
@@ -331,6 +351,7 @@ export async function getDebugConfigurationFromCache(
 			compilerPath,
 		),
 	);
+
 	return null;
 }
 
@@ -338,5 +359,6 @@ export async function checkDebugger(debuggerPath: string): Promise<boolean> {
 	const res = await proc.execute(debuggerPath, ["--version"], null, {
 		shell: true,
 	}).result;
+
 	return res.retc === 0;
 }

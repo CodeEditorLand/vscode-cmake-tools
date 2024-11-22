@@ -9,12 +9,16 @@ export interface TargetTriple {
 
 export function findTargetTriple(line: string): string | null {
     const target_triple_re = /^Target:\s+(.*)/;
+
     const target_triple_match = target_triple_re.exec(line);
+
     if (target_triple_match !== null) {
         return target_triple_match[1];
     }
     const target_triple_re_old = /.*gcc-lib[/\\]([^/\\]*)[/\\]/;
+
     const target_triple_match_old = target_triple_re_old.exec(line);
+
     if (target_triple_match_old !== null) {
         return target_triple_match_old[1];
     }
@@ -113,11 +117,13 @@ const TriplePossibleLibC: { key: string; regexp: RegExp }[] = [
 
 export function computeTargetTriple(target: TargetTriple): string {
     let triple = target.targetArch;
+
     if (target.vendors.length > 0) {
         const vendor = target.vendors.join('_');
         triple += `-${vendor}`;
     }
     triple += `-${target.targetOs}`;
+
     if (target.abi.length > 0) {
         triple += `-${target.abi}`;
     }
@@ -129,18 +135,27 @@ export function computeTargetTriple(target: TargetTriple): string {
 
 export function parseTargetTriple(triple: string): TargetTriple | undefined {
     const triples = triple.split("-");
+
     let foundArch = 'unknown';
+
     let foundOs = 'unknown';
+
     let foundAbi = 'unknown';
+
     let foundLibc = 'unknown';
+
     const elementToSkip: string[] = [];
+
     for (const tripleElement of triples) {
         for (const key of Object.keys(TriplePossibleArch)) {
             const archReg = TriplePossibleArch[key];
+
             if (archReg.exec(tripleElement) !== null) {
                 elementToSkip.push(tripleElement);
+
                 if (foundArch === 'unknown') {
                     foundArch = key;
+
                     break;
                 }
             }
@@ -148,8 +163,10 @@ export function parseTargetTriple(triple: string): TargetTriple | undefined {
 
         for (const key of Object.keys(TriplePossibleOS)) {
             const osReg = TriplePossibleOS[key];
+
             if (osReg.exec(tripleElement) !== null) {
                 elementToSkip.push(tripleElement);
+
                 if (foundOs === 'unknown' || foundOs === 'none') {
                     // os other than none have higher priority
                     // so we not break
@@ -160,10 +177,13 @@ export function parseTargetTriple(triple: string): TargetTriple | undefined {
 
         for (const key of Object.keys(TriplePossibleABI)) {
             const abiReg = TriplePossibleABI[key];
+
             if (abiReg.exec(tripleElement) !== null) {
                 elementToSkip.push(tripleElement);
+
                 if (foundAbi === 'unknown') {
                     foundAbi = key;
+
                     break;
                 }
             }
@@ -171,16 +191,20 @@ export function parseTargetTriple(triple: string): TargetTriple | undefined {
 
         for (const possibleLibC of TriplePossibleLibC) {
             const libcReg = possibleLibC.regexp;
+
             if (libcReg.exec(tripleElement) !== null) {
                 elementToSkip.push(tripleElement);
+
                 if (foundLibc === 'unknown') {
                     foundLibc = possibleLibC.key;
+
                     break;
                 }
             }
         }
     }
     const vendors: string[] = [];
+
     for (const tripleElement of triples) {
         if (elementToSkip.indexOf(tripleElement) < 0) {
             vendors.push(tripleElement);
@@ -199,7 +223,9 @@ export function parseTargetTriple(triple: string): TargetTriple | undefined {
 
 export function majorVersionSemver(semver: string): string {
     const major_version_re = /^(\d+)./;
+
     const major_version_match = major_version_re.exec(semver);
+
     if (Array.isArray(major_version_match)) {
         return major_version_match[1] ?? '';
     }
@@ -208,7 +234,9 @@ export function majorVersionSemver(semver: string): string {
 
 export function minorVersionSemver(semver: string): string {
     const minor_version_re = /^(\d+).(\d+)/;
+
     const minor_version_match = minor_version_re.exec(semver);
+
     if (Array.isArray(minor_version_match)) {
         return minor_version_match[2] ?? '';
     }

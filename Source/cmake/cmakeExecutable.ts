@@ -9,6 +9,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger("cmakeExecutable");
@@ -43,12 +44,15 @@ export async function getCMakeExecutableInformation(
 	// what causes 'path' to be undefined here.
 	if (path && path.length !== 0) {
 		const normalizedPath = util.platformNormalizePath(path);
+
 		if (cmakeInfo.has(normalizedPath)) {
 			const cmakeExe: CMakeExecutable = cmakeInfo.get(normalizedPath)!;
+
 			if (cmakeExe.isPresent) {
 				await setCMakeDebuggerAvailableContext(
 					cmakeExe.isDebuggerSupported?.valueOf() ?? false,
 				);
+
 				return cmakeExe;
 			} else {
 				log.error(
@@ -62,14 +66,17 @@ export async function getCMakeExecutableInformation(
 
 		try {
 			const execOpt: proc.ExecutionOptions = { showOutputOnError: true };
+
 			const execVersion = await proc.execute(
 				path,
 				["--version"],
 				null,
 				execOpt,
 			).result;
+
 			if (execVersion.retc === 0 && execVersion.stdout) {
 				console.assert(execVersion.stdout);
+
 				const regexVersion = /cmake.* version (.*?)\r?\n/;
 				cmake.version = util.parseVersion(
 					regexVersion.exec(execVersion.stdout)![1],
@@ -101,8 +108,10 @@ export async function getCMakeExecutableInformation(
 				null,
 				execOpt,
 			).result;
+
 			if (debuggerPresent.retc === 0 && debuggerPresent.stdout) {
 				console.assert(debuggerPresent.stdout);
+
 				const stdoutJson = JSON.parse(debuggerPresent.stdout);
 				cmake.isDebuggerSupported = stdoutJson["debugger"];
 				await setCMakeDebuggerAvailableContext(

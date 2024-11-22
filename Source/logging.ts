@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /** Logging levels */
@@ -33,16 +34,22 @@ function levelName(level: LogLevel): LogLevelKey {
     switch (level) {
         case LogLevel.Trace:
             return 'trace';
+
         case LogLevel.Debug:
             return 'debug';
+
         case LogLevel.Info:
             return 'info';
+
         case LogLevel.Note:
             return 'note';
+
         case LogLevel.Warning:
             return 'warning';
+
         case LogLevel.Error:
             return 'error';
+
         case LogLevel.Fatal:
             return 'fatal';
     }
@@ -54,23 +61,32 @@ function levelName(level: LogLevel): LogLevelKey {
  */
 function levelEnabled(level: LogLevel): boolean {
     const strlevel = vscode.workspace.getConfiguration('cmake').get<LogLevelKey>('loggingLevel', 'info');
+
     switch (strlevel) {
         case 'trace':
             return level >= LogLevel.Trace;
+
         case 'debug':
             return level >= LogLevel.Debug;
+
         case 'info':
             return level >= LogLevel.Info;
+
         case 'note':
             return level >= LogLevel.Note;
+
         case 'warning':
             return level >= LogLevel.Warning;
+
         case 'error':
             return level >= LogLevel.Error;
+
         case 'fatal':
             return level >= LogLevel.Fatal;
+
         default:
             console.error('Invalid logging level in settings.json');
+
             return true;
     }
 }
@@ -94,9 +110,11 @@ class OutputChannelManager implements vscode.Disposable {
      */
     get(name: string) {
         const channel = this._channels.get(name);
+
         if (!channel) {
             const new_channel = vscode.window.createOutputChannel(name);
             this._channels.set(name, new_channel);
+
             return new_channel;
         }
         return channel;
@@ -127,6 +145,7 @@ async function _openLogFile() {
     if (!_LOGGER) {
         const fpath = logFilePath();
         await fs.mkdir_p(path.dirname(fpath));
+
         if (await fs.exists(fpath)) {
             _LOGGER = node_fs.createWriteStream(fpath, { flags: 'r+' });
         } else {
@@ -148,12 +167,16 @@ class SingletonLogger {
 
     private _log(level: LogLevel, ...args: Stringable[]) {
         const trace = vscode.workspace.getConfiguration('cmake').get('enableTraceLogging', false);
+
         if (level === LogLevel.Trace && !trace) {
             return;
         }
         const user_message = args.map(a => a.toString()).join(' ');
+
         const prefix = new Date().toISOString() + ` [${levelName(level)}]`;
+
         const raw_message = `${prefix} ${user_message}`;
+
         switch (level) {
             case LogLevel.Trace:
             case LogLevel.Debug:
@@ -163,12 +186,16 @@ class SingletonLogger {
                     console.info('[CMakeTools]', raw_message);
                 }
                 break;
+
             case LogLevel.Warning:
                 console.warn('[CMakeTools]', raw_message);
+
                 break;
+
             case LogLevel.Error:
             case LogLevel.Fatal:
                 console.error('[CMakeTools]', raw_message);
+
                 break;
         }
         // Write to the logfile asynchronously.
@@ -256,6 +283,7 @@ export class Logger {
         const reveal_log = vscode.workspace.getConfiguration('cmake').get<RevealLogKey>('revealLog', 'always');
 
         let should_show: boolean = false;
+
         if (reveal_log === 'always') {
             should_show = true;
         }

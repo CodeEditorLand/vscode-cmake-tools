@@ -16,6 +16,7 @@ import { thisExtensionPath } from '@cmt/util';
 import * as nls from 'vscode-nls';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = logging.createLogger('visual-studio');
@@ -57,25 +58,32 @@ let cachedVSInstallations: VSInstallationCache | null = null;
  */
 export async function vsInstallations(): Promise<VSInstallation[]> {
     const now = Date.now();
+
     if (cachedVSInstallations && cachedVSInstallations.queryTime && (now - cachedVSInstallations.queryTime) < 900000) {
         // If less than 15 minutes old, cache is considered ok.
         return cachedVSInstallations.installations;
     }
 
     const installs = [] as VSInstallation[];
+
     const instanceIds = [] as string[];
+
     const vswhereExe = path.join(thisExtensionPath(), 'res', 'vswhere.exe');
+
     const sys32Path = path.join(process.env.WINDIR as string, 'System32');
 
     const vswhereArgs = ['/c', `${sys32Path}\\chcp 65001>nul && "${vswhereExe}" -all -format json -utf8 -products * -legacy -prerelease`];
+
     const vswhereResult = await proc.execute(`${sys32Path}\\cmd.exe`, vswhereArgs, null, { silent: true, encoding: 'utf8', shell: true }).result;
 
     if (vswhereResult.retc !== 0) {
         log.error(localize('failed.to.execute', 'Failed to execute {0}: {1}', "vswhere.exe", vswhereResult.stderr));
+
         return [];
     }
 
     const vsInstalls = JSON.parse(vswhereResult.stdout) as VSInstallation[];
+
     for (const inst of vsInstalls) {
         if (instanceIds.indexOf(inst.instanceId) < 0) {
             installs.push(inst);
@@ -86,16 +94,20 @@ export async function vsInstallations(): Promise<VSInstallation[]> {
         installations: installs,
         queryTime: now
     };
+
     return installs;
 }
 
 export function compareVersions(lhs: string, rhs: string): number {
     const lhsParts = lhs.split('.');
+
     const rhsParts = rhs.split('.');
 
     let index = 0;
+
     for (; ; index++) {
         const lhsp = lhsParts[index];
+
         const rhsp = rhsParts[index];
 
         if (lhsp && rhsp) {
@@ -173,6 +185,7 @@ export function getHostTargetArchString(hostArch: string, targetArch?: string, a
     }
 
     const parsedTargetArch = targetArch.split(",");
+
     const version = parsedTargetArch.filter(a => a.includes("version=")).map(a => a.split("=")[1]).join(" ").trimEnd();
     // The platform can only be first in the list: https://cmake.org/cmake/help/latest/variable/CMAKE_GENERATOR_PLATFORM.html#variable:CMAKE_GENERATOR_PLATFORM
     // If the first entry in the list includes an "=", it is the version, so we need to use the host arch.
@@ -188,16 +201,19 @@ export function getHostTargetArchString(hostArch: string, targetArch?: string, a
     targetArch = targetArchFromGeneratorPlatform(targetArch);
 
     const archValue = (hostArch === targetArch) ? hostArch : `${hostArch}_${targetArch}`;
+
     return  includeVersion ? `${archValue} ${version}` : archValue;
 }
 
 // Gets the MSVC toolsets installed for a given VS install.
 export async function enumerateMsvcToolsets(vsInstallRoot: string, vsVersion: string): Promise<string[] | undefined> {
     const version = parseInt(vsVersion);
+
     if (version < 15) {
         return [`${version}.0`];
     } else {
         const toolsetDir = path.join(vsInstallRoot, 'VC\\Tools\\MSVC');
+
         if (await fs.exists(toolsetDir)) {
             const dirContents = await fs.readdir(toolsetDir, { 'withFileTypes': true });
             // Only the toolsets should be this directory (each in their own directories), but filter out anything else just in case.
@@ -214,6 +230,7 @@ export async function enumerateMsvcToolsets(vsInstallRoot: string, vsVersion: st
 export function filterVSInstallationsByMsvcToolset(vsInstalls: VSInstallation[], toolsetVersion: string): VSInstallation[] {
     return vsInstalls.filter(async vs => {
         const availableToolsets = await enumerateMsvcToolsets(vs.installationPath, vs.installationVersion);
+
         return availableToolsets?.find(t => t.startsWith(toolsetVersion));
     });
 }
@@ -313,8 +330,11 @@ const msvcEnvVars = [
  */
 async function collectDevBatVars(hostArch: string, devBat: string, args: string[], majorVersion: number, commonDir: string): Promise<Environment | undefined> {
     const fname = Math.random().toString() + '.bat';
+
     const batFileName = `vs-cmt-${fname}`;
+
     const envFileName = batFileName + '.env';
+
     const bat = [
         `@echo off`,
         `cd /d "%~dp0"`,
@@ -324,6 +344,7 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
         `setlocal enableextensions enabledelayedexpansion`,
         `cd /d "%~dp0"` /* Switch back to original drive */
     ];
+
     for (const envVar of msvcEnvVars) {
         bat.push(`if DEFINED ${envVar} echo ${envVar} := %${envVar}% >> ${envFileName}`);
     }
@@ -333,17 +354,21 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
     // that may have been defined by the user (the command prompt experience makes it very likely
     // for the user to use quotes when defining an environment variable with a space containing path).
     let tmpDir: string = paths.tmpDir;
+
     if (!tmpDir) {
         console.log(`TEMP dir is not set. ${devBat} will not run.`);
+
         return;
     }
 
     tmpDir = tmpDir.trim();
+
     if (tmpDir.startsWith('"') && tmpDir.endsWith('"')) {
         tmpDir = tmpDir.substring(1, tmpDir.length - 1);
     }
 
     const batPath = path.join(tmpDir, batFileName);
+
     const envPath = path.join(tmpDir, envFileName);
 
     try {
@@ -354,6 +379,7 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
     await fs.writeFile(batPath, batContent);
 
     const outputEncoding = await codepages.getWindowsCodepage();
+
     const execOption: proc.ExecutionOptions = {
         shell: false,
         silent: true,
@@ -363,9 +389,11 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
     // Script file path will be quoted when passed as args
     const result = await proc.execute('cmd.exe', ['/c', batPath], null, execOption).result;
     await fs.unlink(batPath);
+
     const output = (result.stdout) ? result.stdout + (result.stderr || '') : result.stderr;
 
     let env = '';
+
     try {
         /* When the bat running failed, envPath would not exist */
         const binEnv = await fs.readFile(envPath);
@@ -381,6 +409,7 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
 
     const vars = env.split('\n').map(l => l.trim()).filter(l => l.length !== 0).reduce<Environment>((acc, line) => {
         const mat = /(\w+) := ?(.*)/.exec(line);
+
         if (mat) {
             acc[mat[1]] = mat[2];
         } else {
@@ -388,11 +417,14 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
         }
         return acc;
     }, EnvironmentUtils.create());
+
     const includeEnv = vars['INCLUDE'] ?? '';
+
     if (includeEnv === '') {
         log.error(localize('script.run.error.check',
             'Error running:{0} with args:{1}\nCannot find INCLUDE within:\n{2}\nBat content are:\n{3}\nExecute output are:\n{4}\n',
             devBat, args.join(' '), env, batContent, output));
+
         return;
     }
 
@@ -401,7 +433,9 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
         minor: 0,
         patch: 0
     };
+
     const WindowsSDKVersion = vars['WindowsSDKVersion'] ?? '0.0.0';
+
     try {
         WindowsSDKVersionParsed = util.parseVersion(WindowsSDKVersion);
     } catch (err) {
@@ -409,19 +443,26 @@ async function collectDevBatVars(hostArch: string, devBat: string, args: string[
     }
     if (majorVersion === 14 && util.compareVersion(WindowsSDKVersionParsed, { major: 10, minor: 0, patch: 14393 }) >= 0) {
         const WindowsSdkDir = vars['WindowsSdkDir'] ?? '';
+
         const existPath = vars['PATH'] ?? '';
+
         const oldWinSdkBinPath = path.join(WindowsSdkDir, 'bin', hostArch);
+
         const newWinSdkBinPath = path.join(WindowsSdkDir, 'bin', WindowsSDKVersion, hostArch);
+
         const newWinSdkBinPathExist = await fs.exists(newWinSdkBinPath);
+
         if (newWinSdkBinPathExist &&
             existPath !== '' &&
             existPath.toLowerCase().indexOf(newWinSdkBinPath.toLowerCase()) < 0) {
             log.info(localize('windows.sdk.path.patch', 'Patch Windows SDK path from {0} to {1} for {2}',
                 oldWinSdkBinPath, newWinSdkBinPath, devBat));
+
             vars['PATH'] = `${newWinSdkBinPath};${existPath}`;
         }
     }
     log.debug(localize('ok.running', 'OK running {0} {1}, env vars: {2}', devBat, args.join(' '), JSON.stringify(vars)));
+
     return vars;
 }
 
@@ -437,11 +478,13 @@ export async function getVcVarsBatScript(vsInstall: VSInstallation, hostArch: st
     const majorVersion = parseInt(vsInstall.installationVersion);
 
     let vcVarsScript: string = 'vcvarsall.bat';
+
     if (targetArch === "arm" || targetArch === "arm64") {
         // The arm(64) vcvars filename for x64 hosted toolset is using the 'amd64' alias.
         vcVarsScript = `vcvars${getHostTargetArchString(hostArch, targetArch, true)}.bat`;
     }
     let devBatFolder = path.join(vsInstall.installationPath, 'VC', 'Auxiliary', 'Build');
+
     if (majorVersion < 15) {
         devBatFolder = path.join(vsInstall.installationPath, 'VC');
     }
@@ -465,18 +508,24 @@ export async function getVcVarsBatScript(vsInstall: VSInstallation, hostArch: st
  */
 export async function varsForVSInstallation(inst: VSInstallation, hostArch: string, targetArch?: string, toolsetVersion?: string): Promise<Environment | null> {
     log.trace(`varsForVSInstallation path:'${inst.installationPath}' version:${inst.installationVersion} host arch:${hostArch} - target arch:${targetArch}`);
+
     const commonDir = path.join(inst.installationPath, 'Common7', 'Tools');
+
     const majorVersion = parseInt(inst.installationVersion);
+
     const devbat = await getVcVarsBatScript(inst, hostArch, targetArch);
+
     if (!devbat) {
         return null;
     }
 
     const devBatArgs = [getHostTargetArchString(hostArch, targetArch, majorVersion < 15, true)];
+
     if (toolsetVersion && majorVersion >= 15) {
         devBatArgs.push(`-vcvars_ver=${toolsetVersion}`);
     }
     const variables = await collectDevBatVars(hostArch, devbat, devBatArgs, majorVersion, commonDir);
+
     if (!variables) {
         return null;
     } else {
@@ -488,6 +537,7 @@ export async function varsForVSInstallation(inst: VSInstallation, hostArch: stri
         // the VS{vs_version_number}COMNTOOLS environment variable to contain
         // the path to the Common7 directory.
         const vsVersion = variables['VISUALSTUDIOVERSION'];
+
         if (vsVersion) {
             variables[`VS${vsVersion.replace('.', '')}COMNTOOLS`] = commonDir;
         }
@@ -497,16 +547,22 @@ export async function varsForVSInstallation(inst: VSInstallation, hostArch: stri
         // setting the CC and CXX environment variables when we want to do a
         // configure.
         variables['CC'] = 'cl.exe';
+
         variables['CXX'] = 'cl.exe';
 
         if (paths.ninjaPath) {
             let envPATH = variables['PATH'];
+
             if (undefined !== envPATH) {
                 const envPaths = envPATH.split(';');
+
                 const ninjaPath = path.dirname(paths.ninjaPath!);
+
                 const ninjaPathBase = envPaths.find(path => path === ninjaPath);
+
                 if (undefined === ninjaPathBase) {
                     envPATH = envPATH.concat(';' + ninjaPath);
+
                     variables['PATH'] = envPATH;
                 }
             }

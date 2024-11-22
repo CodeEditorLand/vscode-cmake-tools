@@ -19,6 +19,7 @@ export class InputFile {
             return true;
         }
         let stat: Stats;
+
         try {
             stat = await fs.stat(this.filePath);
         } catch (error: any) {
@@ -31,6 +32,7 @@ export class InputFile {
 
     static async create(filePath: string): Promise<InputFile> {
         let stat: Stats;
+
         try {
             stat = await fs.stat(filePath);
         } catch (_) {
@@ -60,6 +62,7 @@ export class InputFileSet {
             }
             return InputFile.create(src);
         }));
+
         return new InputFileSet(inputFiles);
     }
 

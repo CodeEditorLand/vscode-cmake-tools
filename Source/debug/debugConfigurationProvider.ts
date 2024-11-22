@@ -5,6 +5,7 @@ nls.config({
 	messageFormat: nls.MessageFormat.bundle,
 	bundleFormat: nls.BundleFormat.standalone,
 })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class DynamicDebugConfigurationProvider
@@ -42,6 +43,7 @@ export class DebugConfigurationProvider
 			!debugConfiguration.name
 		) {
 			const editor = vscode.window.activeTextEditor;
+
 			if (editor && editor.document.fileName.endsWith(".cmake")) {
 				debugConfiguration.type = "cmake";
 				debugConfiguration.name = localize(

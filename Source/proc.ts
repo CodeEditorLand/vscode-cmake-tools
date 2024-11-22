@@ -14,6 +14,7 @@ import * as nls from 'vscode-nls';
 import { Environment, EnvironmentUtils } from '@cmt/environmentVariables';
 
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger('proc');
@@ -107,6 +108,7 @@ export interface ExecutionOptions {
 
 export function buildCmdStr(command: string, args?: string[]): string {
     let cmdarr = [command];
+
     if (args) {
         cmdarr = cmdarr.concat(args);
     }
@@ -143,17 +145,20 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
         LANG: "C",
         LC_ALL: "C"
     });
+
     const final_env = EnvironmentUtils.merge([
         process.env,
         options.environment,
         options.overrideLocale ? localeOverride : {}]);
 
     const cmdstr = buildCmdStr(command, args);
+
     if (options && options.silent !== true) {
         log.info(// We do simple quoting of arguments with spaces.
             // This is only shown to the user,
             // and doesn't have to be 100% correct.
             localize('executing.command', 'Executing command: {0}', cmdstr));
+
         if (options.environment) {
             log.debug(localize('execution.environment', '  with environment: {0}', JSON.stringify(final_env)));
         }
@@ -167,6 +172,7 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
         env: final_env,
         shell: !!options.shell
     };
+
     if (options?.cwd !== undefined) {
         util.createDirIfNotExistsSync(options.cwd);
         spawn_opts.cwd = options.cwd;
@@ -179,6 +185,7 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
 
     // Since we won't be sending anything to this process, close its stdin.
     spawn_opts.stdio = ['ignore', 'pipe', 'pipe'];
+
     try {
         child = proc.spawn(command, args ?? [], spawn_opts);
     } catch {
@@ -200,6 +207,7 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
     }
 
     const encoding = options.outputEncoding && iconv.encodingExists(options.outputEncoding) ? options.outputEncoding : 'utf8';
+
     const accumulate = (str1: string, str2: string) => {
         try {
             return str1 + str2;
@@ -212,8 +220,11 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
 
     const result = new Promise<ExecutionResult>(resolve => {
         let stdout_acc = '';
+
         let line_acc = '';
+
         let stderr_acc = '';
+
         let stderr_line_acc = '';
         child?.on('error', err => {
             log.warning(localize({key: 'process.error', comment: ['The space before and after all placeholders should be preserved.']}, 'The command: {0} failed with error: {1}', `${cmdstr}`, `${err}`));
@@ -240,9 +251,12 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
         child?.stdout?.on('data', (data: Uint8Array) => {
             rollbar.invoke(localize('processing.data.event.stdout', 'Processing {0} event from proc stdout', "\"data\""), { data, command, args }, () => {
                 const str = iconv.decode(Buffer.from(data), encoding);
+
                 const lines = str.split('\n').map(l => l.endsWith('\r') ? l.substr(0, l.length - 1) : l);
+
                 while (lines.length > 1) {
                     line_acc = accumulate(line_acc, lines[0]);
+
                     if (outputConsumer) {
                         outputConsumer.output(line_acc);
                     } else if (util.isTestMode()) {
@@ -260,9 +274,12 @@ export function execute(command: string, args?: string[], outputConsumer?: Outpu
         child?.stderr?.on('data', (data: Uint8Array) => {
             rollbar.invoke(localize('processing.data.event.stderr', 'Processing {0} event from proc stderr', "\"data\""), { data, command, args }, () => {
                 const str = iconv.decode(Buffer.from(data), encoding);
+
                 const lines = str.split('\n').map(l => l.endsWith('\r') ? l.substr(0, l.length - 1) : l);
+
                 while (lines.length > 1) {
                     stderr_line_acc = accumulate(stderr_line_acc, lines[0]);
+
                     if (outputConsumer) {
                         outputConsumer.error(stderr_line_acc);
                     } else if (util.isTestMode() && stderr_line_acc) {

@@ -74,6 +74,7 @@ export function populateCollection(coll: vscode.DiagnosticCollection, fdiags: It
             by_file.set(fdiag.filepath, []);
         }
         by_file.get(fdiag.filepath)!.push(fdiag.diag);
+
         return by_file;
     });
     // Insert the diags into the collection
@@ -100,12 +101,14 @@ export abstract class RawDiagnosticParser {
      */
     handleLine(line: string): boolean {
         const result = this.doHandleLine(line);
+
         if (result === FeedLineResult.Ok) {
             return true;
         } else if (result === FeedLineResult.NotMine) {
             return false;
         } else {
             this._diagnostics.push(result);
+
             return true;
         }
     }
