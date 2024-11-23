@@ -1702,7 +1702,15 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 			.showWarningMessage<{
 				action: "yes" | "no";
 				title: string;
-			}>(localize("untrusted.kits.found", 'Compiler kits may be present in these directories: {0}. Would you like to scan and execute potential compilers in these directories by adding them to "cmake.additionalCompilerSearchDirs"?', Array.from(untrusted_paths).toString()), { action: "yes", title: localize("yes", "Yes") }, { action: "no", title: localize("no", "No") })
+			}>(
+				localize(
+					"untrusted.kits.found",
+					'Compiler kits may be present in these directories: {0}. Would you like to scan and execute potential compilers in these directories by adding them to "cmake.additionalCompilerSearchDirs"?',
+					Array.from(untrusted_paths).toString(),
+				),
+				{ action: "yes", title: localize("yes", "Yes") },
+				{ action: "no", title: localize("no", "No") },
+			)
 			.then(async (action) => {
 				if (action?.action === "yes") {
 					const settings = vscode.workspace.getConfiguration("cmake");

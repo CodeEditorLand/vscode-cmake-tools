@@ -2,25 +2,25 @@ import { getStatusBar } from "@cmt/extension";
 import { treeDataProvider } from "@cmt/ui/projectStatus";
 
 export async function onConfigureSettingsChange(): Promise<void> {
-    await treeDataProvider.refreshConfigNode();
+	await treeDataProvider.refreshConfigNode();
 
-    getStatusBar()?.updateConfigurePresetButton();
+	getStatusBar()?.updateConfigurePresetButton();
 }
 
 export async function onBuildSettingsChange(): Promise<void> {
-    await treeDataProvider.refreshBuildNode();
+	await treeDataProvider.refreshBuildNode();
 
-    getStatusBar()?.updateBuildPresetButton();
+	getStatusBar()?.updateBuildPresetButton();
 }
 
 export async function onTestSettingsChange(): Promise<void> {
-    await treeDataProvider.refreshTestNode();
+	await treeDataProvider.refreshTestNode();
 
-    getStatusBar()?.updateTestPresetButton();
+	getStatusBar()?.updateTestPresetButton();
 }
 
 export async function onPackageSettingsChange(): Promise<void> {
-    await treeDataProvider.refreshPackageNode();
+	await treeDataProvider.refreshPackageNode();
 
-    getStatusBar()?.updatePackagePresetButton();
+	getStatusBar()?.updatePackagePresetButton();
 }

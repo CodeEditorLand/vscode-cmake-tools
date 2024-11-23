@@ -2,61 +2,74 @@
  * Copyright (c) Microsoft Corporation. All Rights Reserved.
  * See 'LICENSE' in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-'use strict';
+"use strict";
 
-import * as util from '@cmt/util';
-import * as vscode from 'vscode';
-import TelemetryReporter from '@vscode/extension-telemetry';
-import { getExperimentationServiceAsync, IExperimentationService, IExperimentationTelemetry, TargetPopulation } from 'vscode-tas-client';
+import * as util from "@cmt/util";
+import TelemetryReporter from "@vscode/extension-telemetry";
+import * as vscode from "vscode";
+import {
+	getExperimentationServiceAsync,
+	IExperimentationService,
+	IExperimentationTelemetry,
+	TargetPopulation,
+} from "vscode-tas-client";
 
 export type Properties = { [key: string]: string };
 export type Measures = { [key: string]: number };
 
 interface IPackageInfo {
-    name: string;
-    version: string;
-    aiKey: string;
+	name: string;
+	version: string;
+	aiKey: string;
 }
 
 export class ExperimentationTelemetry implements IExperimentationTelemetry {
-    private sharedProperties: Record<string, string> = {};
+	private sharedProperties: Record<string, string> = {};
 
-    constructor(private baseReporter: TelemetryReporter) {}
+	constructor(private baseReporter: TelemetryReporter) {}
 
-    sendTelemetryEvent(eventName: string, properties?: Record<string, string>, measurements?: Record<string, number>): void {
-        this.baseReporter.sendTelemetryEvent(
-            eventName,
-            {
-                ...this.sharedProperties,
-                ...properties
-            },
-            measurements
-        );
-    }
+	sendTelemetryEvent(
+		eventName: string,
+		properties?: Record<string, string>,
+		measurements?: Record<string, number>,
+	): void {
+		this.baseReporter.sendTelemetryEvent(
+			eventName,
+			{
+				...this.sharedProperties,
+				...properties,
+			},
+			measurements,
+		);
+	}
 
-    sendTelemetryErrorEvent(eventName: string, properties?: Record<string, string>, _measurements?: Record<string, number>): void {
-        this.baseReporter.sendTelemetryErrorEvent(eventName, {
-            ...this.sharedProperties,
-            ...properties
-        });
-    }
+	sendTelemetryErrorEvent(
+		eventName: string,
+		properties?: Record<string, string>,
+		_measurements?: Record<string, number>,
+	): void {
+		this.baseReporter.sendTelemetryErrorEvent(eventName, {
+			...this.sharedProperties,
+			...properties,
+		});
+	}
 
-    setSharedProperty(name: string, value: string): void {
-        this.sharedProperties[name] = value;
-    }
+	setSharedProperty(name: string, value: string): void {
+		this.sharedProperties[name] = value;
+	}
 
-    postEvent(eventName: string, props: Map<string, string>): void {
-        const event: Record<string, string> = {};
+	postEvent(eventName: string, props: Map<string, string>): void {
+		const event: Record<string, string> = {};
 
-        for (const [key, value] of props) {
-            event[key] = value;
-        }
-        this.sendTelemetryEvent(eventName, event);
-    }
+		for (const [key, value] of props) {
+			event[key] = value;
+		}
+		this.sendTelemetryEvent(eventName, event);
+	}
 
-    dispose(): Promise<any> {
-        return this.baseReporter.dispose();
-    }
+	dispose(): Promise<any> {
+		return this.baseReporter.dispose();
+	}
 }
 
 let initializationPromise: Promise<IExperimentationService> | undefined;
@@ -64,90 +77,110 @@ let initializationPromise: Promise<IExperimentationService> | undefined;
 let experimentationTelemetry: ExperimentationTelemetry | undefined;
 
 export function activate(extensionContext: vscode.ExtensionContext): void {
-    try {
-        if (extensionContext) {
-            const packageInfo: IPackageInfo = getPackageInfo();
+	try {
+		if (extensionContext) {
+			const packageInfo: IPackageInfo = getPackageInfo();
 
-            if (packageInfo) {
-                const targetPopulation: TargetPopulation = TargetPopulation.Public;
-                experimentationTelemetry = new ExperimentationTelemetry(new TelemetryReporter(appInsightsKey));
-                initializationPromise = getExperimentationServiceAsync(packageInfo.name, packageInfo.version, targetPopulation, experimentationTelemetry, extensionContext.globalState);
-            }
-        }
-    } catch (e) {
-        // Handle error with a try/catch, but do nothing for errors.
-    }
+			if (packageInfo) {
+				const targetPopulation: TargetPopulation =
+					TargetPopulation.Public;
+				experimentationTelemetry = new ExperimentationTelemetry(
+					new TelemetryReporter(appInsightsKey),
+				);
+				initializationPromise = getExperimentationServiceAsync(
+					packageInfo.name,
+					packageInfo.version,
+					targetPopulation,
+					experimentationTelemetry,
+					extensionContext.globalState,
+				);
+			}
+		}
+	} catch (e) {
+		// Handle error with a try/catch, but do nothing for errors.
+	}
 }
 
 export function sendOpenTelemetry(telemetryProperties: Properties): void {
-    const targetPopulation: TargetPopulation = util.getCmakeToolsTargetPopulation();
+	const targetPopulation: TargetPopulation =
+		util.getCmakeToolsTargetPopulation();
 
-    switch (targetPopulation) {
-        case TargetPopulation.Public:
-            telemetryProperties['targetPopulation'] = "Public";
+	switch (targetPopulation) {
+		case TargetPopulation.Public:
+			telemetryProperties["targetPopulation"] = "Public";
 
-            break;
+			break;
 
-        case TargetPopulation.Internal:
-            telemetryProperties['targetPopulation'] = "Internal";
+		case TargetPopulation.Internal:
+			telemetryProperties["targetPopulation"] = "Internal";
 
-            break;
+			break;
 
-        case TargetPopulation.Insiders:
-            telemetryProperties['targetPopulation'] = "Insiders";
+		case TargetPopulation.Insiders:
+			telemetryProperties["targetPopulation"] = "Insiders";
 
-            break;
+			break;
 
-        default:
-            break;
-    }
-    logEvent('open', telemetryProperties);
+		default:
+			break;
+	}
+	logEvent("open", telemetryProperties);
 }
 
-export function getExperimentationService(): Promise<IExperimentationService | undefined> | undefined {
-    return initializationPromise;
+export function getExperimentationService():
+	| Promise<IExperimentationService | undefined>
+	| undefined {
+	return initializationPromise;
 }
 
 export async function deactivate(): Promise<void> {
-    if (initializationPromise) {
-        try {
-            await initializationPromise;
-        } catch (e) {
-            // Continue even if we were not able to initialize the experimentation platform.
-        }
-    }
-    if (experimentationTelemetry) {
-        await experimentationTelemetry.dispose();
-    }
+	if (initializationPromise) {
+		try {
+			await initializationPromise;
+		} catch (e) {
+			// Continue even if we were not able to initialize the experimentation platform.
+		}
+	}
+	if (experimentationTelemetry) {
+		await experimentationTelemetry.dispose();
+	}
 }
 
-export function logEvent(eventName: string, properties?: Properties, measures?: Measures): void {
-    const sendTelemetry = () => {
-        if (experimentationTelemetry) {
-            experimentationTelemetry.sendTelemetryEvent(eventName, properties, measures);
-        }
-    };
+export function logEvent(
+	eventName: string,
+	properties?: Properties,
+	measures?: Measures,
+): void {
+	const sendTelemetry = () => {
+		if (experimentationTelemetry) {
+			experimentationTelemetry.sendTelemetryEvent(
+				eventName,
+				properties,
+				measures,
+			);
+		}
+	};
 
-    if (initializationPromise) {
-        try {
-            void initializationPromise.then(sendTelemetry);
+	if (initializationPromise) {
+		try {
+			void initializationPromise.then(sendTelemetry);
 
-            return;
-        } catch (e) {
-            // Send telemetry even if we were not able to initialize the experimentation platform.
-        }
-    }
-    sendTelemetry();
+			return;
+		} catch (e) {
+			// Send telemetry even if we were not able to initialize the experimentation platform.
+		}
+	}
+	sendTelemetry();
 }
 
 const appInsightsKey: string =
-    "0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255";
+	"0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255";
 function getPackageInfo(): IPackageInfo {
-    const packageJSON: util.PackageJSON = util.thisExtensionPackage();
+	const packageJSON: util.PackageJSON = util.thisExtensionPackage();
 
-    return {
-        name: `${packageJSON.publisher}.${packageJSON.name}`,
-        version: packageJSON.version,
-        aiKey: appInsightsKey
-    };
+	return {
+		name: `${packageJSON.publisher}.${packageJSON.name}`,
+		version: packageJSON.version,
+		aiKey: appInsightsKey,
+	};
 }
