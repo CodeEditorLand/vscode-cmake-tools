@@ -7,6 +7,7 @@ const envProperty = Symbol("envProperty");
 
 // alias of NodeJS.ProcessEnv, Record<string, string | undefined> === Dict<string>
 export type Environment = Record<string, string | undefined>;
+
 export type EnvironmentWithNull = Record<string, string | undefined | null>;
 
 const filter: RegExp = /\$\{.+?\}/;

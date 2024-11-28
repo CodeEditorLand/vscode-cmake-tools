@@ -438,4 +438,5 @@ class Paths {
 }
 
 const paths = new Paths();
+
 export default paths;

@@ -32,6 +32,7 @@ export type FolderProjectType = {
 	folder: vscode.WorkspaceFolder;
 	projects: CMakeProject[];
 };
+
 export class ProjectController implements vscode.Disposable {
 	private readonly folderToProjectsMap = new Map<string, CMakeProject[]>();
 	private readonly sourceDirectorySub = new Map<

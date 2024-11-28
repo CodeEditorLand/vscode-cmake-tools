@@ -91,8 +91,11 @@ let pinnedCommands: PinnedCommands;
 const log = logging.createLogger("extension");
 
 const multiProjectModeKey = "cmake:multiProject";
+
 export const hideLaunchCommandKey = "cmake:hideLaunchCommand";
+
 export const hideDebugCommandKey = "cmake:hideDebugCommand";
+
 export const hideBuildCommandKey = "cmake:hideBuildCommand";
 
 /**

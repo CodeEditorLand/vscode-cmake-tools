@@ -547,6 +547,7 @@ export const defaultTestPreset: TestPreset = {
 		"An empty test preset that does not add any arguments",
 	),
 };
+
 export const defaultPackagePreset: PackagePreset = {
 	name: "__defaultPackagePreset__",
 	displayName: localize("default.package.preset", "[Default]"),
@@ -555,6 +556,7 @@ export const defaultPackagePreset: PackagePreset = {
 		"An empty package preset that does not add any arguments",
 	),
 };
+
 export const defaultWorkflowPreset: WorkflowPreset = {
 	name: "__defaultWorkflowPreset__",
 	steps: [{ type: "configure", name: "_placeholder_" }],

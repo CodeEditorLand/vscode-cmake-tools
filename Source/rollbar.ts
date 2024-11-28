@@ -256,4 +256,5 @@ class RollbarController {
 }
 
 const rollbar = new RollbarController();
+
 export default rollbar;

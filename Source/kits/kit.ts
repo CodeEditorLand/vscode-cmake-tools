@@ -50,6 +50,7 @@ export enum SpecialKits {
 	Unspecified = "__unspec__",
 }
 export const SpecialKitsCount: number = 2;
+
 export type UnspecifiedKit = SpecialKits.Unspecified;
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;

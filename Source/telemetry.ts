@@ -15,6 +15,7 @@ import {
 } from "vscode-tas-client";
 
 export type Properties = { [key: string]: string };
+
 export type Measures = { [key: string]: number };
 
 interface IPackageInfo {

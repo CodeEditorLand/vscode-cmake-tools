@@ -19,6 +19,7 @@ nls.config({
 })();
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 export function defaultNumJobs(): number {
 	return os.cpus().length + 2;
 }
@@ -33,48 +34,61 @@ export type LogLevelKey =
 	| "warning"
 	| "error"
 	| "fatal";
+
 export type CMakeCommunicationMode =
 	| "legacy"
 	| "serverApi"
 	| "fileApi"
 	| "automatic";
+
 export type StatusBarOptionVisibility =
 	| "visible"
 	| "compact"
 	| "icon"
 	| "hidden"
 	| "inherit";
+
 export type StatusBarInheritOptionVisibility =
 	| "visible"
 	| "compact"
 	| "icon"
 	| "hidden";
+
 export type StatusBarStaticOptionVisibility =
 	| "visible"
 	| "icon"
 	| "hidden"
 	| "inherit";
+
 export type StatusBarInheritStaticOptionVisibility =
 	| "visible"
 	| "icon"
 	| "hidden";
+
 export type StatusBarTextOptionVisibility =
 	| "visible"
 	| "compact"
 	| "hidden"
 	| "inherit";
+
 export type StatusBarInheritTextOptionVisibility =
 	| "visible"
 	| "compact"
 	| "hidden";
+
 export type StatusBarIconOptionVisibility = "visible" | "hidden" | "inherit";
+
 export type StatusBarInheritIconOptionVisibility =
 	| "visible"
 	| "hidden"
 	| "inherit";
+
 export type ProjectStatusOptionVisibility = "visible" | "hidden";
+
 export type TouchBarOptionVisibility = "default" | "hidden";
+
 export type UseCMakePresets = "always" | "never" | "auto";
+
 export type UseVsDeveloperEnvironment = "always" | "never" | "auto";
 
 export interface AdvancedTouchBarConfig {

@@ -72,4 +72,5 @@ class Collections {
 }
 
 export const collections = new Collections();
+
 export default collections;

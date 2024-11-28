@@ -10,6 +10,7 @@ enum FirePolicy {
 }
 
 export const FireNow = FirePolicy.FireNow;
+
 export const FireLate = FirePolicy.FireLate;
 
 type SubscriptionCallback<T> = (value: T) => void;

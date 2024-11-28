@@ -21,6 +21,7 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const log = createLogger("expand");
+
 export const envDelimiter: string = process.platform === "win32" ? ";" : ":";
 
 /**
