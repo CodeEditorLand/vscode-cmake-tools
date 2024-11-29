@@ -16,14 +16,23 @@ const log = logging.createLogger("cmakeExecutable");
 
 export interface CMakeExecutable {
 	path: string;
+
 	isPresent: boolean;
+
 	isServerModeSupported?: boolean;
+
 	isFileApiModeSupported?: boolean;
+
 	isDebuggerSupported?: boolean;
+
 	isDefaultGeneratorSupported?: boolean;
+
 	version?: util.Version;
+
 	minimalServerModeVersion: util.Version;
+
 	minimalFileApiModeVersion: util.Version;
+
 	minimalDefaultGeneratorVersion: util.Version;
 }
 
@@ -78,6 +87,7 @@ export async function getCMakeExecutableInformation(
 				console.assert(execVersion.stdout);
 
 				const regexVersion = /cmake.* version (.*?)\r?\n/;
+
 				cmake.version = util.parseVersion(
 					regexVersion.exec(execVersion.stdout)![1],
 				);
@@ -94,6 +104,7 @@ export async function getCMakeExecutableInformation(
 					cmake.version,
 					cmake.minimalFileApiModeVersion,
 				);
+
 				cmake.isPresent = true;
 
 				// Support for CMake using an internal default generator when one isn't provided
@@ -102,6 +113,7 @@ export async function getCMakeExecutableInformation(
 					cmake.minimalDefaultGeneratorVersion,
 				);
 			}
+
 			const debuggerPresent = await proc.execute(
 				path,
 				["-E", "capabilities"],
@@ -113,14 +125,18 @@ export async function getCMakeExecutableInformation(
 				console.assert(debuggerPresent.stdout);
 
 				const stdoutJson = JSON.parse(debuggerPresent.stdout);
+
 				cmake.isDebuggerSupported = stdoutJson["debugger"];
+
 				await setCMakeDebuggerAvailableContext(
 					cmake.isDebuggerSupported?.valueOf() ?? false,
 				);
 			}
 		} catch {}
+
 		cmakeInfo.set(normalizedPath, cmake);
 	}
+
 	return cmake;
 }
 

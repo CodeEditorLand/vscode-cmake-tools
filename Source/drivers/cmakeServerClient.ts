@@ -27,7 +27,9 @@ const messageWrapperRegEx =
 
 export interface ProtocolVersion {
 	isExperimental: boolean;
+
 	major: number;
+
 	minor: number;
 }
 
@@ -84,14 +86,19 @@ export interface ReplyMessage extends CookiedMessage {
  */
 export interface ProgressMessage extends MessageBase {
 	type: "progress";
+
 	progressMessage: string;
+
 	progressMinimum: number;
+
 	progressCurrent: number;
+
 	progressMaximum: number;
 }
 
 export interface SignalMessage extends MessageBase {
 	type: "signal";
+
 	name: string;
 }
 
@@ -101,7 +108,9 @@ export interface DirtyMessage extends SignalMessage {
 
 export interface FileChangeMessage {
 	name: "fileChange";
+
 	path: string;
+
 	properties: string[];
 }
 
@@ -113,8 +122,11 @@ type SomeSignalMessage = DirtyMessage | FileChangeMessage;
  */
 export interface MessageMessage extends MessageBase {
 	type: "message";
+
 	message: string;
+
 	title: string;
+
 	inReplyTo: string;
 }
 
@@ -123,6 +135,7 @@ export interface MessageMessage extends MessageBase {
  */
 export interface HelloMessage extends MessageBase {
 	type: "hello";
+
 	supportedProtocolVersions: ProtocolVersion[];
 }
 
@@ -133,11 +146,17 @@ export interface HelloMessage extends MessageBase {
  */
 export interface HandshakeParams {
 	sourceDirectory?: string;
+
 	buildDirectory: string;
+
 	generator?: string;
+
 	extraGenerator?: string;
+
 	platform?: string;
+
 	toolset?: string;
+
 	protocolVersion: { major: number; minor: number };
 }
 
@@ -164,32 +183,53 @@ export interface GlobalSettingsRequest
 
 export interface GlobalSettingsContent {
 	buildDirectory: string;
+
 	capabilities: {
 		generators: {
 			extraGenerators: string[];
+
 			name: string;
+
 			platformSupport: boolean;
+
 			toolsetSupport: boolean;
 		}[];
+
 		serverMode: boolean;
+
 		version: {
 			isDirty: boolean;
+
 			major: number;
+
 			minor: number;
+
 			patch: number;
+
 			string: string;
+
 			suffix: string;
 		};
 	};
+
 	checkSystemVars: boolean;
+
 	extraGenerator: string;
+
 	generator: string;
+
 	debugOutput: boolean;
+
 	sourceDirectory: string;
+
 	trace: boolean;
+
 	traceExpand: boolean;
+
 	warnUninitialized: boolean;
+
 	warnUnused: boolean;
+
 	warnUnusedCli: boolean;
 }
 
@@ -204,11 +244,17 @@ export interface GlobalSettingsReply
  */
 export interface SetGlobalSettingsParams {
 	checkSystemVars?: boolean;
+
 	debugOutput?: boolean;
+
 	trace?: boolean;
+
 	traceExpand?: boolean;
+
 	warnUninitialized?: boolean;
+
 	warnUnused?: boolean;
+
 	warnUnusedCli?: boolean;
 }
 
@@ -271,10 +317,14 @@ export interface CodeModelRequest extends CookiedMessage, CodeModelParams {
 
 export interface ServerCodeModelFileGroup {
 	language?: string;
+
 	compileFlags?: string; // In CodeModelFileGroup compileCommandFragments is used instead.
 	includePath?: { path: string; isSystem?: boolean }[];
+
 	defines?: string[];
+
 	sources: string[];
+
 	isGenerated: boolean;
 }
 
@@ -289,11 +339,16 @@ export type TargetTypeString =
 
 export interface ServerCodeModelTarget {
 	name: string;
+
 	type: TargetTypeString;
+
 	fullName?: string;
+
 	sourceDirectory?: string;
+
 	buildDirectory?: string; // Doesn't exist in general CodeModelTarget.
 	artifacts?: string[];
+
 	linkerLanguage?: string; // Doesn't exist in general CodeModelTarget.
 	linkLibraries?: string[]; // Doesn't exist in general CodeModelTarget.
 	linkFlags?: string[]; // Doesn't exist in general CodeModelTarget.
@@ -301,13 +356,17 @@ export interface ServerCodeModelTarget {
 	frameworkPath?: string; // Doesn't exist in general CodeModelTarget.
 	linkPath?: string; // Doesn't exist in general CodeModelTarget.
 	sysroot?: string;
+
 	fileGroups?: ServerCodeModelFileGroup[];
 }
 
 export interface ServerCodeModelProject {
 	name: string;
+
 	targets: ServerCodeModelTarget[];
+
 	sourceDirectory: string;
+
 	buildDirectory: string; // Doesn't exist in general CodeModelProject.
 	hasInstallRule?: boolean;
 }
@@ -315,6 +374,7 @@ export interface ServerCodeModelProject {
 export interface ServerCodeModelConfiguration {
 	/** Name of the active configuration in a multi-configuration generator.*/
 	name: string;
+
 	projects: ServerCodeModelProject[];
 }
 
@@ -340,7 +400,9 @@ export interface CMakeInputsRequest extends CookiedMessage, CMakeInputsParams {
 
 export interface CMakeInputsContent {
 	buildFiles: { isCMake: boolean; isTemporary: boolean; sources: string[] }[];
+
 	cmakeRootDirectory: string;
+
 	sourceDirectory: string;
 }
 
@@ -363,8 +425,11 @@ export interface CacheContent {
 
 export interface CMakeCacheEntry {
 	key: string;
+
 	properties: { ADVANCED: "0" | "1"; HELPSTRING: string };
+
 	type: string;
+
 	value: string;
 }
 
@@ -409,20 +474,31 @@ export type SomeMessage =
  */
 export interface ClientInit {
 	cmakePath: string;
+
 	onMessage(m: MessageMessage): Promise<void>;
+
 	onOtherOutput(m: string): Promise<void>;
+
 	onProgress(m: ProgressMessage): Promise<void>;
+
 	onDirty(): Promise<void>;
+
 	environment: Environment;
+
 	sourceDir: string;
+
 	binaryDir: string;
+
 	tmpdir: string;
+
 	generator: CMakeGenerator;
 }
 
 interface ClientInitPrivate extends ClientInit {
 	onHello(m: HelloMessage): Promise<void>;
+
 	onCrash(retc: number, signal: string): Promise<void>;
+
 	onPipeError(e: Error): Promise<void>;
 }
 
@@ -431,7 +507,9 @@ interface ClientInitPrivate extends ClientInit {
  */
 export interface ErrorMessage extends CookiedMessage {
 	type: "error";
+
 	errorMessage: string;
+
 	inReplyTo: string;
 }
 
@@ -446,6 +524,7 @@ export class ServerError extends Error implements ErrorMessage {
 	) {
 		super(e.errorMessage);
 	}
+
 	toString(): string {
 		return `[cmake-server] ${this.errorMessage}`;
 	}
@@ -463,24 +542,31 @@ export class BadHomeDirectoryError extends Error {
 
 interface MessageResolutionCallbacks {
 	resolve(a: SomeReplyMessage): void;
+
 	reject(b: ServerError): void;
 }
 
 export class CMakeServerClient {
 	private accInput: string = "";
+
 	private readonly promisesResolvers: Map<
 		string,
 		MessageResolutionCallbacks
 	> = new Map();
+
 	private readonly params: ClientInitPrivate;
 	// TODO: Refactor init so these init-assertions are not necessary
 	private endPromise!: Promise<void>;
+
 	private pipe!: net.Socket;
+
 	private readonly pipeFilePath: string;
+
 	private serverProcess: ChildProcessWithoutNullStreams | null = null;
 
 	private onMoreData(data: Uint8Array) {
 		const str = data.toString();
+
 		this.accInput += str;
 
 		while (1) {
@@ -491,10 +577,12 @@ export class CMakeServerClient {
 			if (!mat) {
 				break;
 			}
+
 			if (mat.length !== 3) {
 				if (process.env.NODE_ENV === "development") {
 					debugger;
 				}
+
 				throw new global.Error(
 					localize(
 						"protocol.error.cmake",
@@ -503,6 +591,7 @@ export class CMakeServerClient {
 					),
 				);
 			}
+
 			this.accInput = mat[2];
 
 			if (enableCMakeServerDebugProtocol) {
@@ -514,7 +603,9 @@ export class CMakeServerClient {
 					),
 				);
 			}
+
 			const message: SomeMessage = JSON.parse(mat[1]);
+
 			this.onMessage(message);
 		}
 	}
@@ -529,6 +620,7 @@ export class CMakeServerClient {
 				localize("invalid.cookie", "Invalid cookie: {0}", cookie),
 			);
 		}
+
 		this.promisesResolvers.delete(cookie);
 
 		return item;
@@ -555,8 +647,10 @@ export class CMakeServerClient {
 							),
 						);
 					}
+
 					return;
 				}
+
 				case "error": {
 					const err = new ServerError(cookied as ErrorMessage);
 
@@ -573,10 +667,13 @@ export class CMakeServerClient {
 							),
 						);
 					}
+
 					return;
 				}
+
 				case "progress": {
 					const prog = cookied as any as ProgressMessage;
+
 					this.params.onProgress(prog).catch((e) => {
 						log.error(
 							localize(
@@ -602,11 +699,13 @@ export class CMakeServerClient {
 							await fs.unlink(this.pipeFilePath);
 						}
 					});
+
 				rollbar.takePromise(
 					"Unlink pipe",
 					{ pipe: this.pipeFilePath },
 					unlinkPromise,
 				);
+
 				this.params.onHello(some as HelloMessage).catch((e) => {
 					log.error(
 						localize(
@@ -620,6 +719,7 @@ export class CMakeServerClient {
 
 				return;
 			}
+
 			case "message": {
 				this.params.onMessage(some as MessageMessage).catch((e) => {
 					log.error(
@@ -634,6 +734,7 @@ export class CMakeServerClient {
 
 				return;
 			}
+
 			case "signal": {
 				const sig = some as SomeSignalMessage;
 
@@ -652,15 +753,18 @@ export class CMakeServerClient {
 
 						return;
 					}
+
 					case "fileChange": {
 						return;
 					}
 				}
 			}
 		}
+
 		if (process.env.NODE_ENV === "development") {
 			debugger;
 		}
+
 		log.warning(
 			localize(
 				"cant.yet.handle.message",
@@ -674,34 +778,42 @@ export class CMakeServerClient {
 		type: "handshake",
 		params: HandshakeParams,
 	): Promise<HandshakeContent>;
+
 	private sendRequest(
 		type: "globalSettings",
 		params?: GlobalSettingsParams,
 	): Promise<GlobalSettingsContent>;
+
 	private sendRequest(
 		type: "setGlobalSettings",
 		params: SetGlobalSettingsParams,
 	): Promise<SetGlobalSettingsContent>;
+
 	private sendRequest(
 		type: "configure",
 		params: ConfigureParams,
 	): Promise<ConfigureContent>;
+
 	private sendRequest(
 		type: "compute",
 		params?: ComputeParams,
 	): Promise<ComputeContent>;
+
 	private sendRequest(
 		type: "codemodel",
 		params?: CodeModelParams,
 	): Promise<ServerCodeModelContent>;
+
 	private sendRequest(
 		type: "cmakeInputs",
 		params?: CMakeInputsParams,
 	): Promise<CMakeInputsContent>;
+
 	private sendRequest(
 		type: "cache",
 		params?: CacheParams,
 	): Promise<CacheContent>;
+
 	private sendRequest(type: string, params: any = {}): Promise<any> {
 		const cookiedMessage = { type, ...params };
 
@@ -722,8 +834,11 @@ export class CMakeServerClient {
 				),
 			);
 		}
+
 		this.pipe.write('\n[== "CMake Server" ==[\n');
+
 		this.pipe.write(jsonMessage);
+
 		this.pipe.write('\n]== "CMake Server" ==]\n');
 
 		return promise;
@@ -774,9 +889,12 @@ export class CMakeServerClient {
 	}
 
 	protected shutDownFlag = false;
+
 	public async shutdownAsync() {
 		this.shutDownFlag = true;
+
 		this.pipe.end();
+
 		await this.endPromise;
 	}
 
@@ -790,6 +908,7 @@ export class CMakeServerClient {
 		} else {
 			pipeFile = `/tmp/cmake-server-${Math.random()}`;
 		}
+
 		this.pipeFilePath = pipeFile;
 
 		const finalEnv = EnvironmentUtils.merge([
@@ -805,7 +924,9 @@ export class CMakeServerClient {
 				cwd: params.binaryDir,
 			},
 		);
+
 		this.serverProcess = child;
+
 		log.debug(
 			localize(
 				"started.new.cmake.server.instance",
@@ -813,12 +934,15 @@ export class CMakeServerClient {
 				child.pid,
 			),
 		);
+
 		child.stdout.on("data", (data) => {
 			void this.params.onOtherOutput(data.toLocaleString());
 		});
+
 		child.stderr.on("data", (data) => {
 			void this.params.onOtherOutput(data.toLocaleString());
 		});
+
 		child.on("close", (retc: number, signal: string) => {
 			if (retc !== 0) {
 				log.error(
@@ -827,6 +951,7 @@ export class CMakeServerClient {
 						"The connection to cmake-server was terminated unexpectedly",
 					),
 				);
+
 				log.error(
 					localize(
 						"cmake-server.exited.with.status",
@@ -835,6 +960,7 @@ export class CMakeServerClient {
 						signal,
 					),
 				);
+
 				params.onCrash(retc, signal).catch((e) => {
 					log.error(
 						localize(
@@ -851,7 +977,9 @@ export class CMakeServerClient {
 		setTimeout(() => {
 			const endPromise = new Promise<void>((resolve, reject) => {
 				const pipe = (this.pipe = net.createConnection(pipeFile));
+
 				pipe.on("data", this.onMoreData.bind(this));
+
 				pipe.on("error", (e) => {
 					pipe.end();
 
@@ -859,6 +987,7 @@ export class CMakeServerClient {
 						if (process.env.NODE_ENV === "development") {
 							debugger;
 						}
+
 						rollbar.takePromise(
 							localize(
 								"pipe.error.from.cmake-server",
@@ -867,13 +996,16 @@ export class CMakeServerClient {
 							{ pipe: pipeFile },
 							params.onPipeError(e),
 						);
+
 						reject(e);
 					} else {
 						resolve();
 					}
 				});
+
 				pipe.on("end", () => {
 					pipe.end();
+
 					resolve();
 				});
 			});
@@ -881,6 +1013,7 @@ export class CMakeServerClient {
 			const exitPromise = new Promise<void>((resolve) => {
 				child.on("exit", () => resolve());
 			});
+
 			this.endPromise = Promise.all([endPromise, exitPromise]).then(
 				() => {},
 			);
@@ -972,14 +1105,19 @@ export class CMakeServerClient {
 										cachePath,
 									);
 								}
+
 								hsparams.sourceDirectory = cachedDir;
 							}
 						} else {
 							// Do clean configure, all parameters are required.
 							const generator = params.generator;
+
 							hsparams.sourceDirectory = params.sourceDir;
+
 							hsparams.generator = generator.name;
+
 							hsparams.platform = generator.platform;
+
 							hsparams.toolset = generator.toolset;
 
 							const configureMessage: string = localize(
@@ -999,15 +1137,20 @@ export class CMakeServerClient {
 											),
 										)
 									: "";
+
 							log.info(configureMessage + extraMessage);
 						}
 
 						await client.handshake(hsparams);
+
 						resolved = true;
+
 						resolve(client);
 					} catch (e) {
 						await client.shutdownAsync();
+
 						resolved = true;
+
 						reject(e);
 					}
 				},

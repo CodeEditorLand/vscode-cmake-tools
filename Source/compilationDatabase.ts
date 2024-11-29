@@ -15,8 +15,11 @@ const log = createLogger("compdb");
 
 export interface CompileCommand {
 	directory: string;
+
 	file: string;
+
 	output?: string;
+
 	command: string; // The command string includes both commands and arguments (if any).
 	arguments?: string[];
 }
@@ -60,6 +63,7 @@ export class CompilationDatabase {
 				const content = JSON.parse(
 					fileContent.toString(),
 				) as CompileCommand[];
+
 				database.push(...content);
 			} catch (e) {
 				log.warning(

@@ -123,10 +123,12 @@ class OutputChannelManager implements vscode.Disposable {
 
 		if (!channel) {
 			const new_channel = vscode.window.createOutputChannel(name);
+
 			this._channels.set(name, new_channel);
 
 			return new_channel;
 		}
+
 		return channel;
 	}
 
@@ -142,6 +144,7 @@ export const channelManager = new OutputChannelManager();
 
 interface Stringable {
 	toString(): string;
+
 	toLocaleString(): string;
 }
 
@@ -154,6 +157,7 @@ function logFilePath(): string {
 async function _openLogFile() {
 	if (!_LOGGER) {
 		const fpath = logFilePath();
+
 		await fs.mkdir_p(path.dirname(fpath));
 
 		if (await fs.exists(fpath)) {
@@ -162,6 +166,7 @@ async function _openLogFile() {
 			_LOGGER = node_fs.createWriteStream(fpath, { flags: "w" });
 		}
 	}
+
 	return _LOGGER;
 }
 
@@ -185,6 +190,7 @@ class SingletonLogger {
 		if (level === LogLevel.Trace && !trace) {
 			return;
 		}
+
 		const user_message = args.map((a) => a.toString()).join(" ");
 
 		const prefix = new Date().toISOString() + ` [${levelName(level)}]`;
@@ -199,6 +205,7 @@ class SingletonLogger {
 				if (process.env["CMT_QUIET_CONSOLE"] !== "1") {
 					console.info("[CMakeTools]", raw_message);
 				}
+
 				break;
 
 			case LogLevel.Warning:
@@ -230,21 +237,27 @@ class SingletonLogger {
 	trace(...args: Stringable[]) {
 		this._log(LogLevel.Trace, ...args);
 	}
+
 	debug(...args: Stringable[]) {
 		this._log(LogLevel.Debug, ...args);
 	}
+
 	info(...args: Stringable[]) {
 		this._log(LogLevel.Info, ...args);
 	}
+
 	note(...args: Stringable[]) {
 		this._log(LogLevel.Note, ...args);
 	}
+
 	warning(...args: Stringable[]) {
 		this._log(LogLevel.Warning, ...args);
 	}
+
 	error(...args: Stringable[]) {
 		this._log(LogLevel.Error, ...args);
 	}
+
 	fatal(...args: Stringable[]) {
 		this._log(LogLevel.Fatal, ...args);
 	}
@@ -263,33 +276,42 @@ class SingletonLogger {
 		if (SingletonLogger._inst === null) {
 			SingletonLogger._inst = new SingletonLogger();
 		}
+
 		return SingletonLogger._inst;
 	}
 }
 
 export class Logger {
 	constructor(readonly _tag: string) {}
+
 	get tag() {
 		return `[${this._tag}]`;
 	}
+
 	trace(...args: Stringable[]) {
 		SingletonLogger.instance().trace(this.tag, ...args);
 	}
+
 	debug(...args: Stringable[]) {
 		SingletonLogger.instance().debug(this.tag, ...args);
 	}
+
 	info(...args: Stringable[]) {
 		SingletonLogger.instance().info(this.tag, ...args);
 	}
+
 	note(...args: Stringable[]) {
 		SingletonLogger.instance().note(this.tag, ...args);
 	}
+
 	warning(...args: Stringable[]) {
 		SingletonLogger.instance().warning(this.tag, ...args);
 	}
+
 	error(...args: Stringable[]) {
 		SingletonLogger.instance().error(this.tag, ...args);
 	}
+
 	fatal(...args: Stringable[]) {
 		SingletonLogger.instance().fatal(this.tag, ...args);
 	}
@@ -312,6 +334,7 @@ export class Logger {
 		if (reveal_log === "error" && error_to_show !== undefined) {
 			should_show = error_to_show;
 		}
+
 		const should_focus = reveal_log === "focus";
 
 		if (should_show) {
@@ -323,6 +346,7 @@ export class Logger {
 		SingletonLogger.instance().info(
 			"-----------------------------------------------------------------------",
 		);
+
 		SingletonLogger.instance().info(
 			`Beginning test: ${suite ?? "unknown suite"} - ${test ?? "unknown test"}`,
 		);

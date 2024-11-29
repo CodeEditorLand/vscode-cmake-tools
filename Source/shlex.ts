@@ -45,6 +45,7 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
 			if (quoteChars.includes(char)) {
 				// Reached the end of a sub-quoted token.
 				isSubQuote = false;
+
 				token = (token || "") + char;
 
 				continue;
@@ -68,6 +69,7 @@ export function* split(str: string, opt?: ShlexOptions): Iterable<string> {
 			if (token !== undefined) {
 				yield token;
 			}
+
 			token = undefined;
 
 			continue;
@@ -90,6 +92,7 @@ export function quote(str: string, opt?: ShlexOptions): string {
 	if (str === "") {
 		return '""';
 	}
+
 	if (/[^\w@%\-+=:,./|><]/.test(str)) {
 		str = str.replace(/"/g, '\\"');
 

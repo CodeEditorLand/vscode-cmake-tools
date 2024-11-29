@@ -46,12 +46,16 @@ export class DebugConfigurationProvider
 
 			if (editor && editor.document.fileName.endsWith(".cmake")) {
 				debugConfiguration.type = "cmake";
+
 				debugConfiguration.name = localize(
 					"cmake.debug.without.launch",
 					"Debugging cmake script with default launch",
 				);
+
 				debugConfiguration.request = "launch";
+
 				debugConfiguration.cmakeDebugType = "script";
+
 				debugConfiguration.scriptPath = editor.document.fileName;
 			} else {
 				throw new Error(

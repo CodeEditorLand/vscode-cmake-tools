@@ -64,6 +64,7 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 						),
 					);
 				}
+
 				const args: string[] = session.configuration.scriptArgs ?? [];
 
 				const env =
@@ -75,7 +76,9 @@ export class DebugAdapterNamedPipeServerDescriptorFactory
 							],
 						),
 					) ?? new Map();
+
 				logCMakeDebuggerTelemetry(origin, cmakeDebugType);
+
 				void executeScriptWithDebugger(
 					script,
 					args,

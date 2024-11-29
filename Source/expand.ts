@@ -33,26 +33,43 @@ export const envDelimiter: string = process.platform === "win32" ? ";" : ":";
  */
 interface RequiredExpansionContextVars {
 	generator: string;
+
 	workspaceFolder: string;
+
 	workspaceFolderBasename: string;
+
 	sourceDir: string;
+
 	workspaceHash: string;
+
 	workspaceRoot: string;
+
 	workspaceRootFolderName: string;
+
 	userHome: string;
 }
 
 export interface KitContextVars extends RequiredExpansionContextVars {
 	[key: string]: string;
+
 	buildType: string;
+
 	buildKit: string;
+
 	buildKitVendor: string;
+
 	buildKitTriple: string;
+
 	buildKitVersion: string;
+
 	buildKitHostOs: string;
+
 	buildKitTargetOs: string;
+
 	buildKitTargetArch: string;
+
 	buildKitVersionMajor: string;
+
 	buildKitVersionMinor: string;
 }
 
@@ -60,16 +77,23 @@ export interface PresetContextVars
 	extends PresetContextNotPresetSpecificVars,
 		RequiredExpansionContextVars {
 	[key: string]: string;
+
 	presetName: string;
 }
 
 export interface PresetContextNotPresetSpecificVars {
 	[key: string]: string;
+
 	sourceDir: string;
+
 	sourceParentDir: string;
+
 	sourceDirName: string;
+
 	fileDir: string;
+
 	hostSystemName: string;
+
 	pathListSep: string;
 }
 
@@ -121,6 +145,7 @@ export interface ExpansionOptions {
 
 export interface ExpansionErrorHandler {
 	errorList: [string, string][];
+
 	tempErrorList: [string, string][]; // This is primarily used to store errors that will then be re-used and modified with additional context to be added into the `errorList`
 }
 
@@ -139,6 +164,7 @@ export async function expandString<T>(
 	if (typeof input !== "string") {
 		return input;
 	}
+
 	const inputString = input as string;
 
 	try {
@@ -159,9 +185,13 @@ export async function expandString<T>(
 				opts,
 				errorHandler,
 			);
+
 			result = expansion.result;
+
 			didReplacement = expansion.didReplacement;
+
 			circularReference = expansion.circularReference;
+
 			i++;
 		} while (
 			i < maxRecursion &&
@@ -185,6 +215,7 @@ export async function expandString<T>(
 					"Reached max string expansion recursion. Possible circular reference.",
 				),
 			);
+
 			errorHandler?.tempErrorList.push([
 				localize("max.recursion", "Max string expansion recursion"),
 				"",
@@ -201,6 +232,7 @@ export async function expandString<T>(
 				errorToString(e),
 			),
 		);
+
 		errorHandler?.tempErrorList.push([
 			localize(
 				"exception.expanding.string",
@@ -228,6 +260,7 @@ async function expandStringHelper(
 	const env = EnvironmentUtils.create(envPreNormalize);
 
 	const replacements = opts.vars;
+
 	replacements.sourceDirectory = replacements.sourceDir;
 
 	let circularReference: string | undefined;
@@ -260,6 +293,7 @@ async function expandStringHelper(
 						input,
 					),
 				);
+
 				errorHandler?.tempErrorList.push([
 					localize(
 						"invalid.variable.reference",
@@ -283,6 +317,7 @@ async function expandStringHelper(
 		const varName = mat[1];
 
 		const replacement = fixPaths(env[varName]) || "";
+
 		subs.set(full, replacement);
 	}
 
@@ -296,6 +331,7 @@ async function expandStringHelper(
 		const varName = mat[1];
 
 		const replacement = fixPaths(env[varName]) || "";
+
 		subs.set(full, replacement);
 	}
 
@@ -318,6 +354,7 @@ async function expandStringHelper(
 
 		if (varNameReplacement && varNameReplacement === varName) {
 			circularReference = `\"${varName}\" : \"${input}\"`;
+
 			errorHandler?.tempErrorList.push([
 				localize(
 					"circular.variable.reference",
@@ -328,6 +365,7 @@ async function expandStringHelper(
 
 			break;
 		}
+
 		subs.set(full, replacement);
 	}
 
@@ -355,6 +393,7 @@ async function expandStringHelper(
 
 			if (f) {
 				expansionOccurred = true;
+
 				subs.set(full, f.uri.fsPath);
 			}
 		}
@@ -376,6 +415,7 @@ async function expandStringHelper(
 			const varName = mat[1];
 
 			const replacement = variants[varName] || "";
+
 			subs.set(full, replacement);
 		}
 	}
@@ -394,6 +434,7 @@ async function expandStringHelper(
 
 			break;
 		}
+
 		const full = mat[0];
 
 		const command = mat[1];
@@ -401,6 +442,7 @@ async function expandStringHelper(
 		if (subs.has(full)) {
 			continue; // Don't execute commands more than once per string
 		}
+
 		try {
 			expansionOccurred = true;
 
@@ -408,6 +450,7 @@ async function expandStringHelper(
 				command,
 				opts.vars.workspaceFolder,
 			);
+
 			subs.set(full, `${result}`);
 		} catch (e) {
 			log.warning(
@@ -419,6 +462,7 @@ async function expandStringHelper(
 					errorToString(e),
 				),
 			);
+
 			errorHandler?.tempErrorList.push([
 				localize(
 					"exception.executing.command",
@@ -444,8 +488,10 @@ export async function expandStrings(
 
 	for (const input of inputs) {
 		const expandedInput: string = await expandString(input, opts);
+
 		expandedInputs.push(expandedInput);
 	}
+
 	return expandedInputs;
 }
 
@@ -453,9 +499,11 @@ export function substituteAll(input: string, subs: Map<string, string>) {
 	let finalString = input;
 
 	let didReplacement = false;
+
 	subs.forEach((value, key) => {
 		if (value !== key) {
 			finalString = replaceAll(finalString, key, value);
+
 			didReplacement = true;
 		}
 	});
@@ -483,6 +531,7 @@ export function getParentEnvSubstitutions(
 			fixPaths(
 				replacementValue === null ? undefined : replacementValue,
 			) || "";
+
 		subs.set(full, replacement);
 	}
 
@@ -500,6 +549,7 @@ export function errorHandlerHelper(
 				`'${error[1]}' in preset '${presetName}'`,
 			]);
 		}
+
 		errorHandler.tempErrorList = [];
 	}
 }

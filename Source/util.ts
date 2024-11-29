@@ -29,6 +29,7 @@ class Context implements contex.IContext {
 	constructor(dictionary: { [key: string]: any }) {
 		this._value = dictionary;
 	}
+
 	public getValue<T>(key: string): T | undefined {
 		const ret = this._value[key];
 
@@ -67,6 +68,7 @@ export function fixPaths(str: string | undefined) {
 	if (str === undefined) {
 		return undefined;
 	}
+
 	const fix_paths = /[A-Z]:(\\((?![<>:\"\/\\|\?\*]).)+)*\\?(?!\\)/gi;
 
 	let pathmatch: RegExpMatchArray | null = null;
@@ -77,8 +79,10 @@ export function fixPaths(str: string | undefined) {
 		const pathfull = pathmatch[0];
 
 		const fixslash = pathfull.replace(/\\/g, "/");
+
 		newstr = newstr.replace(pathfull, fixslash);
 	}
+
 	return newstr;
 }
 
@@ -95,6 +99,7 @@ export function removeAllPatterns(str: string, patterns: string[]): string {
 type NormalizationSetting = "always" | "never" | "platform";
 interface PathNormalizationOptions {
 	normCase?: NormalizationSetting;
+
 	normUnicode?: NormalizationSetting;
 }
 
@@ -140,11 +145,13 @@ export function normalizePath(
 			if (process.platform === "win32" || process.platform === "darwin") {
 				norm = norm.toLocaleLowerCase();
 			}
+
 			break;
 
 		case "never":
 			break;
 	}
+
 	switch (normUnicode) {
 		case "always":
 			norm = norm.normalize();
@@ -155,6 +162,7 @@ export function normalizePath(
 			if (process.platform === "darwin") {
 				norm = norm.normalize();
 			}
+
 			break;
 
 		case "never":
@@ -166,6 +174,7 @@ export function normalizePath(
 	while (norm.includes("//")) {
 		norm = replaceAll(norm, "//", "/");
 	}
+
 	return norm;
 }
 
@@ -195,17 +204,20 @@ export function splitPath(p: string): string[] {
 	if (p.length === 0 || p === ".") {
 		return [];
 	}
+
 	const pardir = path.dirname(p);
 
 	if (pardir === p) {
 		// We've reach a root path. (Might be a Windows drive dir)
 		return [p];
 	}
+
 	const arr: string[] = [];
 
 	if (p.startsWith(pardir)) {
 		arr.push(...splitPath(pardir));
 	}
+
 	arr.push(path.basename(p));
 
 	return arr;
@@ -278,6 +290,7 @@ export function reduce<In, Out>(
 	for (const item of iter) {
 		init = mapper(init, item);
 	}
+
 	return init;
 }
 
@@ -330,15 +343,19 @@ export function cmakeify(
 
 	if (value === true || value === false) {
 		ret.type = "BOOL";
+
 		ret.value = value ? "TRUE" : "FALSE";
 	} else if (isString(value)) {
 		ret.type = "STRING";
+
 		ret.value = replaceAll(value, ";", "\\;");
 	} else if (typeof value === "number") {
 		ret.type = "STRING";
+
 		ret.value = value.toString();
 	} else if (value instanceof Array) {
 		ret.type = "STRING";
+
 		ret.value = value.join(";");
 	} else if (
 		Object.getOwnPropertyNames(value).filter(
@@ -346,6 +363,7 @@ export function cmakeify(
 		).length === 2
 	) {
 		ret.type = value.type;
+
 		ret.value = value.value;
 	} else {
 		throw new Error(
@@ -356,6 +374,7 @@ export function cmakeify(
 			),
 		);
 	}
+
 	return ret;
 }
 
@@ -367,6 +386,7 @@ export async function termProc(child: child_process.ChildProcess) {
 	if (child.pid) {
 		await _killTree(child.pid);
 	}
+
 	return true;
 }
 
@@ -383,11 +403,13 @@ async function _killTree(pid: number) {
 		if (!!stdout.length) {
 			children = stdout.split("\n").map((line) => Number.parseInt(line));
 		}
+
 		for (const other of children) {
 			if (other) {
 				await _killTree(other);
 			}
 		}
+
 		try {
 			process.kill(pid, "SIGINT");
 		} catch (e: any) {
@@ -409,6 +431,7 @@ export function splitCommandLine(cmd: string): string[] {
 	const cmd_re = /('(\\'|[^'])*'|"(\\"|[^"])*"|(\\ |[^ ])+|[\w-]+)/g;
 
 	const quoted_args = cmd.match(cmd_re);
+
 	console.assert(quoted_args);
 	// Our regex will parse escaped quotes, but they remain. We must
 	// remove them ourselves
@@ -433,7 +456,9 @@ export class InvalidVersionString extends Error {}
 
 export interface Version {
 	major: number;
+
 	minor: number;
+
 	patch: number;
 }
 export function parseVersion(str: string): Version {
@@ -450,6 +475,7 @@ export function parseVersion(str: string): Version {
 			),
 		);
 	}
+
 	const [, major, minor, , patch] = mat;
 
 	return {
@@ -471,9 +497,11 @@ export function compareVersion(va: Version, vb: Version) {
 	if (va.major !== vb.major) {
 		return va.major - vb.major;
 	}
+
 	if (va.minor !== vb.minor) {
 		return va.minor - vb.minor;
 	}
+
 	return va.patch - vb.patch;
 }
 
@@ -486,6 +514,7 @@ export function errorToString(e: any): string {
 		// e.stack has both the message and the stack in it.
 		return `\n\t${e.stack}`;
 	}
+
 	return `\n\t${e.toString()}`;
 }
 
@@ -533,6 +562,7 @@ export function first<In, Out>(
 			return result;
 		}
 	}
+
 	return [];
 }
 
@@ -542,6 +572,7 @@ export function makeDebuggerEnvironmentVars(
 	if (!env) {
 		return [];
 	}
+
 	const filter: RegExp = /\$\{.+?\}|\n/; // Disallow env variables that have variable expansion values or newlines
 	const converted_env: DebuggerEnvironmentVariable[] = [];
 
@@ -553,6 +584,7 @@ export function makeDebuggerEnvironmentVars(
 			});
 		}
 	}
+
 	return converted_env;
 }
 
@@ -566,6 +598,7 @@ export function fromDebuggerEnvironmentVars(
 			env[envVar.name] = envVar.value;
 		});
 	}
+
 	return env;
 }
 
@@ -587,12 +620,15 @@ export function thisExtension() {
 			localize("extension.is.undefined", "Extension is undefined!"),
 		);
 	}
+
 	return extension;
 }
 
 export interface PackageJSON {
 	name: string;
+
 	publisher: string;
+
 	version: string;
 }
 
@@ -619,6 +655,7 @@ export async function getExtensionLocalizedPackageJson(): Promise<{
 	if (!fileExists) {
 		localizedFilePath = path.join(thisExtensionPath(), "package.nls.json");
 	}
+
 	const localizedStrings = fs.readFileSync(localizedFilePath, "utf8");
 
 	return JSON.parse(localizedStrings);
@@ -626,6 +663,7 @@ export async function getExtensionLocalizedPackageJson(): Promise<{
 
 interface CommandPalette {
 	command: string;
+
 	when: string | null;
 }
 
@@ -667,6 +705,7 @@ export function thisExtensionActiveCommands(context: {
 		if (evaluateExpression(commandP.when, contextObj)) {
 			return commandP.command;
 		}
+
 		return null;
 	});
 
@@ -694,6 +733,7 @@ export function compareVersions(
 	if (typeof a === "string") {
 		a = parseVersion(a);
 	}
+
 	if (typeof b === "string") {
 		b = parseVersion(b);
 	}
@@ -785,6 +825,7 @@ export function setContextValue(key: string, value: any): Thenable<void> {
 
 export interface ProgressReport {
 	message: string;
+
 	increment?: number;
 }
 
@@ -842,6 +883,7 @@ export function getLocaleId(): string {
 			return vscodeNlsConfigJson.locale;
 		}
 	}
+
 	return "en";
 }
 
@@ -857,6 +899,7 @@ export function checkFileExistsSync(filePath: string): boolean {
 	try {
 		return fs.statSync(filePath).isFile();
 	} catch (e) {}
+
 	return false;
 }
 
@@ -873,6 +916,7 @@ export function checkDirectoryExistsSync(dirPath: string): boolean {
 	try {
 		return fs.statSync(dirPath).isDirectory();
 	} catch (e) {}
+
 	return false;
 }
 
@@ -880,6 +924,7 @@ export function createDirIfNotExistsSync(dirPath: string | undefined): void {
 	if (!dirPath) {
 		return;
 	}
+
 	if (!checkDirectoryExistsSync(dirPath)) {
 		try {
 			fs.mkdirSync(dirPath, { recursive: true });
@@ -949,9 +994,11 @@ export function makeHashString(str: string): string {
 	if (process.platform === "win32") {
 		str = normalizePath(str, { normCase: "always" });
 	}
+
 	const crypto = require("crypto");
 
 	const hash = crypto.createHash("sha256");
+
 	hash.update(str);
 
 	return hash.digest("hex");
@@ -991,10 +1038,12 @@ export async function normalizeAndVerifySourceDir(
 		// Windows drive letter should be uppercase, for consistency with other tools like Visual Studio.
 		result = result[0].toUpperCase() + result.slice(1);
 	}
+
 	if (path.basename(result).toLocaleLowerCase() === "cmakelists.txt") {
 		// Don't fail if CMakeLists.txt was accidentally appended to the sourceDirectory.
 		result = path.dirname(result);
 	}
+
 	if (!(await checkDirectoryExists(result))) {
 		rollbar.error(
 			localize(
@@ -1004,6 +1053,7 @@ export async function normalizeAndVerifySourceDir(
 			{ sourceDirectory: result },
 		);
 	}
+
 	return result;
 }
 
@@ -1054,6 +1104,7 @@ async function recGetAllFilePaths(
 			continue;
 		}
 	}
+
 	return result;
 }
 
@@ -1129,6 +1180,7 @@ export function getCmakeToolsTargetPopulation(): TargetPopulation {
 	} else if (checkFileExistsSync(getExtensionFilePath("release.flag"))) {
 		return TargetPopulation.Public;
 	}
+
 	return TargetPopulation.Internal;
 }
 
@@ -1209,8 +1261,10 @@ export async function globForFileName(
 		if (await globWrapper(`${starString}/${fileName}`, cwd)) {
 			return true;
 		}
+
 		starString += "/*";
 	}
+
 	return false;
 }
 

@@ -13,11 +13,13 @@ import * as which from "which";
 
 interface VSCMakePaths {
 	cmake?: string;
+
 	ninja?: string;
 }
 
 export interface PathWithTrust {
 	path: string;
+
 	isTrusted: boolean;
 }
 
@@ -56,6 +58,7 @@ class WindowsEnvironment {
 				".vscode",
 			);
 		}
+
 		return process.env["APPDATA"];
 	}
 
@@ -66,6 +69,7 @@ class WindowsEnvironment {
 				".vscode",
 			);
 		}
+
 		return process.env["LOCALAPPDATA"];
 	}
 
@@ -145,6 +149,7 @@ class Paths {
 				".vscode",
 			);
 		}
+
 		if (process.platform === "win32") {
 			return this.windows.LocalAppData!;
 		} else {
@@ -153,6 +158,7 @@ class Paths {
 			if (xdg_dir) {
 				return xdg_dir;
 			}
+
 			const home = this.userHome;
 
 			return path.join(home, ".local/share");
@@ -168,6 +174,7 @@ class Paths {
 			if (xdg_dir) {
 				return xdg_dir;
 			}
+
 			const home = this.userHome;
 
 			return path.join(home, ".config");
@@ -215,6 +222,7 @@ class Paths {
 						resolved,
 						"`which` didn't do what it should have.",
 					);
+
 					resolve(resolved!);
 				}
 			});
@@ -248,6 +256,7 @@ class Paths {
 						path.dirname(cmake),
 						ctestName,
 					);
+
 					await fs.access(ctestSibling, fs.constants.X_OK);
 
 					return ctestSibling;
@@ -288,6 +297,7 @@ class Paths {
 						path.dirname(cmake),
 						cpackName,
 					);
+
 					await fs.access(cpackSibling, fs.constants.X_OK);
 
 					return cpackSibling;
@@ -320,6 +330,7 @@ class Paths {
 			if (on_path) {
 				return on_path;
 			}
+
 			if (process.platform === "win32") {
 				// We didn't find it on the $PATH. Try some good guesses
 				const cmake_relative_path = "\\CMake\\bin\\cmake.exe";
@@ -344,6 +355,7 @@ class Paths {
 					return bundled_tools_paths.cmake!;
 				}
 			}
+
 			return null;
 		}
 
@@ -386,8 +398,11 @@ class Paths {
 		if (vs_installations.length > 0) {
 			const bundled_tool_paths = [] as {
 				cmake: string;
+
 				ninja: string;
+
 				instanceId: string;
+
 				version: util.Version;
 			}[];
 
@@ -402,14 +417,17 @@ class Paths {
 					instanceId: install.instanceId,
 					version: util.parseVersion(install.installationVersion),
 				};
+
 				bundled_tool_paths.push(bundled_tool_path);
 			}
+
 			bundled_tool_paths.sort((a, b) => {
 				if (preferredInstanceId === a.instanceId) {
 					return -1;
 				} else if (preferredInstanceId === b.instanceId) {
 					return 1;
 				}
+
 				return util.versionGreater(a.version, b.version)
 					? -1
 					: util.versionEquals(a.version, b.version)

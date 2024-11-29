@@ -35,6 +35,7 @@ export enum CacheEntryType {
  */
 export class CacheEntry {
 	public readonly type: CacheEntryType = CacheEntryType.Uninitialized;
+
 	public readonly helpString: string = "";
 	/** The name of the cache entry */
 	public readonly key: string = "";
@@ -72,6 +73,7 @@ export class CacheEntry {
 		advanced: boolean,
 	) {
 		this.key = key;
+
 		this.serializedKey = key; // may be overwritten later with quoted version of `key`
 		this.type = type;
 
@@ -80,7 +82,9 @@ export class CacheEntry {
 		} else {
 			this.value = value;
 		}
+
 		this.helpString = docString;
+
 		this.advanced = advanced;
 	}
 }
@@ -113,6 +117,7 @@ export class CMakeCache {
 			log.trace(localize("file.exists", "File exists"));
 
 			const content = await fs.readFile(path);
+
 			log.trace(
 				localize(
 					"file.contents.read.successfully",
@@ -121,6 +126,7 @@ export class CMakeCache {
 			);
 
 			const entries = CMakeCache.parseCache(content.toString());
+
 			log.trace(
 				localize(
 					"parsed.entries.from",
@@ -219,6 +225,7 @@ export class CMakeCache {
 
 					continue;
 				}
+
 				const [
 					,
 					serializedName,
@@ -233,6 +240,7 @@ export class CMakeCache {
 				if (!name || !typeName) {
 					continue;
 				}
+
 				log.trace(
 					localize(
 						"read.line.in.cache",
@@ -249,6 +257,7 @@ export class CMakeCache {
 				if (name.endsWith("-ADVANCED")) {
 					if (value === "1") {
 						const entryName = name.substr(0, name.lastIndexOf("-"));
+
 						advancedNames.push(entryName);
 					}
 				} else if (name.endsWith("-MODIFIED")) {
@@ -301,7 +310,9 @@ export class CMakeCache {
 							docString,
 							false,
 						);
+
 						entry.serializedKey = serializedName;
+
 						entries.set(name, entry);
 					}
 				}
@@ -385,6 +396,7 @@ export class CMakeCache {
 
 					if (newlineIndex >= 0) {
 						value = value.substring(0, newlineIndex);
+
 						log.warning(
 							localize(
 								"cache.value.truncation.warning",
@@ -395,6 +407,7 @@ export class CMakeCache {
 						);
 					}
 				}
+
 				const newValueLine =
 					entry.serializedKey +
 					type +
@@ -407,6 +420,7 @@ export class CMakeCache {
 				return content.replace(line, newValueLine);
 			}
 		}
+
 		return content;
 	}
 
@@ -438,8 +452,10 @@ export class CMakeCache {
 			for (const option of options) {
 				content = this.replace(content, option.key, option.value);
 			}
+
 			return content;
 		}
+
 		return "";
 	}
 
@@ -489,6 +505,7 @@ export class CMakeCache {
 				),
 			);
 		}
+
 		return ret;
 	}
 }

@@ -23,8 +23,11 @@ const log = createLogger("debugger");
  */
 export interface VSCodeDebugConfiguration extends CppDebugConfiguration {
 	type: string;
+
 	name: string;
+
 	request: string;
+
 	program: string;
 	[key: string]: any;
 }
@@ -34,37 +37,59 @@ export interface VSCodeDebugConfiguration extends CppDebugConfiguration {
  */
 export interface CppDebugConfiguration {
 	symbolSearchPath?: string;
+
 	additionalSOLibSearchPath?: string;
+
 	externalConsole?: boolean;
+
 	console?: ConsoleTypes;
+
 	logging?: DebuggerLogging;
+
 	visualizerFile?: string;
+
 	args?: string[];
+
 	cwd?: string;
+
 	environment?: proc.DebuggerEnvironmentVariable[];
+
 	MIMode?: MIModes;
+
 	miDebuggerPath?: string;
+
 	stopAtEntry?: boolean;
 
 	setupCommands?: SetupCommand[];
+
 	customLaunchSetupCommands?: SetupCommand[];
+
 	launchCompleteCommand?: string;
+
 	dumpPath?: string;
+
 	coreDumpPath?: string;
 }
 
 export interface DebuggerLogging {
 	exceptions?: boolean;
+
 	moduleLoad?: boolean;
+
 	programOutput?: boolean;
+
 	engineLogging?: boolean;
+
 	trace?: boolean;
+
 	traceResponse?: boolean;
 }
 
 export interface SetupCommand {
 	text?: string;
+
 	description?: string;
+
 	ignoreFailures?: boolean;
 }
 
@@ -164,6 +189,7 @@ type DebuggerMIMode = "gdb" | "lldb";
 type DebuggerGenerators = {
 	[MIMode in DebuggerMIMode]: {
 		miMode: MIMode;
+
 		createConfig(
 			debuggerPath: string,
 			target: ExecutableTarget,
@@ -191,8 +217,10 @@ function searchForCompilerPathInCache(cache: CMakeCache): string | null {
 		if (!entry) {
 			continue;
 		}
+
 		return entry.value as string;
 	}
+
 	return null;
 }
 
@@ -228,6 +256,7 @@ export async function getDebugConfigurationFromCache(
 		) {
 			return description.createConfig(debuggerPathOverride, target);
 		}
+
 		log.warning(
 			localize(
 				"invalid.miDebuggerPath.override",
@@ -270,6 +299,7 @@ export async function getDebugConfigurationFromCache(
 				return createLLDBDebugConfiguration(miDebuggerPath, target);
 			}
 		}
+
 		if (modeOverride === MIModes.lldb || lldbMIReplaced) {
 			// 1b. lldb-mi installed by CppTools
 			const cppToolsExtension =
@@ -339,6 +369,7 @@ export async function getDebugConfigurationFromCache(
 			gdbDebuggerPath = gdbDebuggerPath + ".exe";
 		}
 	}
+
 	if (gdbDebuggerPath.search(new RegExp(description.miMode)) !== -1) {
 		return description.createConfig(gdbDebuggerPath, target);
 	}

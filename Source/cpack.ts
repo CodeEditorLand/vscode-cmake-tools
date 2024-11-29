@@ -22,6 +22,7 @@ class CPackOutputLogger implements OutputConsumer {
 	output(line: string) {
 		log.info(line);
 	}
+
 	error(line: string) {
 		this.output(line);
 	}
@@ -38,13 +39,16 @@ export class CPackDriver implements vscode.Disposable {
 	get packagingEnabled(): boolean {
 		return this._packagingEnabled;
 	}
+
 	set packagingEnabled(v: boolean) {
 		this._packagingEnabled = v;
+
 		this.packagingEnabledEmitter.fire(v);
 	}
 
 	private readonly packagingEnabledEmitter =
 		new vscode.EventEmitter<boolean>();
+
 	readonly onPackagingEnabledChanged = this.packagingEnabledEmitter.event;
 
 	dispose() {
@@ -60,6 +64,7 @@ export class CPackDriver implements vscode.Disposable {
 		if (!packagePreset && driver.packagePreset) {
 			packagePreset = driver.packagePreset;
 		}
+
 		if (!driver.useCMakePresets || !packagePreset) {
 			return undefined;
 		}
@@ -70,27 +75,35 @@ export class CPackDriver implements vscode.Disposable {
 		if (packagePreset.vendorName) {
 			cpackArgs.push("--vendor", `${packagePreset.vendorName}`);
 		}
+
 		if (packagePreset.generators?.length) {
 			cpackArgs.push("-G", `${packagePreset.generators.join(";")}`);
 		}
+
 		if (packagePreset.configurations?.length) {
 			cpackArgs.push("-C", `${packagePreset.configurations.join(";")}`);
 		}
+
 		if (packagePreset.configFile) {
 			cpackArgs.push("--config", `${packagePreset.configFile}`);
 		}
+
 		if (packagePreset.output?.debug) {
 			cpackArgs.push("--debug");
 		}
+
 		if (packagePreset.output?.verbose) {
 			cpackArgs.push("--verbose");
 		}
+
 		if (packagePreset.packageName) {
 			cpackArgs.push("-P", `${packagePreset.packageName}`);
 		}
+
 		if (packagePreset.packageVersion) {
 			cpackArgs.push("-R", `${packagePreset.packageVersion}`);
 		}
+
 		if (packagePreset.packageDirectory) {
 			cpackArgs.push("-B", `${packagePreset.packageDirectory}`);
 		}
@@ -145,6 +158,7 @@ export class CPackDriver implements vscode.Disposable {
 
 			const presetArgs =
 				(await this.getCPackArgs(driver, packagePreset)) || [];
+
 			cpackArgs = [`-C`, configs].concat(presetArgs).concat(args);
 		}
 

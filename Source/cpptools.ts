@@ -99,31 +99,45 @@ type IntelliSenseMode =
 
 export interface DiagnosticsCpptools {
 	isReady: boolean;
+
 	hasCodeModel: boolean;
+
 	activeBuildType: string;
+
 	buildTypesSeen: string[];
+
 	targetCount: number;
+
 	executablesCount: number;
+
 	librariesCount: number;
+
 	targets: DiagnosticsTarget[];
+
 	requests: string[];
+
 	responses: cpptools.SourceFileConfigurationItem[];
+
 	partialMatches: DiagnosticsPartialMatch[];
 }
 
 export interface DiagnosticsTarget {
 	name: string;
+
 	type: TargetTypeString;
 }
 
 export interface DiagnosticsPartialMatch {
 	request: string;
+
 	matches: string | string[];
 }
 
 export interface CompileFlagInformation {
 	extraDefinitions: string[];
+
 	standard?: StandardVersion;
+
 	targetArch: Architecture;
 }
 
@@ -131,8 +145,11 @@ class MissingCompilerException extends Error {}
 
 interface TargetDefaults {
 	name: string;
+
 	includePath?: string[];
+
 	compileCommandFragments: string[];
+
 	defines?: string[];
 }
 
@@ -271,6 +288,7 @@ export function parseCompileFlags(
 		if (done) {
 			break;
 		}
+
 		const lower = value.toLowerCase();
 
 		if (requireStandardTarget && (lower === "-m32" || lower === "-m64")) {
@@ -280,6 +298,7 @@ export function parseCompileFlags(
 			(lower.startsWith("-arch=") || lower.startsWith("/arch:"))
 		) {
 			const target = lower.substring(6);
+
 			targetArch = parseTargetArch(target);
 		} else if (requireStandardTarget && lower === "-arch") {
 			const { done, value } = iter.next();
@@ -288,12 +307,15 @@ export function parseCompileFlags(
 				// TODO: add an allow list of architecture values and add telemetry
 				continue;
 			}
+
 			targetArch = parseTargetArch(value.toLowerCase());
 		} else if (requireStandardTarget && lower.startsWith("-march=")) {
 			const target = lower.substring(7);
+
 			targetArch = parseTargetArch(target);
 		} else if (requireStandardTarget && lower.startsWith("--target=")) {
 			const target = lower.substring(9);
+
 			targetArch = parseTargetArch(target);
 		} else if (requireStandardTarget && lower === "-target") {
 			const { done, value } = iter.next();
@@ -302,6 +324,7 @@ export function parseCompileFlags(
 				// TODO: add an allow list of architecture values and add telemetry
 				continue;
 			}
+
 			targetArch = parseTargetArch(value.toLowerCase());
 		} else if (value === "-D" || value === "/D") {
 			const { done, value } = iter.next();
@@ -316,9 +339,11 @@ export function parseCompileFlags(
 
 				continue;
 			}
+
 			extraDefinitions.push(value);
 		} else if (value.startsWith("-D") || value.startsWith("/D")) {
 			const def = value.substring(2);
+
 			extraDefinitions.push(def);
 		} else if (
 			extractStdFlag &&
@@ -362,6 +387,7 @@ export function parseCompileFlags(
 				if (!s) {
 					s = parseCStandard(std, canUseGnuStd);
 				}
+
 				if (!s) {
 					log.warning(
 						localize(
@@ -380,9 +406,11 @@ export function parseCompileFlags(
 			}
 		}
 	}
+
 	if (!standard && requireStandardTarget && extractStdFlag) {
 		standard = lang === "C" ? "c11" : "c++17";
 	}
+
 	return { extraDefinitions, standard, targetArch };
 }
 
@@ -399,6 +427,7 @@ export function getIntelliSenseMode(
 		// IntelliSenseMode is optional for CppTools v5+ and is determined by CppTools.
 		return undefined;
 	}
+
 	const canUseArm = cptVersion >= cpptools.Version.v4;
 
 	const compilerName = path.basename(compilerPath || "").toLocaleLowerCase();
@@ -510,6 +539,7 @@ export class CppConfigurationProvider
 
 	private workspaceBrowseConfiguration: cpptools.WorkspaceBrowseConfiguration =
 		{ browsePath: [] };
+
 	private readonly workspaceBrowseConfigurations = new Map<
 		string,
 		cpptools.WorkspaceBrowseConfiguration
@@ -544,6 +574,7 @@ export class CppConfigurationProvider
 	}
 
 	private requests = new Set<string>();
+
 	private responses = new Map<string, cpptools.SourceFileConfigurationItem>();
 
 	/**
@@ -555,6 +586,7 @@ export class CppConfigurationProvider
 		const configs = util.dropNulls(
 			uris.map((u) => this.getConfiguration(u)),
 		);
+
 		configs.forEach((config) => {
 			this.responses.set(config.uri.toString(), config);
 		});
@@ -612,6 +644,7 @@ export class CppConfigurationProvider
 	private activeTarget: string | null = null;
 
 	private activeBuildType: string | null = null;
+
 	private buildTypesSeen = new Set<string>();
 
 	/**
@@ -676,6 +709,7 @@ export class CppConfigurationProvider
 			if (!fragments) {
 				return [];
 			}
+
 			return [
 				...util.flatMap(fragments, (fragment) => shlex.split(fragment)),
 			];
@@ -704,13 +738,16 @@ export class CppConfigurationProvider
 				flags,
 				lang,
 			));
+
 			defines = defines.concat(extraDefinitions);
+
 			intelliSenseMode = getIntelliSenseMode(
 				this.cpptoolsVersion,
 				compilerPath,
 				targetArchFromToolchains ?? targetArch,
 			);
 		}
+
 		const frameworkPaths = Array.from(
 			new Set<string>(
 				(fileGroup.frameworks ?? []).map((f) => path.dirname(f.path)),
@@ -744,9 +781,11 @@ export class CppConfigurationProvider
 				flags.push(`--sysroot=${shlex.quote(sysroot)}`);
 			}
 		}
+
 		if (targetFromToolchains) {
 			if (useFragments) {
 				compileCommandFragments = compileCommandFragments.slice(0);
+
 				compileCommandFragments.push(
 					`--target=${targetFromToolchains}`,
 				);
@@ -825,12 +864,15 @@ export class CppConfigurationProvider
 					string,
 					cpptools.SourceFileConfigurationItem
 				>();
+
 				data.set(target.name, {
 					uri: vscode.Uri.file(absolutePath).toString(),
 					configuration,
 				});
+
 				this.fileIndex.set(normalizedAbsolutePath, data);
 			}
+
 			const dir = path.dirname(normalizedAbsolutePath);
 
 			if (this.workspaceBrowseConfiguration.browsePath.indexOf(dir) < 0) {
@@ -853,23 +895,31 @@ export class CppConfigurationProvider
 	updateConfigurationData(opts: CodeModelParams) {
 		// Reset the counters for diagnostics
 		this.requests.clear();
+
 		this.responses.clear();
+
 		this.buildTypesSeen.clear();
+
 		this.targets = [];
 
 		let hadMissingCompilers = false;
+
 		this.workspaceBrowseConfiguration = { browsePath: [] };
+
 		this.activeTarget = opts.activeTarget;
+
 		this.activeBuildType = opts.activeBuildTypeVariant;
 
 		for (const config of opts.codeModelContent.configurations) {
 			this.buildTypesSeen.add(config.name);
 		}
+
 		if (
 			this.buildTypesSeen.size > 0 &&
 			!this.buildTypesSeen.has(opts.activeBuildTypeVariant || "")
 		) {
 			const configName = opts.codeModelContent.configurations[0].name;
+
 			log.warning(
 				localize(
 					"build.type.out.of.sync",
@@ -878,8 +928,10 @@ export class CppConfigurationProvider
 					`"${opts.activeBuildTypeVariant}"`,
 				),
 			);
+
 			opts.activeBuildTypeVariant = configName;
 		}
+
 		for (const config of opts.codeModelContent.configurations) {
 			// Update only the active build type variant.
 			if (
@@ -919,6 +971,7 @@ export class CppConfigurationProvider
 						];
 
 						const sysroot = target.sysroot;
+
 						this.targets.push({
 							name: target.name,
 							type: target.type,
@@ -957,9 +1010,11 @@ export class CppConfigurationProvider
 						}
 					}
 				}
+
 				break;
 			}
 		}
+
 		if (hadMissingCompilers && this.lastUpdateSucceeded) {
 			void vscode.window.showErrorMessage(
 				localize(
@@ -968,6 +1023,7 @@ export class CppConfigurationProvider
 				),
 			);
 		}
+
 		this.lastUpdateSucceeded = !hadMissingCompilers;
 	}
 
@@ -976,6 +1032,7 @@ export class CppConfigurationProvider
 	get ready(): boolean {
 		return this.readyFlag;
 	}
+
 	markAsReady() {
 		this.readyFlag = true;
 	}
@@ -998,6 +1055,7 @@ export class CppConfigurationProvider
 						matches.push(key);
 					}
 				}
+
 				if (matches.length === 1) {
 					partialMatches.push({
 						request,

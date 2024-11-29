@@ -44,8 +44,11 @@ abstract class BaseNode {
  */
 interface TreeUpdateContext {
 	defaultTarget?: string;
+
 	launchTargetName: string | null;
+
 	nodesToUpdate: BaseNode[];
+
 	folder: vscode.WorkspaceFolder;
 }
 
@@ -55,7 +58,9 @@ interface TreeUpdateContext {
  */
 interface PathedTree<T> {
 	pathPart: string;
+
 	items: T[];
+
 	children: PathedTree<T>[];
 }
 
@@ -78,10 +83,13 @@ function addToTree<T>(tree: PathedTree<T>, itemPath: string, item: T) {
 				children: [],
 				items: [],
 			};
+
 			tree.children.push(subtree);
 		}
+
 		tree = subtree;
 	}
+
 	tree.items.push(item);
 }
 
@@ -95,15 +103,19 @@ function collapseTreeInplace<T>(tree: PathedTree<T>): void {
 	for (let child of tree.children) {
 		while (child.children.length === 1 && child.items.length === 0) {
 			const subchild = child.children[0];
+
 			child = {
 				pathPart: path.join(child.pathPart, subchild.pathPart),
 				items: subchild.items,
 				children: subchild.children,
 			};
 		}
+
 		collapseTreeInplace(child);
+
 		new_children.push(child);
 	}
+
 	tree.children = new_children;
 }
 
@@ -138,6 +150,7 @@ export class DirectoryNode<Node extends BaseNode> extends BaseNode {
 	}
 
 	private _subdirs = new Map<string, DirectoryNode<Node>>();
+
 	private _leaves = new Map<string, Node>();
 
 	getOrderTuple() {
@@ -154,11 +167,13 @@ export class DirectoryNode<Node extends BaseNode> extends BaseNode {
 		const subdirs = [...this._subdirs.values()].sort((a, b) =>
 			a.pathPart.localeCompare(b.pathPart),
 		);
+
 		ret.push(...subdirs);
 
 		const leaves = [...this._leaves.values()].sort((a, b) =>
 			lexicographicalCompare(a.getOrderTuple(), b.getOrderTuple()),
 		);
+
 		ret.push(...leaves);
 
 		return ret;
@@ -169,7 +184,9 @@ export class DirectoryNode<Node extends BaseNode> extends BaseNode {
 			this.pathPart,
 			vscode.TreeItemCollapsibleState.Collapsed,
 		);
+
 		item.resourceUri = vscode.Uri.file(this.fsPath);
+
 		item.id = this.id;
 
 		return item;
@@ -177,8 +194,11 @@ export class DirectoryNode<Node extends BaseNode> extends BaseNode {
 
 	update<InputItem extends NamedItem>(opts: {
 		tree: PathedTree<InputItem>;
+
 		context: TreeUpdateContext;
+
 		create(input: InputItem): Node;
+
 		update(existingNode: Node, input: InputItem): void;
 	}) {
 		const new_subdirs = new Map<string, DirectoryNode<Node>>();
@@ -196,34 +216,44 @@ export class DirectoryNode<Node extends BaseNode> extends BaseNode {
 					this.fsPath,
 					new_subdir.pathPart,
 				);
+
 				did_update = true;
 			}
+
 			existing.update({
 				...opts,
 				tree: new_subdir,
 			});
+
 			new_subdirs.set(new_subdir.pathPart, existing);
 		}
+
 		for (const new_leaf of opts.tree.items) {
 			let existing = this._leaves.get(new_leaf.name);
 
 			if (!existing) {
 				existing = opts.create(new_leaf);
+
 				did_update = true;
 			} else {
 				opts.update(existing, new_leaf);
 			}
+
 			new_leaves.set(new_leaf.name, existing);
 		}
+
 		if (new_subdirs.size !== this._subdirs.size) {
 			// We added/removed nodes
 			did_update = true;
 		}
+
 		if (new_leaves.size !== this._leaves.size) {
 			// We added/removed leaves
 			did_update = true;
 		}
+
 		this._subdirs = new_subdirs;
+
 		this._leaves = new_leaves;
 
 		if (did_update) {
@@ -260,7 +290,9 @@ export class SourceFileNode extends BaseNode {
 
 	getTreeItem() {
 		const item = new vscode.TreeItem(path.basename(this.filePath));
+
 		item.id = this.id;
+
 		item.resourceUri = vscode.Uri.file(this.filePath);
 
 		const name = this.name.toLowerCase();
@@ -268,11 +300,13 @@ export class SourceFileNode extends BaseNode {
 		const cml = name === "cmakelists.txt";
 
 		const is_compilable = ["CXX", "C"].indexOf(this._language || "") !== -1;
+
 		item.contextValue = [
 			"nodeType=file",
 			`compilable=${is_compilable}`,
 			`cmakelists=${cml}`,
 		].join(",");
+
 		item.command = {
 			title: localize("open.file", "Open file"),
 			command: "vscode.open",
@@ -297,23 +331,29 @@ export class ReferencesNode extends BaseNode {
 	getChildren(): BaseNode[] {
 		return [...this._references.values()];
 	}
+
 	getTreeItem(): vscode.TreeItem {
 		const item = new vscode.TreeItem(this.id);
+
 		item.id = this.id;
 
 		if (this.getChildren().length) {
 			item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 		}
+
 		item.label = localize("references", "References");
+
 		item.contextValue = [
 			"nodeType=references",
 			`compilable=${false}`,
 			`cmakelists=${false}`,
 		].join(",");
+
 		item.iconPath = new vscode.ThemeIcon("references");
 
 		return item;
 	}
+
 	getOrderTuple(): string[] {
 		return [this.id];
 	}
@@ -327,6 +367,7 @@ export class ReferencesNode extends BaseNode {
 				new_refs.set(ref.id, new ReferenceNode(ref.id, targetId));
 			}
 		}
+
 		this._references = new_refs;
 	}
 }
@@ -336,6 +377,7 @@ export class ReferenceNode extends BaseNode {
 		const name = id.split("::")[0];
 
 		super(`${name}-${parentTargetId}`);
+
 		this.name = name;
 	}
 
@@ -344,19 +386,25 @@ export class ReferenceNode extends BaseNode {
 	getChildren(): BaseNode[] {
 		return [];
 	}
+
 	getTreeItem(): vscode.TreeItem {
 		const item = new vscode.TreeItem(this.id);
+
 		item.id = this.id;
+
 		item.label = this.name;
+
 		item.contextValue = [
 			"nodeType=reference",
 			`compilable=${false}`,
 			`cmakelists=${false}`,
 		].join(",");
+
 		item.iconPath = new vscode.ThemeIcon("references");
 
 		return item;
 	}
+
 	getOrderTuple(): string[] {
 		return [this.id];
 	}
@@ -373,8 +421,11 @@ export class TargetNode extends BaseNode {
 		super(
 			`${prefix}::${cm.name || ""}:${cm.fullName || ""}:${cm.sourceDirectory || ""}`,
 		);
+
 		this.name = cm.name;
+
 		this.sourceDir = cm.sourceDirectory || "";
+
 		this._rootDir = new DirectoryNode<SourceFileNode>(
 			this.id,
 			this.sourceDir,
@@ -383,11 +434,17 @@ export class TargetNode extends BaseNode {
 	}
 
 	readonly name: string;
+
 	readonly sourceDir: string;
+
 	private _fullName = "";
+
 	private _type: codeModel.TargetTypeString = "UTILITY";
+
 	private _isDefault = false;
+
 	private _isLaunch = false;
+
 	private _fsPath: string = "";
 
 	getOrderTuple() {
@@ -395,11 +452,13 @@ export class TargetNode extends BaseNode {
 	}
 
 	private readonly _rootDir: DirectoryNode<SourceFileNode>;
+
 	private readonly _referencesNode = new ReferencesNode(this.id);
 
 	getChildren() {
 		return [this._referencesNode, ...this._rootDir.getChildren()];
 	}
+
 	getTreeItem() {
 		try {
 			const item = new vscode.TreeItem(this.name);
@@ -408,9 +467,11 @@ export class TargetNode extends BaseNode {
 				item.collapsibleState =
 					vscode.TreeItemCollapsibleState.Collapsed;
 			}
+
 			if (this._isDefault) {
 				item.label += " 🔨";
 			}
+
 			if (this._isLaunch) {
 				item.label += " 🚀";
 			}
@@ -432,15 +493,19 @@ export class TargetNode extends BaseNode {
 			}
 
 			item.resourceUri = vscode.Uri.file(this._fsPath);
+
 			item.tooltip = localize("target.tooltip", "Target {0}", this.name);
 
 			if (this._isLaunch) {
 				item.tooltip += ` [${localize("launch.tooltip", "launch")}]`;
 			}
+
 			if (this._isDefault) {
 				item.tooltip += ` [${localize("default.tooltip", "default")}]`;
 			}
+
 			item.iconPath = new vscode.ThemeIcon(iconForTargetType(this._type));
+
 			item.id = this.id;
 
 			const canBuild =
@@ -449,6 +514,7 @@ export class TargetNode extends BaseNode {
 				this._type !== "OBJECT_LIBRARY";
 
 			const canRun = this._type === "UTILITY";
+
 			item.contextValue = [
 				`nodeType=target`,
 				`isDefault=${this._isDefault}`,
@@ -463,6 +529,7 @@ export class TargetNode extends BaseNode {
 			if (process.env.NODE_ENV === "development") {
 				debugger;
 			}
+
 			return new vscode.TreeItem(
 				`${this.name} (${localize("item.render.issue", "There was an issue rendering this item. This is a bug")})`,
 			);
@@ -471,9 +538,11 @@ export class TargetNode extends BaseNode {
 
 	update(cm: codeModel.CodeModelTarget, ctx: TreeUpdateContext) {
 		console.assert(this.name === cm.name);
+
 		console.assert(this.sourceDir === (cm.sourceDirectory || ""));
 
 		let did_update = this._fullName !== (cm.fullName || "");
+
 		this._fullName = cm.fullName || "";
 
 		const old_fspath = this._fsPath;
@@ -483,18 +552,24 @@ export class TargetNode extends BaseNode {
 		} else {
 			this._fsPath = cm.fullName || "";
 		}
+
 		did_update = did_update || old_fspath !== this._fsPath;
 
 		did_update = did_update || this._type !== cm.type;
+
 		this._type = cm.type;
 
 		const new_is_default =
 			!!ctx.defaultTarget && this.name === ctx.defaultTarget;
+
 		did_update = did_update || new_is_default !== this._isDefault;
+
 		this._isDefault = new_is_default;
 
 		const new_is_launch = this.name === ctx.launchTargetName;
+
 		did_update = did_update || new_is_launch !== this._isLaunch;
+
 		this._isLaunch = new_is_launch;
 
 		const tree: PathedTree<SourceFileNode> = {
@@ -509,9 +584,11 @@ export class TargetNode extends BaseNode {
 					if (!path.isAbsolute(src)) {
 						src = path.join(this.sourceDir, src);
 					}
+
 					const src_dir = path.dirname(src);
 
 					const relpath = path.relative(this.sourceDir, src_dir);
+
 					addToTree(
 						tree,
 						relpath,
@@ -568,7 +645,9 @@ export class TargetNode extends BaseNode {
 
 		if (offset >= 0) {
 			const pos = doc.positionAt(offset);
+
 			editor.revealRange(new vscode.Range(pos, pos.translate(2)));
+
 			editor.selection = new vscode.Selection(pos, pos);
 		}
 	}
@@ -618,6 +697,7 @@ export class ProjectNode extends BaseNode {
 			this.sourceDirectory,
 			path.join(this.sourceDirectory, "CMakeLists.txt"),
 		);
+
 		children.push(cmakelists);
 
 		const possiblePreset = path.join(
@@ -664,7 +744,9 @@ export class ProjectNode extends BaseNode {
 		if (this.getChildren().length === 0) {
 			item.label += ` — (${localize("empty.project", "Empty project")})`;
 		}
+
 		item.tooltip = `${this.name}\n${this.sourceDirectory}`;
+
 		item.contextValue = "nodeType=project";
 
 		return item;
@@ -715,6 +797,7 @@ export class ProjectNode extends BaseNode {
 					newTgt,
 					this.folder,
 				);
+
 				node.update(newTgt, ctx);
 
 				return node;
@@ -746,7 +829,9 @@ export class WorkspaceFolderNode extends BaseNode {
 			this.wsFolder.uri.fsPath,
 			vscode.TreeItemCollapsibleState.Expanded,
 		);
+
 		item.iconPath = vscode.ThemeIcon.Folder;
+
 		item.id = this.wsFolder.uri.fsPath;
 
 		let description: string;
@@ -756,7 +841,9 @@ export class WorkspaceFolderNode extends BaseNode {
 		} else {
 			description = localize("workspace", "Workspace");
 		}
+
 		item.description = `[${description}]`;
+
 		item.contextValue = [
 			"nodeType=workspace",
 			`selected=${this._active}`,
@@ -782,8 +869,10 @@ export class WorkspaceFolderNode extends BaseNode {
 
 		if (!sub_map) {
 			sub_map = new Map<string, ProjectNode>();
+
 			this._projects.set(cmakeProject.folderPath, sub_map);
 		}
+
 		return sub_map.set(modelProjectName, node);
 	}
 
@@ -798,6 +887,7 @@ export class WorkspaceFolderNode extends BaseNode {
 	) {
 		if (!model || model.configurations.length < 1) {
 			this.removeNodes(cmakeProject);
+
 			ctx.nodesToUpdate.push(this);
 
 			return;
@@ -805,6 +895,7 @@ export class WorkspaceFolderNode extends BaseNode {
 
 		if (model.configurations[0].projects.length === 0) {
 			this.removeNodes(cmakeProject);
+
 			ctx.nodesToUpdate.push(this);
 
 			return;
@@ -822,8 +913,10 @@ export class WorkspaceFolderNode extends BaseNode {
 				this.wsFolder,
 				cmakeProject.folderPath,
 			);
+
 			this.setNode(cmakeProject, rootProject.name, item);
 		}
+
 		item.update(rootProject, ctx);
 	}
 
@@ -833,6 +926,7 @@ export class WorkspaceFolderNode extends BaseNode {
 		for (const sub_map of this._projects.values()) {
 			children.push(...sub_map.values());
 		}
+
 		return children.sort((a, b) =>
 			lexicographicalCompare(a.getOrderTuple(), b.getOrderTuple()),
 		);
@@ -847,6 +941,7 @@ export class ProjectOutline implements vscode.TreeDataProvider<BaseNode> {
 	}
 
 	private readonly _folders = new Map<string, WorkspaceFolderNode>();
+
 	private _selected_workspace?: WorkspaceFolderNode;
 
 	addAllCurrentFolders() {
@@ -857,11 +952,13 @@ export class ProjectOutline implements vscode.TreeDataProvider<BaseNode> {
 
 	addFolder(folder: vscode.WorkspaceFolder) {
 		this._folders.set(folder.uri.fsPath, new WorkspaceFolderNode(folder));
+
 		this._changeEvent.fire(null);
 	}
 
 	removeFolder(folder: vscode.WorkspaceFolder) {
 		this._folders.delete(folder.uri.fsPath);
+
 		this._changeEvent.fire(null);
 	}
 
@@ -882,10 +979,12 @@ export class ProjectOutline implements vscode.TreeDataProvider<BaseNode> {
 			);
 			// That's an error, but we can keep going otherwise.
 			existing = new WorkspaceFolderNode(folder);
+
 			this._folders.set(folder.uri.fsPath, existing);
 		}
 
 		const updates: BaseNode[] = [];
+
 		existing.updateCodeModel(cmakeProject, model, {
 			defaultTarget: cmakeProject.defaultBuildTarget || undefined,
 			launchTargetName: cmakeProject.launchTargetName,
@@ -907,6 +1006,7 @@ export class ProjectOutline implements vscode.TreeDataProvider<BaseNode> {
 					return folder.getChildren();
 				}
 			}
+
 			return [...this._folders.values()];
 		} catch (e) {
 			rollbar.error(
@@ -925,18 +1025,23 @@ export class ProjectOutline implements vscode.TreeDataProvider<BaseNode> {
 		if (!folderPath) {
 			return;
 		}
+
 		const current_node = this._selected_workspace;
 
 		const new_node = this._folders.get(folderPath);
 
 		if (current_node) {
 			current_node.setActive(false);
+
 			this._changeEvent.fire(current_node);
 		}
+
 		if (new_node) {
 			new_node.setActive(true);
+
 			this._changeEvent.fire(new_node);
 		}
+
 		this._selected_workspace = new_node;
 	}
 

@@ -31,13 +31,18 @@ interface PinnedCommandsQuickPickItem extends vscode.QuickPickItem {
 
 class PinnedCommandNode extends vscode.TreeItem {
 	public commandName: string;
+
 	public isVisible: boolean;
 
 	constructor(label: string, command: string, isVisible: boolean) {
 		super(label);
+
 		this.collapsibleState = vscode.TreeItemCollapsibleState.None;
+
 		this.tooltip = label;
+
 		this.commandName = command;
+
 		this.isVisible = isVisible;
 	}
 
@@ -52,6 +57,7 @@ class PinnedCommandNode extends vscode.TreeItem {
 
 export class PinnedCommands {
 	private treeDataProvider: PinnedCommandsTreeDataProvider;
+
 	protected disposables: vscode.Disposable[] = [];
 
 	constructor(
@@ -62,6 +68,7 @@ export class PinnedCommands {
 			configReader,
 			extensionContext,
 		);
+
 		this.disposables.push(
 			...[
 				// Commands for projectStatus items
@@ -122,6 +129,7 @@ export class PinnedCommands {
 
 			return null;
 		}
+
 		return chosenItem;
 	}
 
@@ -131,6 +139,7 @@ export class PinnedCommands {
 
 	dispose() {
 		vscode.Disposable.from(...this.disposables).dispose();
+
 		this.treeDataProvider.dispose();
 	}
 
@@ -145,14 +154,22 @@ class PinnedCommandsTreeDataProvider
 	implements vscode.TreeDataProvider<PinnedCommandNode>, vscode.Disposable
 {
 	private treeView: vscode.TreeView<PinnedCommandNode>;
+
 	private _onDidChangeTreeData: vscode.EventEmitter<PinnedCommandNode | void> =
 		new vscode.EventEmitter<PinnedCommandNode | void>();
+
 	private pinnedCommands: PinnedCommandNode[] = [];
+
 	private config: vscode.WorkspaceConfiguration | null;
+
 	private pinnedCommandsKey: string = "cmake.pinnedCommands";
+
 	private isInitialized = false;
+
 	private pinDefaultTasks = true;
+
 	private readonly _settingsSub;
+
 	private extensionContext: vscode.ExtensionContext;
 
 	constructor(
@@ -162,11 +179,15 @@ class PinnedCommandsTreeDataProvider
 		this.treeView = vscode.window.createTreeView("cmake.pinnedCommands", {
 			treeDataProvider: this,
 		});
+
 		this._settingsSub = configReader.onChange("pinnedCommands", () =>
 			this.doConfigureSettingsChange(),
 		);
+
 		this.config = vscode.workspace.getConfiguration();
+
 		this.extensionContext = extensionContext;
+
 		this.pinDefaultTasks =
 			this.extensionContext.globalState.get(mementoKey) === undefined; // the user has not unpinned any of the tasks commands yet.
 		onExtensionActiveCommandsChanged(this.doConfigureSettingsChange, this);
@@ -180,6 +201,7 @@ class PinnedCommandsTreeDataProvider
 
 	async initialize(): Promise<void> {
 		this.config = vscode.workspace.getConfiguration();
+
 		this.pinnedCommands = []; //reset to empty list.
 		const localization = getExtensionLocalizedStrings();
 
@@ -225,14 +247,17 @@ class PinnedCommandsTreeDataProvider
 						);
 					}
 				});
+
 				await this.updateSettings();
 			}
 		}
+
 		this.isInitialized = true;
 	}
 
 	async doConfigureSettingsChange() {
 		await this.initialize();
+
 		await this.refresh();
 	}
 
@@ -244,8 +269,11 @@ class PinnedCommandsTreeDataProvider
 				chosen.command,
 				true,
 			);
+
 			this.pinnedCommands.push(node);
+
 			await this.refresh();
+
 			await this.updateSettings();
 		}
 	}
@@ -256,6 +284,7 @@ class PinnedCommandsTreeDataProvider
 				return i;
 			}
 		}
+
 		return -1;
 	}
 
@@ -264,15 +293,19 @@ class PinnedCommandsTreeDataProvider
 
 		if (index !== -1) {
 			this.pinnedCommands.splice(index, 1);
+
 			await this.refresh();
 		}
+
 		if (
 			this.pinDefaultTasks &&
 			defaultTaskCommands.includes(node.commandName)
 		) {
 			await this.extensionContext.globalState.update(mementoKey, false);
+
 			this.pinDefaultTasks = false;
 		}
+
 		await this.updateSettings();
 	}
 
@@ -289,6 +322,7 @@ class PinnedCommandsTreeDataProvider
 			const newValue: string[] = this.pinnedCommands.map(
 				(x) => x.commandName,
 			);
+
 			await this.config.update(this.pinnedCommandsKey, newValue, true); // update global
 		}
 	}
@@ -299,6 +333,7 @@ class PinnedCommandsTreeDataProvider
 
 	dispose(): void {
 		this.treeView.dispose();
+
 		this._settingsSub.dispose();
 	}
 
@@ -306,6 +341,7 @@ class PinnedCommandsTreeDataProvider
 		if (!this.isInitialized) {
 			await this.initialize();
 		}
+
 		return this.pinnedCommands.filter((x) => x.isVisible)!;
 	}
 }

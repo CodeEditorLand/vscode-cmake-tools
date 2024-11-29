@@ -28,11 +28,17 @@ function hasCPPTools(): boolean {
 // Button class
 abstract class Button {
 	readonly settingsName: string | null = null;
+
 	protected readonly button: vscode.StatusBarItem;
+
 	private _forceHidden: boolean = false;
+
 	private _hidden: boolean = false;
+
 	private _text: string = "";
+
 	private _tooltip: string | null = null;
+
 	private _icon: string | null = null;
 
 	constructor(
@@ -50,22 +56,27 @@ abstract class Button {
 	 */
 	set forceHidden(v: boolean) {
 		this._forceHidden = v;
+
 		this.update();
 	}
 
 	get hidden() {
 		return this._hidden;
 	}
+
 	set hidden(v: boolean) {
 		this._hidden = v;
+
 		this.update();
 	}
 
 	get text(): string {
 		return this._text;
 	}
+
 	set text(v: string) {
 		this._text = v;
+
 		this.update();
 	}
 
@@ -76,8 +87,10 @@ abstract class Button {
 	get tooltip(): string | null {
 		return this._tooltip;
 	}
+
 	set tooltip(v: string | null) {
 		this._tooltip = v;
+
 		this.update();
 	}
 
@@ -92,12 +105,14 @@ abstract class Button {
 	dispose(): void {
 		this.button.dispose();
 	}
+
 	update(): void {
 		if (!this._isVisible() || this._forceHidden) {
 			this.button.hide();
 
 			return;
 		}
+
 		const text = this._getText(true);
 
 		if (text === "") {
@@ -105,8 +120,11 @@ abstract class Button {
 
 			return;
 		}
+
 		this.button.text = text;
+
 		this.button.tooltip = this._getTooltip() || undefined;
+
 		this.button.show();
 	}
 
@@ -114,11 +132,14 @@ abstract class Button {
 		if (this._text.length > 0) {
 			return this.bracketText;
 		}
+
 		return "";
 	}
+
 	protected getTextShort(): string {
 		return this.getTextNormal();
 	}
+
 	protected getTextIcon(): string {
 		return "";
 	}
@@ -126,6 +147,7 @@ abstract class Button {
 	protected getTooltipNormal(): string | null {
 		return this._tooltip;
 	}
+
 	protected getTooltipShort(): string | null {
 		const tooltip = this.getTooltipNormal();
 
@@ -134,11 +156,14 @@ abstract class Button {
 		if (!tooltip && !text) {
 			return null;
 		}
+
 		if (!tooltip || !text) {
 			return this.prependCMake(`${tooltip || text}`);
 		}
+
 		return this.prependCMake(`${text}\n${tooltip}`);
 	}
+
 	protected getTooltipIcon(): string | null {
 		return this.getTooltipShort();
 	}
@@ -146,16 +171,19 @@ abstract class Button {
 	protected isVisible(): boolean {
 		return !this.hidden;
 	}
+
 	protected prependCMake(text: string | null): any {
 		if (!!text) {
 			return `CMake: ${text}`;
 		}
+
 		return text;
 	}
 
 	private _isVisible(): boolean {
 		return this.isVisible() && this._getVisibilitySetting() !== "hidden";
 	}
+
 	private _getVisibilitySetting():
 		| StatusBarOptionVisibility
 		| StatusBarTextOptionVisibility
@@ -176,11 +204,14 @@ abstract class Button {
 					setting = this.config.options.statusBarVisibility;
 				}
 			}
+
 			if (setting === undefined) {
 				setting = this.config.options.statusBarVisibility;
 			}
+
 			return setting || null;
 		}
+
 		return null;
 	}
 
@@ -201,6 +232,7 @@ abstract class Button {
 				return this.getTooltipNormal();
 		}
 	}
+
 	private _getText(icon: boolean = false): string {
 		const type = this._getVisibilitySetting();
 
@@ -222,15 +254,19 @@ abstract class Button {
 
 				break;
 		}
+
 		if (!icon) {
 			return text;
 		}
+
 		if (!this._icon) {
 			return text;
 		}
+
 		if (text === "") {
 			return this._icon || "";
 		}
+
 		return `${this._icon} ${text}`;
 	}
 }
@@ -247,8 +283,11 @@ class FolderButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.selectActiveFolder";
+
 		this.icon = "folder-active";
+
 		this.tooltip = localize(
 			"click.to.select.workspace.tooltip",
 			"Click to select the active folder",
@@ -268,14 +307,17 @@ class FolderButton extends Button {
 		// if (this._autoSelect) {
 		//  return `${this.tooltip} (${WorkspaceButton._autoSelectToolTip})`;
 		// }
+
 		return this.tooltip;
 	}
+
 	protected getTextShort(): string {
 		let len = this.config.options.advanced?.folder?.statusBarLength || 0;
 
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -285,16 +327,20 @@ class FolderButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
+
 	protected getTooltipShort(): string | null {
 		return this.prependCMake(this.getTooltipNormal());
 	}
+
 	protected getTooltipIcon(): string | null {
 		return super.getTooltipShort();
 	}
 
 	public isMultiProject: boolean = false;
+
 	protected isVisible(): boolean {
 		return (
 			super.isVisible() &&
@@ -315,10 +361,15 @@ class VariantStatus extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = true;
+
 		this.command = "cmake.setVariant";
+
 		this.icon = "info";
+
 		this.text = localize("unconfigured", "Unconfigured");
+
 		this.tooltip = localize(
 			"click.to.select.variant.tooltip",
 			"Click to select the current build variant",
@@ -327,12 +378,14 @@ class VariantStatus extends Button {
 
 	set statusMessage(v: string) {
 		this._statusMessage = v;
+
 		this.update();
 	}
 
 	protected getTextNormal(): string {
 		return this.prependCMake(`${this.bracketText}: ${this._statusMessage}`);
 	}
+
 	protected getTextShort(): string {
 		return this.bracketText;
 	}
@@ -349,6 +402,7 @@ class KitSelection extends Button {
 		"no.active.kit",
 		"No active kit",
 	);
+
 	private static readonly _noKitSelected = localize(
 		"no.kit.selected",
 		"No Kit Selected",
@@ -361,9 +415,13 @@ class KitSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = true;
+
 		this.command = "cmake.selectKit";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.kit.tooltip",
 			"Click to change the active kit",
@@ -376,9 +434,11 @@ class KitSelection extends Button {
 		if (text === SpecialKits.Unspecified) {
 			return KitSelection._noActiveKit;
 		}
+
 		if (text.length === 0) {
 			return KitSelection._noKitSelected;
 		}
+
 		return this.bracketText;
 	}
 
@@ -388,6 +448,7 @@ class KitSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -397,6 +458,7 @@ class KitSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -404,6 +466,7 @@ class KitSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -416,8 +479,11 @@ class BuildTargetSelectionButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.setDefaultTarget";
+
 		this.tooltip = localize(
 			"set.active.target.tooltip",
 			"Set the default build target",
@@ -431,6 +497,7 @@ class BuildTargetSelectionButton extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -440,6 +507,7 @@ class BuildTargetSelectionButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -456,7 +524,9 @@ class LaunchTargetSelectionButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.selectLaunchTarget";
+
 		this.tooltip = localize(
 			"select.target.tooltip",
 			"Select the target to launch",
@@ -474,6 +544,7 @@ class LaunchTargetSelectionButton extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -483,6 +554,7 @@ class LaunchTargetSelectionButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 }
@@ -495,8 +567,11 @@ class DebugButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.debugTarget";
+
 		this.icon = "bug";
+
 		this.tooltip = localize(
 			"launch.debugger.tooltip",
 			"Launch the debugger for the selected target",
@@ -507,6 +582,7 @@ class DebugButton extends Button {
 
 	set target(v: string | null) {
 		this._target = v;
+
 		this.update();
 	}
 
@@ -514,6 +590,7 @@ class DebugButton extends Button {
 		if (!!this._target) {
 			return `${this.tooltip}: [${this._target}]`;
 		}
+
 		return this.tooltip;
 	}
 
@@ -530,8 +607,11 @@ class LaunchButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.launchTarget";
+
 		this.icon = "play";
+
 		this.tooltip = localize(
 			"launch.tooltip",
 			"Launch the selected target in the terminal window",
@@ -542,6 +622,7 @@ class LaunchButton extends Button {
 
 	set target(v: string | null) {
 		this._target = v;
+
 		this.update();
 	}
 
@@ -549,6 +630,7 @@ class LaunchButton extends Button {
 		if (!!this._target) {
 			return `${this.tooltip}: [${this._target}]`;
 		}
+
 		return this.tooltip;
 	}
 }
@@ -561,15 +643,19 @@ class CTestButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.ctest";
+
 		this.tooltip = localize("run.ctest.tests.tooltip", "Run CTest tests");
 	}
 
 	private _enabled: boolean = false;
+
 	private _color: string = "";
 
 	set enabled(v: boolean) {
 		this._enabled = v;
+
 		this.update();
 	}
 
@@ -581,6 +667,7 @@ class CTestButton extends Button {
 		} else {
 			this.button.color = "";
 		}
+
 		super.update();
 	}
 
@@ -600,6 +687,7 @@ class CTestButton extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -609,12 +697,14 @@ class CTestButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
 	protected getTooltipShort(): string | null {
 		return this.prependCMake(this.getTooltipNormal());
 	}
+
 	protected getTooltipIcon() {
 		return this.getTooltipShort();
 	}
@@ -628,15 +718,19 @@ class CPackButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.cpack";
+
 		this.tooltip = localize("run.cpack.tooltip", "Run CPack");
 	}
 
 	private _enabled: boolean = false;
+
 	private _color: string = "";
 
 	set enabled(v: boolean) {
 		this._enabled = v;
+
 		this.update();
 	}
 
@@ -648,6 +742,7 @@ class CPackButton extends Button {
 		} else {
 			this.button.color = "";
 		}
+
 		super.update();
 	}
 
@@ -667,6 +762,7 @@ class CPackButton extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -676,12 +772,14 @@ class CPackButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
 	protected getTooltipShort(): string | null {
 		return this.prependCMake(this.getTooltipNormal());
 	}
+
 	protected getTooltipIcon() {
 		return this.getTooltipShort();
 	}
@@ -695,15 +793,19 @@ class WorkflowButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.workflow";
+
 		this.tooltip = localize("run.workflow.tooltip", "Run Workflow");
 	}
 
 	private _enabled: boolean = false;
+
 	private _color: string = "";
 
 	set enabled(v: boolean) {
 		this._enabled = v;
+
 		this.update();
 	}
 
@@ -715,6 +817,7 @@ class WorkflowButton extends Button {
 		} else {
 			this.button.color = "";
 		}
+
 		super.update();
 	}
 
@@ -734,6 +837,7 @@ class WorkflowButton extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -743,12 +847,14 @@ class WorkflowButton extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
 	protected getTooltipShort(): string | null {
 		return this.prependCMake(this.getTooltipNormal());
 	}
+
 	protected getTooltipIcon() {
 		return this.getTooltipShort();
 	}
@@ -756,6 +862,7 @@ class WorkflowButton extends Button {
 
 class BuildButton extends Button {
 	private static readonly _build = localize("build", "Build");
+
 	private static readonly _stop = localize("stop", "Stop");
 
 	settingsName = "build";
@@ -765,29 +872,38 @@ class BuildButton extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.command = "cmake.build";
+
 		this.tooltip = localize("build.tooltip", "Build the selected target");
 	}
 
 	private _isBusy: boolean = false;
+
 	private _target: string | null = null;
 
 	set isBusy(v: boolean) {
 		this._isBusy = v;
+
 		this.button.command = v ? "cmake.stop" : "cmake.build";
+
 		this.icon = this._isBusy ? "x" : "gear";
+
 		this.text = this._isBusy ? BuildButton._stop : BuildButton._build;
 		// update implicitly called in set text.
 		// this.update();
 	}
+
 	set target(v: string | null) {
 		this._target = v;
+
 		this.update();
 	}
 
 	protected getTextNormal(): string {
 		return this.text;
 	}
+
 	protected getTextShort(): string {
 		return "";
 	}
@@ -796,8 +912,10 @@ class BuildButton extends Button {
 		if (!!this._target) {
 			return `${this.tooltip}: [${this._target}]`;
 		}
+
 		return this.tooltip;
 	}
+
 	protected getTooltipShort(): string | null {
 		return this.prependCMake(this.getTooltipNormal());
 	}
@@ -820,9 +938,13 @@ export class ConfigurePresetSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.selectConfigurePreset";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.configure.preset.tooltip",
 			"Click to change the active configure preset",
@@ -835,6 +957,7 @@ export class ConfigurePresetSelection extends Button {
 		if (text.length === 0) {
 			return ConfigurePresetSelection._noPresetSelected;
 		}
+
 		return checkConfigureOverridesPresent(this.config)
 			? `*${this.bracketText}`
 			: this.bracketText;
@@ -847,6 +970,7 @@ export class ConfigurePresetSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -856,6 +980,7 @@ export class ConfigurePresetSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -863,6 +988,7 @@ export class ConfigurePresetSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -880,9 +1006,13 @@ export class BuildPresetSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.selectBuildPreset";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.build.preset.tooltip",
 			"Click to change the active build preset",
@@ -895,6 +1025,7 @@ export class BuildPresetSelection extends Button {
 		if (text.length === 0) {
 			return BuildPresetSelection._noPresetSelected;
 		}
+
 		return checkBuildOverridesPresent(this.config)
 			? `*${this.bracketText}`
 			: this.bracketText;
@@ -907,6 +1038,7 @@ export class BuildPresetSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -916,6 +1048,7 @@ export class BuildPresetSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -923,6 +1056,7 @@ export class BuildPresetSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -940,9 +1074,13 @@ export class TestPresetSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.selectTestPreset";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.test.preset.tooltip",
 			"Click to change the active test preset",
@@ -955,6 +1093,7 @@ export class TestPresetSelection extends Button {
 		if (text.length === 0) {
 			return TestPresetSelection._noPresetSelected;
 		}
+
 		return checkTestOverridesPresent(this.config)
 			? `*${this.bracketText}`
 			: this.bracketText;
@@ -967,6 +1106,7 @@ export class TestPresetSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -976,6 +1116,7 @@ export class TestPresetSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -983,6 +1124,7 @@ export class TestPresetSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -1000,9 +1142,13 @@ export class PackagePresetSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.selectPackagePreset";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.package.preset.tooltip",
 			"Click to change the active package preset",
@@ -1015,6 +1161,7 @@ export class PackagePresetSelection extends Button {
 		if (text.length === 0) {
 			return PackagePresetSelection._noPresetSelected;
 		}
+
 		return checkPackageOverridesPresent(this.config)
 			? `*${this.bracketText}`
 			: this.bracketText;
@@ -1027,6 +1174,7 @@ export class PackagePresetSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -1036,6 +1184,7 @@ export class PackagePresetSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -1043,6 +1192,7 @@ export class PackagePresetSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -1060,9 +1210,13 @@ export class WorkflowPresetSelection extends Button {
 		protected readonly priority: number,
 	) {
 		super(config, priority);
+
 		this.hidden = false;
+
 		this.command = "cmake.selectWorkflowPreset";
+
 		this.icon = "tools";
+
 		this.tooltip = localize(
 			"click.to.change.workflow.preset.tooltip",
 			"Click to change the active workflow preset",
@@ -1075,6 +1229,7 @@ export class WorkflowPresetSelection extends Button {
 		if (text.length === 0) {
 			return WorkflowPresetSelection._noPresetSelected;
 		}
+
 		return this.bracketText; // no setting overrides for workflow
 	}
 
@@ -1085,6 +1240,7 @@ export class WorkflowPresetSelection extends Button {
 		if (!Number.isInteger(len) || len <= 0) {
 			len = 20;
 		}
+
 		let text = this.getTextNormal();
 
 		if (len + 3 < text.length) {
@@ -1094,6 +1250,7 @@ export class WorkflowPresetSelection extends Button {
 				text = `${text}]`;
 			}
 		}
+
 		return text;
 	}
 
@@ -1101,6 +1258,7 @@ export class WorkflowPresetSelection extends Button {
 		if (this.getTextNormal() === this.getTextShort()) {
 			return this.prependCMake(this.getTooltipNormal());
 		}
+
 		return super.getTooltipShort();
 	}
 }
@@ -1112,20 +1270,24 @@ export class StatusBar implements vscode.Disposable {
 		this._config,
 		3.55,
 	);
+
 	private readonly _variantStatusButton = new VariantStatus(
 		this._config,
 		3.5,
 	);
+
 	private readonly _kitSelectionButton = new KitSelection(this._config, 3.4);
 
 	private readonly _buildButton: BuildButton = new BuildButton(
 		this._config,
 		3.35,
 	);
+
 	private readonly _buildPresetButton = new BuildPresetSelection(
 		this._config,
 		3.33,
 	);
+
 	private readonly _buildTargetNameButton = new BuildTargetSelectionButton(
 		this._config,
 		3.3,
@@ -1135,7 +1297,9 @@ export class StatusBar implements vscode.Disposable {
 		this._config,
 		3.22,
 	);
+
 	private readonly _launchButton = new LaunchButton(this._config, 3.21);
+
 	private readonly _launchTargetNameButton = new LaunchTargetSelectionButton(
 		this._config,
 		3.2,
@@ -1145,18 +1309,21 @@ export class StatusBar implements vscode.Disposable {
 		this._config,
 		3.15,
 	);
+
 	private readonly _testButton = new CTestButton(this._config, 3.1);
 
 	private readonly _packagePresetButton = new PackagePresetSelection(
 		this._config,
 		3.05,
 	);
+
 	private readonly _packButton = new CPackButton(this._config, 3.04);
 
 	private readonly _workflowPresetButton = new WorkflowPresetSelection(
 		this._config,
 		3.03,
 	);
+
 	private readonly _workflowButton = new WorkflowButton(this._config, 3.02);
 
 	private readonly _buttons: Button[];
@@ -1180,13 +1347,16 @@ export class StatusBar implements vscode.Disposable {
 			this._packagePresetButton,
 			this._workflowPresetButton,
 		];
+
 		this._config.onChange("options", () => this.update());
+
 		this.update();
 	}
 
 	dispose(): void {
 		this._buttons.forEach((btn) => btn.dispose());
 	}
+
 	update(): void {
 		this._buttons.forEach((btn) => btn.update());
 	}
@@ -1197,71 +1367,98 @@ export class StatusBar implements vscode.Disposable {
 
 	setActiveProjectName(v: string, isMultiProject: boolean): void {
 		this._folderButton.text = v;
+
 		this._folderButton.isMultiProject = isMultiProject;
 	}
+
 	setAutoSelectActiveProject(autoSelectActiveProject: boolean): void {
 		this._folderButton.autoSelect = autoSelectActiveProject;
 	}
+
 	setVariantLabel(v: string): void {
 		this._variantStatusButton.text = v;
 	}
+
 	setStatusMessage(v: string): void {
 		this._variantStatusButton.statusMessage = v;
 	}
+
 	setBuildTargetName(v: string): void {
 		this._buildTargetNameButton.text = v;
+
 		this._buildButton.target = v;
 	}
+
 	setLaunchTargetName(v: string): void {
 		this._launchTargetNameButton.text = v;
+
 		this._launchButton.target = v;
+
 		this._debugButton.target = v;
 	}
+
 	setCTestEnabled(v: boolean): void {
 		this._testButton.enabled = v;
 	}
+
 	setCPackEnabled(v: boolean): void {
 		this._packButton.enabled = v;
 	}
+
 	setWorkflowEnabled(v: boolean): void {
 		this._workflowButton.enabled = v;
 	}
+
 	setIsBusy(v: boolean): void {
 		this._buildButton.isBusy = v;
 	}
+
 	setActiveKitName(v: string): void {
 		this._kitSelectionButton.text = v;
 	}
+
 	setConfigurePresetName(v: string): void {
 		this._configurePresetButton.text = v;
 	}
+
 	updateConfigurePresetButton(): void {
 		this._configurePresetButton.update();
 	}
+
 	setBuildPresetName(v: string): void {
 		this._buildPresetButton.text = v;
 	}
+
 	updateBuildPresetButton(): void {
 		this._buildPresetButton.update();
 	}
+
 	setTestPresetName(v: string): void {
 		this._testPresetButton.text = v;
+
 		this.setCTestEnabled(true);
 	}
+
 	updateTestPresetButton(): void {
 		this._testPresetButton.update();
 	}
+
 	setPackagePresetName(v: string): void {
 		this._packagePresetButton.text = v;
+
 		this.setCPackEnabled(true);
 	}
+
 	updatePackagePresetButton(): void {
 		this._packagePresetButton.update();
 	}
+
 	setWorkflowPresetName(v: string): void {
 		this._workflowPresetButton.text = v;
+
 		this.setWorkflowEnabled(true);
 	}
+
 	updateWorkflowPresetButton(): void {
 		this._workflowPresetButton.update();
 	}
@@ -1269,20 +1466,28 @@ export class StatusBar implements vscode.Disposable {
 	hideLaunchButton(shouldHide: boolean = true): void {
 		this._launchButton.hidden = shouldHide;
 	}
+
 	hideDebugButton(shouldHide: boolean = true): void {
 		this._debugButton.hidden = shouldHide;
 	}
+
 	hideBuildButton(shouldHide: boolean = true): void {
 		this._buildButton.hidden = shouldHide;
 	}
 
 	useCMakePresets(isUsing: boolean = true): void {
 		this._variantStatusButton.hidden = isUsing;
+
 		this._kitSelectionButton.hidden = isUsing;
+
 		this._configurePresetButton.hidden = !isUsing;
+
 		this._buildPresetButton.hidden = !isUsing;
+
 		this._testPresetButton.hidden = !isUsing;
+
 		this._packagePresetButton.hidden = !isUsing;
+
 		this._workflowPresetButton.hidden = !isUsing;
 	}
 }

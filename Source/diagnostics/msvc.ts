@@ -19,6 +19,7 @@ export class Parser extends RawDiagnosticParser {
 		if (!res) {
 			return FeedLineResult.NotMine;
 		}
+
 		const [full /* proc*/, , file, location, severity, code, message] = res;
 
 		const range = (() => {
@@ -29,11 +30,13 @@ export class Parser extends RawDiagnosticParser {
 			if (parts.length === 1) {
 				return new vscode.Range(n0, 0, n0, 999);
 			}
+
 			if (parts.length === 2) {
 				const n1 = oneLess(parts[1]);
 
 				return new vscode.Range(n0, n1, n0, n1);
 			}
+
 			if (parts.length === 4) {
 				const n1 = oneLess(parts[1]);
 
@@ -43,6 +46,7 @@ export class Parser extends RawDiagnosticParser {
 
 				return new vscode.Range(n0, n1, n2, n3);
 			}
+
 			throw new Error("Unable to determine location of MSVC diagnostic");
 		})();
 

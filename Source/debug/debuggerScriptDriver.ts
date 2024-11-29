@@ -41,13 +41,18 @@ export async function executeScriptWithDebugger(
 
 		if (cmakeExe.isDebuggerSupported) {
 			const concreteArgs = ["-P", scriptPath];
+
 			concreteArgs.push(...scriptArgs);
+
 			concreteArgs.push("--debugger");
+
 			concreteArgs.push("--debugger-pipe");
+
 			concreteArgs.push(`${debuggerInformation.pipeName}`);
 
 			if (debuggerInformation.dapLog) {
 				concreteArgs.push("--debugger-dap-log");
+
 				concreteArgs.push(debuggerInformation.dapLog);
 			}
 

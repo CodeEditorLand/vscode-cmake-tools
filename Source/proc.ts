@@ -65,17 +65,21 @@ export interface OutputConsumer {
  */
 export interface Subprocess {
 	result: Promise<ExecutionResult>;
+
 	child: proc.ChildProcess | undefined;
 }
 
 export interface BuildCommand {
 	command: string;
+
 	args?: string[];
+
 	build_env?: Environment;
 }
 
 export interface DebuggerEnvironmentVariable {
 	name: string;
+
 	value: string;
 }
 
@@ -101,13 +105,21 @@ export interface ExecutionResult {
 
 export interface ExecutionOptions {
 	environment?: Environment;
+
 	shell?: boolean | string;
+
 	silent?: boolean;
+
 	cwd?: string;
+
 	encoding?: BufferEncoding;
+
 	outputEncoding?: string;
+
 	overrideLocale?: boolean;
+
 	timeout?: number;
+
 	showOutputOnError?: boolean;
 }
 
@@ -117,6 +129,7 @@ export function buildCmdStr(command: string, args?: string[]): string {
 	if (args) {
 		cmdarr = cmdarr.concat(args);
 	}
+
 	return cmdarr.map((a) => (/[ \n\r\f;\t]/.test(a) ? `"${a}"` : a)).join(" ");
 }
 
@@ -151,6 +164,7 @@ export function execute(
 	if (!options) {
 		options = {};
 	}
+
 	const localeOverride = EnvironmentUtils.create({
 		LANG: "C",
 		LC_ALL: "C",
@@ -194,8 +208,10 @@ export function execute(
 
 	if (options?.cwd !== undefined) {
 		util.createDirIfNotExistsSync(options.cwd);
+
 		spawn_opts.cwd = options.cwd;
 	}
+
 	if (options?.timeout) {
 		spawn_opts.timeout = options.timeout;
 	}
@@ -210,6 +226,7 @@ export function execute(
 	} catch {
 		child = undefined;
 	}
+
 	if (!child) {
 		return {
 			child: undefined,
@@ -248,6 +265,7 @@ export function execute(
 		let stderr_acc = "";
 
 		let stderr_line_acc = "";
+
 		child?.on("error", (err) => {
 			log.warning(
 				localize(
@@ -263,6 +281,7 @@ export function execute(
 				),
 			);
 		});
+
 		child?.on("exit", (code, signal) => {
 			if (code !== 0) {
 				if (signal !== null && signal !== undefined) {
@@ -295,11 +314,13 @@ export function execute(
 						),
 					);
 				}
+
 				if (options?.showOutputOnError) {
 					if (stdout_acc) {
 						const output = stdout_acc
 							.trimEnd()
 							.replace(/\n/g, "\n\t");
+
 						log.warning(
 							localize(
 								"process.exit.stdout",
@@ -308,10 +329,12 @@ export function execute(
 							),
 						);
 					}
+
 					if (stderr_acc) {
 						const output = stderr_acc
 							.trimEnd()
 							.replace(/\n/g, "\n\t");
+
 						log.warning(
 							localize(
 								"process.exit.stderr",
@@ -323,6 +346,7 @@ export function execute(
 				}
 			}
 		});
+
 		child?.stdout?.on("data", (data: Uint8Array) => {
 			rollbar.invoke(
 				localize(
@@ -348,20 +372,25 @@ export function execute(
 						} else if (util.isTestMode()) {
 							log.info(line_acc);
 						}
+
 						line_acc = "";
 						// Erase the first line from the list
 						lines.splice(0, 1);
 					}
+
 					console.assert(
 						lines.length,
 						"Invalid lines",
 						JSON.stringify(lines),
 					);
+
 					line_acc = accumulate(line_acc, lines[0]);
+
 					stdout_acc = accumulate(stdout_acc, str);
 				},
 			);
 		});
+
 		child?.stderr?.on("data", (data: Uint8Array) => {
 			rollbar.invoke(
 				localize(
@@ -387,16 +416,20 @@ export function execute(
 						} else if (util.isTestMode() && stderr_line_acc) {
 							log.info(stderr_line_acc);
 						}
+
 						stderr_line_acc = "";
 						// Erase the first line from the list
 						lines.splice(0, 1);
 					}
+
 					console.assert(
 						lines.length,
 						"Invalid lines",
 						JSON.stringify(lines),
 					);
+
 					stderr_line_acc = accumulate(stderr_line_acc, lines[0]);
+
 					stderr_acc = accumulate(stderr_acc, str);
 				},
 			);
@@ -417,9 +450,11 @@ export function execute(
 						if (line_acc && outputConsumer) {
 							outputConsumer.output(line_acc);
 						}
+
 						if (stderr_line_acc && outputConsumer) {
 							outputConsumer.error(stderr_line_acc);
 						}
+
 						resolve({
 							retc,
 							stdout: stdout_acc,

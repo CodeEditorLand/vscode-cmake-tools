@@ -76,7 +76,9 @@ export const OLD_USER_KITS_FILEPATH = path.join(
  */
 export interface CMakeGenerator {
 	name: string;
+
 	toolset?: string;
+
 	platform?: string;
 }
 
@@ -175,11 +177,17 @@ export interface Kit extends KitDetect {
 
 interface CompilerVersion {
 	vendor: CompilerVendorEnum;
+
 	detectedName: string;
+
 	fullVersion: string;
+
 	version: string;
+
 	target: TargetTriple;
+
 	threadModel?: string;
+
 	installedDir?: string;
 }
 
@@ -207,6 +215,7 @@ export async function getCompilerVersion(
 			),
 		});
 	}
+
 	const exec = await proc.execute(binPath, ["-v"], undefined, {
 		overrideLocale: true,
 		timeout: 60000,
@@ -225,15 +234,18 @@ export async function getCompilerVersion(
 
 		return null;
 	}
+
 	let version_re: RegExp;
 
 	let version_match_index;
 
 	if (vendor === "Clang") {
 		version_re = /^(?:Apple LLVM|.*clang) version ([^\s-]+)(?:[\s-]|$)/gim;
+
 		version_match_index = 1;
 	} else {
 		version_re = /^gcc(-| )version (.*?) .*/gim;
+
 		version_match_index = 2;
 	}
 
@@ -250,14 +262,17 @@ export async function getCompilerVersion(
 
 		if (version_match !== null && version === "") {
 			version = version_match[version_match_index];
+
 			fullVersion = line;
 		}
+
 		const target_triple_match = findTargetTriple(line);
 
 		if (target_triple_match !== null) {
 			target = parseTargetTriple(target_triple_match);
 		}
 	}
+
 	if (version === "" || target === undefined) {
 		log.debug(
 			localize(
@@ -272,6 +287,7 @@ export async function getCompilerVersion(
 
 		return null;
 	}
+
 	const thread_model_mat = /Thread model:\s+(.*)/.exec(exec.stderr);
 
 	let threadModel: string | undefined;
@@ -279,6 +295,7 @@ export async function getCompilerVersion(
 	if (thread_model_mat) {
 		threadModel = thread_model_mat[1];
 	}
+
 	const install_dir_mat = /InstalledDir:\s+(.*)/.exec(exec.stderr);
 
 	let installedDir: string | undefined;
@@ -286,13 +303,16 @@ export async function getCompilerVersion(
 	if (install_dir_mat && vendor === "Clang") {
 		installedDir = install_dir_mat[1];
 	}
+
 	let detectedName = `${vendor} ${version} ${target.triple}`;
 
 	if (isMsys(binPath)) {
 		// Add the MSYS environment to the name, so that we can distinguish between different MSYS environments
 		const msysEnvDirName = path.dirname(path.dirname(binPath));
+
 		detectedName += ` (${path.basename(msysEnvDirName)})`;
 	}
+
 	log.debug(
 		localize(
 			"detected.compiler",
@@ -322,11 +342,13 @@ export async function getKitDetect(kit: Kit): Promise<KitDetect> {
 		if (!vs) {
 			return kit;
 		}
+
 		let version: CompilerVersion | null = null;
 
 		if (c_bin) {
 			version = await getCompilerVersion("Clang", c_bin);
 		}
+
 		let targetArch =
 			kit.preferredGenerator?.platform ??
 			kit.visualStudioArchitecture ??
@@ -335,6 +357,7 @@ export async function getKitDetect(kit: Kit): Promise<KitDetect> {
 		if (targetArch === "win32") {
 			targetArch = "i686";
 		}
+
 		const triple = `${targetArch}-pc-windows-msvc`;
 
 		let versionCompiler = vs.installationVersion;
@@ -343,10 +366,12 @@ export async function getKitDetect(kit: Kit): Promise<KitDetect> {
 
 		if (version !== null) {
 			vendor = "Clang";
+
 			versionCompiler = version.version;
 		} else {
 			vendor = `MSVC`;
 		}
+
 		return {
 			vendor,
 			triple,
@@ -361,6 +386,7 @@ export async function getKitDetect(kit: Kit): Promise<KitDetect> {
 		} else if (kit.name.startsWith("Clang ")) {
 			vendor = "Clang";
 		}
+
 		if (vendor === undefined) {
 			return kit;
 		}
@@ -370,9 +396,11 @@ export async function getKitDetect(kit: Kit): Promise<KitDetect> {
 		if (c_bin) {
 			version = await getCompilerVersion(vendor, c_bin);
 		}
+
 		if (!version) {
 			return kit;
 		}
+
 		return {
 			vendor,
 			triple: computeTargetTriple(version.target),
@@ -437,6 +465,7 @@ async function asMingwKit(bin: string, kit: Kit): Promise<Kit> {
 		const msysBasePath = path.dirname(prefixPath);
 
 		const msysBinPath = path.join(msysBasePath, "usr", "bin");
+
 		kit.environmentVariables = {
 			CMT_MINGW_PATH: `${binParentPath}`,
 			MSYSTEM: `${msysEnvironment}`,
@@ -504,6 +533,7 @@ export async function kitIfCompiler(
 		if (isTrusted && version === null) {
 			return null;
 		}
+
 		const gccCompilers: { [lang: string]: string } = {};
 
 		const gxx_fname1 = fname.replace(/gcc/, "g++");
@@ -546,11 +576,13 @@ export async function kitIfCompiler(
 				// Names like x86_64-pc-linux-gnu-gcc-11.1.0
 				gccCompilers.C = bin;
 			}
+
 			if (version_is_match && (await fs.exists(gxx_bin2))) {
 				// Names like x86_64-pc-linux-gnu-g++
 				gccCompilers.CXX = gxx_bin2;
 			}
 		}
+
 		const gccKit: Kit = {
 			name:
 				version?.detectedName ??
@@ -588,6 +620,7 @@ export async function kitIfCompiler(
 				// mentions msvc.
 				return null;
 			}
+
 			if (
 				version.target &&
 				version.target.triple.includes("msvc") &&
@@ -607,6 +640,7 @@ export async function kitIfCompiler(
 			: fname.replace(/^clang/, "clang++");
 
 		const clangxx_bin1 = path.join(path.dirname(bin), clangxx_fname);
+
 		log.debug(
 			localize(
 				"detected.clang.compiler",
@@ -655,11 +689,13 @@ export async function kitIfCompiler(
 				// Names like clang-13
 				clangCompilers.C = bin;
 			}
+
 			if (version_is_match && (await fs.exists(clangxx_bin2))) {
 				// Names like clang++
 				clangCompilers.CXX = clangxx_bin2;
 			}
 		}
+
 		const clangKit: Kit = {
 			name:
 				(clang_cl_res
@@ -703,6 +739,7 @@ async function scanDirectory<Ret>(
 
 		return [];
 	}
+
 	if (!(await fs.exists(dir))) {
 		log.debug(
 			localize(
@@ -733,6 +770,7 @@ async function scanDirectory<Ret>(
 		}
 	} catch (ce) {
 		const e = ce as NodeJS.ErrnoException;
+
 		log.warning(
 			localize(
 				"failed.to.scan",
@@ -745,6 +783,7 @@ async function scanDirectory<Ret>(
 		if (e.code === "ENOENT") {
 			return [];
 		}
+
 		throw e;
 	}
 
@@ -759,7 +798,9 @@ async function scanDirectory<Ret>(
 		if (e.code === "EACCES" || e.code === "EPERM") {
 			return [];
 		}
+
 		console.log("unexpected file system error");
+
 		console.log(e);
 
 		return [];
@@ -795,12 +836,16 @@ export async function scanDirForCompilerKits(
 
 			if (kit?.compilers) {
 				log.trace(`Kit found: ${kit.name}`);
+
 				log.trace(`        C: ${kit.compilers["C"]}`);
+
 				log.trace(`      CXX: ${kit.compilers["CXX"]}`);
 			}
+
 			return kit;
 		} catch (ce) {
 			const e = ce as NodeJS.ErrnoException;
+
 			log.warning(
 				localize(
 					"filed.to.check.binary",
@@ -820,7 +865,9 @@ export async function scanDirForCompilerKits(
 				// This is when file is not executable (in windows)
 				return null;
 			}
+
 			const stat = await fs.stat(bin);
+
 			log.debug(
 				"File infos: ",
 				"Mode",
@@ -832,6 +879,7 @@ export async function scanDirForCompilerKits(
 				"isSymbolicLink",
 				stat.isSymbolicLink(),
 			);
+
 			rollbar.exception(
 				localize("failed.to.scan.kit", "Failed to scan a kit file"),
 				e,
@@ -841,6 +889,7 @@ export async function scanDirForCompilerKits(
 			return null;
 		}
 	});
+
 	log.debug(
 		localize(
 			"founds.kits.in.directory",
@@ -880,6 +929,7 @@ export function vsVersionName(inst: VSInstallation): string {
 	if (!inst.catalog) {
 		return inst.instanceId;
 	}
+
 	const end = inst.catalog.productDisplayVersion.indexOf("[");
 
 	return end < 0
@@ -902,8 +952,10 @@ export function vsDisplayName(inst: VSInstallation): string {
 				return `${inst.displayName} ${inst.channelId.substr(index + 1)}`;
 			}
 		}
+
 		return inst.displayName;
 	}
+
 	return inst.instanceId;
 }
 
@@ -1002,9 +1054,11 @@ export async function getShellScriptEnvironment(
 		script += `printenv >> ${environment_path}`; // write env vars to temp file
 		run_command = `/bin/bash -c "source ${script_path}"`; // run script in bash to enable bash-builtin commands like 'source'
 	}
+
 	try {
 		await fs.unlink(environment_path); // delete the temp file if it exists
 	} catch (error) {}
+
 	await fs.writeFile(script_path, script); // write batch file
 
 	const res = await proc.execute(run_command, [], null, {
@@ -1032,10 +1086,12 @@ export async function getShellScriptEnvironment(
 	try {
 		/* When the script failed, envpath would not exist */
 		env = await fs.readFile(environment_path, "utf8");
+
 		await fs.unlink(environment_path);
 	} catch (error) {
 		log.error(error as Error);
 	}
+
 	if (!env || env === "") {
 		console.log(
 			`Error running ${kit.environmentSetupScript} with:`,
@@ -1046,6 +1102,7 @@ export async function getShellScriptEnvironment(
 	}
 
 	// split and trim env vars, and exclude ${variables}
+
 	const filter: RegExp = /\$\{.+?\}/;
 
 	const vars = env
@@ -1066,8 +1123,10 @@ export async function getShellScriptEnvironment(
 					),
 				);
 			}
+
 			return acc;
 		}, EnvironmentUtils.create());
+
 	log.debug(
 		localize(
 			"ok.running",
@@ -1108,11 +1167,13 @@ async function tryCreateNewVCEnvironment(
 	pr?: ProgressReporter,
 ): Promise<Kit | null> {
 	const name = vsKitName(inst, hostArch, targetArch);
+
 	log.debug(localize("checking.for.kit", "Checking for kit: {0}", name));
 
 	if (pr) {
 		pr.report({ message: localize("checking", "Checking {0}", name) });
 	}
+
 	const variables = await varsForVSInstallation(inst, hostArch, targetArch);
 
 	if (!variables) {
@@ -1127,11 +1188,15 @@ async function tryCreateNewVCEnvironment(
 	};
 
 	const version = /^(\d+)+./.exec(inst.installationVersion);
+
 	log.debug(
 		localize("detected.kit.for.version", "Detected VsKit for version"),
 	);
+
 	log.debug(` DisplayName: ${name}`);
+
 	log.debug(` InstanceId: ${inst.instanceId}`);
+
 	log.debug(` InstallVersion: ${inst.installationVersion}`);
 
 	const majorVersion = parseInt(inst.installationVersion);
@@ -1150,6 +1215,7 @@ async function tryCreateNewVCEnvironment(
 			log.debug(
 				` ${localize("generator.present", "Generator Present: {0}", generatorName)}`,
 			);
+
 			kit.preferredGenerator = {
 				name: generatorName,
 				platform:
@@ -1159,6 +1225,7 @@ async function tryCreateNewVCEnvironment(
 				toolset: majorVersion < 15 ? undefined : host,
 			};
 		}
+
 		log.debug(
 			` ${localize("selected.preferred.generator.name", "Selected Preferred Generator Name: {0} {1}", generatorName, JSON.stringify(kit.preferredGenerator))}`,
 		);
@@ -1193,6 +1260,7 @@ export async function scanForVSKits(pr?: ProgressReporter): Promise<Kit[]> {
 			(version && version.major > 17);
 
 		const sub_prs: Promise<Kit | null>[] = [];
+
 		hostArches.forEach((hostArch) => {
 			if (hostArch === "ARM64" && !vsVersionSupportsArm64) {
 				return;
@@ -1206,6 +1274,7 @@ export async function scanForVSKits(pr?: ProgressReporter): Promise<Kit[]> {
 		});
 
 		const maybe_kits = await Promise.all(sub_prs);
+
 		maybe_kits.map((k) => (k ? ret.push(k) : null));
 
 		return ret;
@@ -1375,6 +1444,7 @@ async function getVSInstallForKit(
 	}
 
 	console.assert(kit.visualStudio);
+
 	console.assert(kit.visualStudioArchitecture);
 
 	const installs = await vsInstallations();
@@ -1441,6 +1511,7 @@ export async function effectiveKitEnvironment(
 			host_env = shell_vars;
 		}
 	}
+
 	let env = EnvironmentUtils.create(host_env);
 
 	const kit_env = EnvironmentUtils.create(kit.environmentVariables);
@@ -1471,19 +1542,23 @@ export async function effectiveKitEnvironment(
 			if (cCompiler) {
 				path_list.push(path.dirname(cCompiler));
 			}
+
 			const mingwPath = env["CMT_MINGW_PATH"];
 
 			if (mingwPath) {
 				path_list.push(mingwPath);
 			}
+
 			if (env.hasOwnProperty("PATH")) {
 				// since mingwPath is at the front of path_list, we shouldn't need to remove other mingw from env['PATH']
 				path_list.push(env["PATH"] ?? "");
+
 				env["PATH"] = path_list.join(";");
 			}
 		}
 	} else {
 		const vs_vars = await getVSKitEnvironment(kit);
+
 		env = EnvironmentUtils.merge([env, vs_vars]);
 
 		const expandOptions: expand.ExpansionOptions = opts
@@ -1501,6 +1576,7 @@ export async function effectiveKitEnvironment(
 			);
 		}
 	}
+
 	log.debug(
 		localize(
 			"kit.env",
@@ -1519,16 +1595,19 @@ export async function findCLCompilerPath(
 	if (!env) {
 		return null;
 	}
+
 	const path_val = env["PATH"];
 
 	if (!path_val) {
 		return null;
 	}
+
 	const path_ext = env["PATHEXT"];
 
 	if (!path_ext) {
 		return null;
 	}
+
 	for (const dir of path_val.split(";")) {
 		for (const ext of path_ext.split(";")) {
 			const fname = `cl${ext}`;
@@ -1542,11 +1621,13 @@ export async function findCLCompilerPath(
 			}
 		}
 	}
+
 	return null;
 }
 
 export interface KitScanOptions {
 	ignorePath?: boolean;
+
 	scanDirs?: string[];
 }
 
@@ -1587,6 +1668,7 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 			const normalizedPath = util.lightNormalizePath(path);
 
 			const map = paths ?? scan_paths;
+
 			map.set(normalizedPath, map.get(normalizedPath) || trusted);
 		}
 
@@ -1617,6 +1699,7 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 		paths.windows.defaultCompilerPaths.LLVM.forEach((p) =>
 			addScanPath(p.path, p.isTrusted),
 		);
+
 		paths.windows.defaultCompilerPaths.MSYS2.forEach((p) =>
 			addScanPath(p.path, p.isTrusted),
 		);
@@ -1624,6 +1707,7 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 		const compiler_kits = Array.from(scan_paths).map((path_el) =>
 			scanDirForCompilerKits(path_el[0], path_el[1], pr),
 		);
+
 		kit_promises = kit_promises.concat(compiler_kits);
 
 		if (isWin32) {
@@ -1635,6 +1719,7 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 				const llvm_root = path.normalize(
 					(process.env.LLVM_ROOT as string) + "\\bin",
 				);
+
 				addScanPath(llvm_root, true, clang_paths);
 			}
 
@@ -1646,20 +1731,24 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 			const vs_installs = await vsInstallations();
 
 			const bundled_clang_paths: string[] = [];
+
 			vs_installs.forEach((vs_install) => {
 				bundled_clang_paths.push(
 					vs_install.installationPath + "\\VC\\Tools\\Llvm\\bin",
 				);
+
 				bundled_clang_paths.push(
 					vs_install.installationPath + "\\VC\\Tools\\Llvm\\x64\\bin",
 				);
 			});
+
 			bundled_clang_paths.forEach((path_el) =>
 				addScanPath(path_el, true, clang_paths),
 			);
 
 			// Scan for kits
 			const vs_kits = scanForVSKits(pr);
+
 			kit_promises.push(vs_kits);
 
 			const clang_kits = await scanForClangForMSVCKits(
@@ -1669,12 +1758,14 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 				}),
 				cmakePath,
 			);
+
 			kit_promises = kit_promises.concat(clang_kits);
 		}
 
 		const arrays = await Promise.all(kit_promises);
 
 		const kits = ([] as Kit[]).concat(...arrays);
+
 		kits.map((k) =>
 			log.info(
 				localize(
@@ -1701,6 +1792,7 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 		void vscode.window
 			.showWarningMessage<{
 				action: "yes" | "no";
+
 				title: string;
 			}>(
 				localize(
@@ -1719,14 +1811,17 @@ export async function scanForKits(cmakePath?: string, opt?: KitScanOptions) {
 						"additionalCompilerSearchDirs",
 						[],
 					);
+
 					additionalCompilerSearchDirs.push(
 						...Array.from(untrusted_paths),
 					);
+
 					await settings.update(
 						"additionalCompilerSearchDirs",
 						additionalCompilerSearchDirs,
 						vscode.ConfigurationTarget.Global,
 					);
+
 					await vscode.commands.executeCommand("cmake.scanForKits");
 				}
 			});
@@ -1760,9 +1855,11 @@ export async function scanForKitsIfNeeded(
 				kitsVersionCurrent,
 			),
 		);
+
 		await kitsController.KitsController.scanForKits(
 			await project.getCMakePathofProject(),
 		);
+
 		await project.workspaceContext.state.extensionContext.globalState.update(
 			"kitsVersionSaved",
 			kitsVersionCurrent,
@@ -1785,6 +1882,7 @@ export async function descriptionForKit(
 	if (kit.description) {
 		return kit.description;
 	}
+
 	if (kit.toolchainFile) {
 		return localize(
 			"kit.for.toolchain.file",
@@ -1792,6 +1890,7 @@ export async function descriptionForKit(
 			kit.toolchainFile,
 		);
 	}
+
 	if (kit.visualStudio) {
 		if (kit.compilers) {
 			// Clang for MSVC
@@ -1841,9 +1940,11 @@ export async function descriptionForKit(
 					hostTargetArch,
 				);
 			}
+
 			return "";
 		}
 	}
+
 	if (kit.compilers) {
 		const compilers = Object.keys(kit.compilers).map(
 			(k) => `${k} = ${kit.compilers![k]}`,
@@ -1855,12 +1956,14 @@ export async function descriptionForKit(
 			compilers.join(", "),
 		);
 	}
+
 	if (kit.name === SpecialKits.ScanForKits) {
 		return localize(
 			"search.for.compilers",
 			"Search for compilers on this computer",
 		);
 	}
+
 	return localize(
 		"unspecified.let.cmake.guess",
 		"Unspecified (Let CMake guess what compilers and environment to use)",
@@ -1885,6 +1988,7 @@ export async function readKitsFile(
 
 		return [];
 	}
+
 	if (!fileStats.isFile()) {
 		log.debug(
 			localize(
@@ -1896,6 +2000,7 @@ export async function readKitsFile(
 
 		return [];
 	}
+
 	log.debug(localize("reading.kits.file", "Reading kits file {0}", filePath));
 
 	const content_str = await fs.readFile(filePath);
@@ -1916,12 +2021,14 @@ export async function readKitsFile(
 
 		return [];
 	}
+
 	const validator = await loadSchema("./schemas/kits-schema.json");
 
 	const is_valid = validator(kits_raw);
 
 	if (!is_valid) {
 		const errors = validator.errors!;
+
 		log.error(
 			localize(
 				"invalid.file.error",
@@ -1934,14 +2041,17 @@ export async function readKitsFile(
 		for (const err of errors) {
 			log.error(` >> ${err.dataPath}: ${err.message}`);
 		}
+
 		return [];
 	}
+
 	const kits = (kits_raw as Kit[]).map((kit) => {
 		// Serialized kits are trusted for backwards compatibility if not otherwise specified.
 		kit.isTrusted = kit.isTrusted === undefined ? true : kit.isTrusted;
 
 		return kit;
 	});
+
 	log.info(
 		localize(
 			"successfully.loaded.kits",
@@ -1985,6 +2095,7 @@ export async function readKitsFile(
 			},
 		};
 	}
+
 	for (const kit of dropNulls(kits)) {
 		expansionOptions.vars.buildKit = kit.name;
 
@@ -1994,6 +2105,7 @@ export async function readKitsFile(
 				expansionOptions,
 			);
 		}
+
 		if (kit.compilers) {
 			for (const lang in kit.compilers) {
 				kit.compilers[lang] = await expand.expandString(
@@ -2002,8 +2114,10 @@ export async function readKitsFile(
 				);
 			}
 		}
+
 		expandedKits.push(kit);
 	}
+
 	return expandedKits;
 }
 
@@ -2055,6 +2169,7 @@ export async function getAdditionalKits(project: CMakeProject): Promise<Kit[]> {
 			),
 		);
 	}
+
 	return additionalKits;
 }
 
@@ -2070,6 +2185,7 @@ export function kitChangeNeedsClean(newKit: Kit, oldKit: Kit | null): boolean {
 
 		return false;
 	}
+
 	const important_params = (k: Kit) => ({
 		compilers: k.compilers,
 		vs: k.visualStudio,

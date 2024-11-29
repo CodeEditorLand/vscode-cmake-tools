@@ -38,13 +38,21 @@ const log = logging.createLogger("preset");
 
 export interface PresetsFile {
 	version: number;
+
 	schema?: string;
+
 	cmakeMinimumRequired?: util.Version;
+
 	include?: string[];
+
 	configurePresets?: ConfigurePreset[];
+
 	buildPresets?: BuildPreset[];
+
 	testPresets?: TestPreset[];
+
 	packagePresets?: PackagePreset[];
+
 	workflowPresets?: WorkflowPreset[];
 
 	__path?: string; // Private field holding the path to the file.
@@ -54,13 +62,21 @@ export type VendorType = { [key: string]: any };
 
 export interface Preset {
 	name: string;
+
 	displayName?: string;
+
 	description?: string;
+
 	hidden?: boolean;
+
 	inherits?: string | string[];
+
 	environment?: EnvironmentWithNull;
+
 	vendor?: VendorType;
+
 	condition?: Condition | boolean | null;
+
 	isUserPreset?: boolean;
 
 	__parentEnvironment?: EnvironmentWithNull; // Private field that contains the parent environment, which might be a modified VS Dev Env, or simply process.env.
@@ -71,19 +87,25 @@ export interface Preset {
 
 export interface ValueStrategy {
 	value?: string;
+
 	strategy?: "set" | "external";
 }
 
 export interface WarningOptions {
 	dev?: boolean;
+
 	deprecated?: boolean;
+
 	uninitialized?: boolean;
+
 	unusedCli?: boolean;
+
 	systemVars?: boolean;
 }
 
 export interface ErrorOptions {
 	dev?: boolean;
+
 	deprecated?: boolean;
 }
 
@@ -91,6 +113,7 @@ export interface DebugOptions {
 	output?: boolean;
 
 	tryCompile?: boolean;
+
 	find?: boolean;
 }
 
@@ -109,7 +132,9 @@ export interface TraceOptions {
 	mode?: string;
 
 	format?: string;
+
 	source?: string[];
+
 	redirect: string;
 }
 
@@ -125,13 +150,21 @@ export interface Condition {
 		| "anyOf"
 		| "allOf"
 		| "not";
+
 	value?: boolean;
+
 	lhs?: string;
+
 	rhs?: string;
+
 	string?: string;
+
 	list?: string[];
+
 	regex?: string;
+
 	conditions?: Condition[];
+
 	condition?: Condition;
 }
 
@@ -178,6 +211,7 @@ export function evaluateCondition(condition: Condition): boolean {
 		case "equals":
 		case "notEquals":
 			validateConditionProperty(condition, "lhs");
+
 			validateConditionProperty(condition, "rhs");
 
 			const equals = condition.lhs === condition.rhs;
@@ -187,6 +221,7 @@ export function evaluateCondition(condition: Condition): boolean {
 		case "inList":
 		case "notInList":
 			validateConditionProperty(condition, "string");
+
 			validateConditionProperty(condition, "list");
 
 			const inList = condition.list!.includes(condition.string!);
@@ -196,6 +231,7 @@ export function evaluateCondition(condition: Condition): boolean {
 		case "matches":
 		case "notMatches":
 			validateConditionProperty(condition, "string");
+
 			validateConditionProperty(condition, "regex");
 
 			const regex = new RegExp(condition.regex!);
@@ -249,6 +285,7 @@ function evaluateInheritedPresetConditions(
 
 			return false;
 		}
+
 		if (parent && !references.has(parent.name)) {
 			parent.__inheritedPresetCondition = evaluatePresetCondition(
 				parent,
@@ -272,6 +309,7 @@ function evaluateInheritedPresetConditions(
 				evaluateParent(parentName),
 			);
 		}
+
 		log.error(
 			localize(
 				"invalid.inherits.type",
@@ -283,6 +321,7 @@ function evaluateInheritedPresetConditions(
 
 		return false;
 	}
+
 	return true;
 }
 
@@ -368,18 +407,29 @@ export type VendorVsSettings = {
 
 export interface ConfigurePreset extends Preset {
 	generator?: string;
+
 	architecture?: string | ValueStrategy;
+
 	toolset?: string | ValueStrategy;
+
 	binaryDir?: string;
+
 	cmakeExecutable?: string;
 	// Make the cache value to be possibly undefined for type checking
 	cacheVariables?: { [key: string]: CacheVarType | undefined };
+
 	warnings?: WarningOptions;
+
 	errors?: ErrorOptions;
+
 	debug?: DebugOptions;
+
 	trace?: TraceOptions;
+
 	vendor?: VendorVsSettings | VendorType;
+
 	toolchainFile?: string;
+
 	installDir?: string;
 
 	// Private fields
@@ -388,15 +438,21 @@ export interface ConfigurePreset extends Preset {
 
 export interface InheritsConfigurePreset extends Preset {
 	configurePreset?: string;
+
 	inheritConfigureEnvironment?: boolean; // Defaults to true
 }
 
 export interface BuildPreset extends InheritsConfigurePreset {
 	jobs?: number;
+
 	targets?: string | string[];
+
 	configuration?: string;
+
 	cleanFirst?: boolean;
+
 	verbose?: boolean;
+
 	nativeToolOptions?: string[];
 
 	// Private fields
@@ -419,67 +475,103 @@ export const defaultBuildPreset: BuildPreset = {
 
 export interface OutputOptions {
 	shortProgress?: boolean;
+
 	verbosity?: "default" | "verbose" | "extra";
+
 	debug?: boolean;
+
 	outputOnFailure?: boolean;
+
 	quiet?: boolean;
+
 	outputLogFile?: string;
+
 	outputJUnitFile?: string;
+
 	labelSummary?: boolean;
+
 	subprojectSummary?: boolean;
+
 	maxPassedTestOutputSize?: number;
+
 	maxFailedTestOutputSize?: number;
+
 	testOutputTruncation?: "tail" | "heads" | "middle";
+
 	maxTestNameWidth?: number;
 }
 
 export interface IncludeFilter {
 	name?: string;
+
 	label?: string;
+
 	useUnion?: boolean;
+
 	index?:
 		| string
 		| {
 				start?: number;
+
 				end?: number;
+
 				stride?: number;
+
 				specificTests?: number[];
 		  };
 }
 
 export interface ExcludeFilter {
 	name?: string;
+
 	label?: string;
+
 	fixtures?: { any?: string; setup?: string; cleanup?: string };
 }
 
 export interface TestFilter {
 	include?: IncludeFilter;
+
 	exclude?: ExcludeFilter;
 }
 
 export interface ExecutionOptions {
 	stopOnFailure?: boolean;
+
 	enableFailover?: boolean;
+
 	jobs?: number;
+
 	resourceSpecFile?: string;
+
 	testLoad?: number;
+
 	showOnly?: "human" | "json-v1";
+
 	repeat?: {
 		mode: "until-fail" | "until-pass" | "after-timeout";
+
 		count: number;
 	};
+
 	interactiveDebugging?: boolean;
+
 	scheduleRandom?: boolean;
+
 	timeout?: number;
+
 	noTestsAction?: "default" | "error" | "ignore";
 }
 
 export interface TestPreset extends InheritsConfigurePreset {
 	configuration?: string;
+
 	overwriteConfigurationFile?: string[];
+
 	output?: OutputOptions;
+
 	filter?: TestFilter;
+
 	execution?: ExecutionOptions;
 
 	// Private fields
@@ -489,19 +581,27 @@ export interface TestPreset extends InheritsConfigurePreset {
 
 export interface PackageOutputOptions {
 	debug?: boolean;
+
 	verbose?: boolean;
 }
 
 export interface PackagePreset extends InheritsConfigurePreset {
 	configurations?: string[];
+
 	generators?: string[];
 
 	variables?: { [key: string]: string | null | undefined };
+
 	configFile?: string;
+
 	output?: PackageOutputOptions;
+
 	packageName?: string;
+
 	packageVersion?: string;
+
 	packageDirectory?: string;
+
 	vendorName?: string;
 
 	// Private fields
@@ -511,15 +611,21 @@ export interface PackagePreset extends InheritsConfigurePreset {
 
 export interface WorkflowStepsOptions {
 	type: string;
+
 	name: string;
 }
 
 export interface WorkflowPreset {
 	name: string;
+
 	displayName?: string;
+
 	description?: string;
+
 	vendor?: VendorType;
+
 	isUserPreset?: boolean;
+
 	steps: WorkflowStepsOptions[];
 
 	__vsDevEnvApplied?: boolean; // Private field to indicate if we have already applied the VS Dev Env.
@@ -636,6 +742,7 @@ export function setUserPresetsHelper(presets: PresetsFile | undefined) {
 					) ?? true;
 			}
 		}
+
 		if (presets.buildPresets) {
 			for (const buildPreset of presets.buildPresets) {
 				buildPreset.isUserPreset =
@@ -644,6 +751,7 @@ export function setUserPresetsHelper(presets: PresetsFile | undefined) {
 					) ?? true;
 			}
 		}
+
 		if (presets.testPresets) {
 			for (const testPreset of presets.testPresets) {
 				testPreset.isUserPreset =
@@ -652,6 +760,7 @@ export function setUserPresetsHelper(presets: PresetsFile | undefined) {
 					) ?? true;
 			}
 		}
+
 		if (presets.packagePresets) {
 			for (const packagePreset of presets.packagePresets) {
 				packagePreset.isUserPreset =
@@ -660,6 +769,7 @@ export function setUserPresetsHelper(presets: PresetsFile | undefined) {
 					) ?? true;
 			}
 		}
+
 		if (presets.workflowPresets) {
 			for (const workflowPreset of presets.workflowPresets) {
 				workflowPreset.isUserPreset =
@@ -676,6 +786,7 @@ export function setUserPresetsPlusIncluded(
 	presets: PresetsFile | undefined,
 ) {
 	setUserPresetsHelper(presets);
+
 	userPresetsPlusIncluded.set(folder, presets);
 }
 
@@ -708,7 +819,9 @@ export function updateCachedExpandedPreset(
 	const expanded = expandedPresets.get(folder);
 
 	const userExpanded = expandedUserPresets.get(folder);
+
 	updateCachedExpandedPresethelper(expanded, clonedPreset, presetType);
+
 	updateCachedExpandedPresethelper(userExpanded, clonedPreset, presetType);
 }
 
@@ -783,6 +896,7 @@ export function setExpandedUserPresetsFile(
 	presets: PresetsFile | undefined,
 ) {
 	setUserPresetsHelper(presets);
+
 	expandedUserPresets.set(folder, presets);
 }
 
@@ -794,6 +908,7 @@ export function minCMakeVersion(folder: string) {
 	if (!min1) {
 		return min2;
 	}
+
 	if (!min2) {
 		return min1;
 	}
@@ -808,6 +923,7 @@ export function configurePresets(
 	if (usePresetsPlusIncluded) {
 		return presetsPlusIncluded.get(folder)?.configurePresets || [];
 	}
+
 	return expandedPresets.get(folder)?.configurePresets || [];
 }
 
@@ -818,6 +934,7 @@ export function userConfigurePresets(
 	if (usePresetsPlusIncluded) {
 		return userPresetsPlusIncluded.get(folder)?.configurePresets || [];
 	}
+
 	return expandedUserPresets.get(folder)?.configurePresets || [];
 }
 
@@ -843,6 +960,7 @@ export function buildPresets(
 	if (usePresetsPlusIncluded) {
 		return presetsPlusIncluded.get(folder)?.buildPresets || [];
 	}
+
 	return expandedPresets.get(folder)?.buildPresets || [];
 }
 
@@ -853,6 +971,7 @@ export function userBuildPresets(
 	if (usePresetsPlusIncluded) {
 		return userPresetsPlusIncluded.get(folder)?.buildPresets || [];
 	}
+
 	return expandedUserPresets.get(folder)?.buildPresets || [];
 }
 
@@ -878,6 +997,7 @@ export function testPresets(
 	if (usePresetsPlusIncluded) {
 		return presetsPlusIncluded.get(folder)?.testPresets || [];
 	}
+
 	return expandedPresets.get(folder)?.testPresets || [];
 }
 
@@ -888,6 +1008,7 @@ export function userTestPresets(
 	if (usePresetsPlusIncluded) {
 		return userPresetsPlusIncluded.get(folder)?.testPresets || [];
 	}
+
 	return expandedUserPresets.get(folder)?.testPresets || [];
 }
 
@@ -913,6 +1034,7 @@ export function packagePresets(
 	if (usePresetsPlusIncluded) {
 		return presetsPlusIncluded.get(folder)?.packagePresets || [];
 	}
+
 	return expandedPresets.get(folder)?.packagePresets || [];
 }
 
@@ -923,6 +1045,7 @@ export function userPackagePresets(
 	if (usePresetsPlusIncluded) {
 		return userPresetsPlusIncluded.get(folder)?.packagePresets || [];
 	}
+
 	return expandedUserPresets.get(folder)?.packagePresets || [];
 }
 
@@ -948,6 +1071,7 @@ export function workflowPresets(
 	if (usePresetsPlusIncluded) {
 		return presetsPlusIncluded.get(folder)?.workflowPresets || [];
 	}
+
 	return expandedPresets.get(folder)?.workflowPresets || [];
 }
 
@@ -958,6 +1082,7 @@ export function userWorkflowPresets(
 	if (usePresetsPlusIncluded) {
 		return userPresetsPlusIncluded.get(folder)?.workflowPresets || [];
 	}
+
 	return expandedUserPresets.get(folder)?.workflowPresets || [];
 }
 
@@ -1090,6 +1215,7 @@ async function getVendorForConfigurePreset(
 	} else {
 		refs.clear();
 	}
+
 	return getVendorForConfigurePresetImpl(
 		folder,
 		name,
@@ -1173,6 +1299,7 @@ async function getVendorForConfigurePresetHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.config.preset",
@@ -1192,6 +1319,7 @@ async function getVendorForConfigurePresetHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parent of preset.inherits) {
 			const parentVendor = await getVendorForConfigurePresetImpl(
 				folder,
@@ -1257,9 +1385,11 @@ async function getExpansionOptions(
 	if (preset.__file && preset.__file.version >= 3) {
 		expansionOpts.vars.hostSystemName = await util.getHostSystemNameMemo();
 	}
+
 	if (preset.__file && preset.__file.version >= 4) {
 		expansionOpts.vars.fileDir = path.dirname(preset.__file!.__path!);
 	}
+
 	if (preset.__file && preset.__file.version >= 5) {
 		expansionOpts.vars.pathListSep = path.delimiter;
 	}
@@ -1275,9 +1405,11 @@ async function expandCondition(
 	if (util.isNullOrUndefined(condition)) {
 		return undefined;
 	}
+
 	if (util.isBoolean(condition)) {
 		return condition;
 	}
+
 	if (condition.type) {
 		const result: Condition = { type: condition.type };
 
@@ -1288,6 +1420,7 @@ async function expandCondition(
 				errorHandler,
 			);
 		}
+
 		if (condition.rhs) {
 			result.rhs = await expandString(
 				condition.rhs,
@@ -1295,6 +1428,7 @@ async function expandCondition(
 				errorHandler,
 			);
 		}
+
 		if (condition.string) {
 			result.string = await expandString(
 				condition.string,
@@ -1302,6 +1436,7 @@ async function expandCondition(
 				errorHandler,
 			);
 		}
+
 		if (condition.list) {
 			result.list = [];
 
@@ -1311,6 +1446,7 @@ async function expandCondition(
 				);
 			}
 		}
+
 		if (condition.condition) {
 			const expanded = await expandCondition(
 				condition.condition,
@@ -1321,6 +1457,7 @@ async function expandCondition(
 				result.condition = expanded;
 			}
 		}
+
 		if (condition.conditions) {
 			result.conditions = [];
 
@@ -1332,10 +1469,12 @@ async function expandCondition(
 				}
 			}
 		}
+
 		merge(result, condition); // Copy the remaining fields;
 
 		return result;
 	}
+
 	return undefined;
 }
 
@@ -1345,7 +1484,9 @@ export function getArchitecture(preset: ConfigurePreset) {
 	} else if (preset.architecture && preset.architecture.value) {
 		return preset.architecture.value;
 	}
+
 	const fallbackArchitecture = util.getHostArchitecture();
+
 	log.warning(
 		localize(
 			"no.cl.arch",
@@ -1388,10 +1529,13 @@ export function getToolset(preset: ConfigurePreset): Toolset {
 				),
 			);
 		}
+
 		if (!result.host) {
 			log.warning(noToolsetArchWarning);
+
 			result.host = fallbackArchitecture;
 		}
+
 		if (!result.version && result.name !== latestToolsetName) {
 			log.warning(
 				localize(
@@ -1403,8 +1547,10 @@ export function getToolset(preset: ConfigurePreset): Toolset {
 		}
 	} else {
 		log.warning(noToolsetArchWarning);
+
 		result = { host: fallbackArchitecture };
 	}
+
 	return result;
 }
 
@@ -1473,12 +1619,15 @@ function parseToolset(toolset: string): Toolset {
 			}
 		}
 	}
+
 	return result;
 }
 
 export interface VsDevEnvOptions {
 	preset: ConfigurePreset;
+
 	shouldInterrogateForNinja: boolean;
+
 	compilerName?: string; // Only will have a value when `useVsDeveloperEnvironmentMode` is "auto"
 }
 
@@ -1526,6 +1675,7 @@ async function getVsDevEnv(
 			const cmakeGeneratorInstanceNormalized = path.normalize(
 				cmakeGeneratorInstance,
 			);
+
 			vsInstall = vsInstalls.find(
 				(vs) =>
 					vs.installationPath &&
@@ -1556,6 +1706,7 @@ async function getVsDevEnv(
 			} else if (!a.isPrerelease && b.isPrerelease) {
 				return -1;
 			}
+
 			return -compareVersions(
 				a.installationVersion,
 				b.installationVersion,
@@ -1655,6 +1806,7 @@ async function getVsDevEnv(
 						vsCMakePaths.ninja,
 					),
 				);
+
 				compilerEnv["PATH"] =
 					`${path.dirname(vsCMakePaths.ninja)};${compilerEnv["PATH"]}`;
 			}
@@ -1845,6 +1997,7 @@ export async function getConfigurePresetInherits(
 		usePresetsPlusIncluded,
 		errorHandler,
 	);
+
 	errorHandlerHelper(name, errorHandler);
 
 	return preset;
@@ -1907,6 +2060,7 @@ async function getConfigurePresetInheritsImpl(
 			name,
 		),
 	);
+
 	errorHandler?.errorList.push([
 		localize("config.preset.not.found", "Could not find configure preset"),
 		name,
@@ -1939,6 +2093,7 @@ async function getConfigurePresetInheritsHelper(
 						'"toolchainFile"',
 					),
 				);
+
 				errorHandler?.errorList.push([
 					localize(
 						"property.unsupported.v2",
@@ -1949,6 +2104,7 @@ async function getConfigurePresetInheritsHelper(
 
 				return null;
 			}
+
 			if (preset.installDir) {
 				log.error(
 					localize(
@@ -1958,6 +2114,7 @@ async function getConfigurePresetInheritsHelper(
 						'"installDir"',
 					),
 				);
+
 				errorHandler?.errorList.push([
 					localize(
 						"property.unsupported.v2",
@@ -1982,6 +2139,7 @@ async function getConfigurePresetInheritsHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.config.preset",
@@ -1999,6 +2157,7 @@ async function getConfigurePresetInheritsHelper(
 	if (!preset.environment) {
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
+
 	if (!preset.cacheVariables) {
 		preset.cacheVariables = {};
 	}
@@ -2010,6 +2169,7 @@ async function getConfigurePresetInheritsHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parentName of preset.inherits) {
 			const parent = await getConfigurePresetInheritsImpl(
 				folder,
@@ -2214,6 +2374,7 @@ export async function expandConfigurePresetVariables(
 			errorHandler,
 		);
 	}
+
 	if (preset.vendor) {
 		await getVendorForConfigurePreset(
 			folder,
@@ -2252,6 +2413,7 @@ export function expandConfigurePresetForPresets(
 		for (const preset of buildPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType);
 		}
+
 		for (const preset of userBuildPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType, true);
 		}
@@ -2259,6 +2421,7 @@ export function expandConfigurePresetForPresets(
 		for (const preset of testPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType);
 		}
+
 		for (const preset of userTestPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType, true);
 		}
@@ -2266,6 +2429,7 @@ export function expandConfigurePresetForPresets(
 		for (const preset of packagePresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType);
 		}
+
 		for (const preset of userPackagePresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType, true);
 		}
@@ -2273,6 +2437,7 @@ export function expandConfigurePresetForPresets(
 		for (const preset of workflowPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType);
 		}
+
 		for (const preset of userWorkflowPresets(folder)) {
 			getConfigurePresetForPreset(folder, preset.name, presetType, true);
 		}
@@ -2360,6 +2525,7 @@ function getConfigurePresetForPresetImpl(
 		} else {
 			preset = getPresetByName(userTestPresets(folder), name);
 		}
+
 		if (preset) {
 			return getConfigurePresetForPresetHelper(
 				folder,
@@ -2458,6 +2624,7 @@ function getConfigurePresetForPresetHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parent of preset.inherits) {
 			const parentConfigurePreset = getConfigurePresetForPresetImpl(
 				folder,
@@ -2511,6 +2678,7 @@ export async function getBuildPresetInherits(
 		errorHandler,
 		inheritedByPreset,
 	);
+
 	errorHandlerHelper(name, errorHandler);
 
 	return preset;
@@ -2609,6 +2777,7 @@ async function getBuildPresetInheritsImpl(
 			name,
 		),
 	);
+
 	errorHandler?.errorList.push([
 		localize("build.preset.not.found", "Could not find build preset"),
 		name,
@@ -2645,6 +2814,7 @@ async function getBuildPresetInheritsHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.build.preset",
@@ -2662,6 +2832,7 @@ async function getBuildPresetInheritsHelper(
 	if (!preset.environment) {
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
+
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
 
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
@@ -2671,6 +2842,7 @@ async function getBuildPresetInheritsHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parentName of preset.inherits) {
 			const parent = await getBuildPresetInheritsImpl(
 				folder,
@@ -2692,6 +2864,7 @@ async function getBuildPresetInheritsHelper(
 					parent.environment,
 					inheritedEnv,
 				]);
+
 				inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 					parent.__parentEnvironment,
 					inheritedParentEnv,
@@ -2731,6 +2904,7 @@ async function getBuildPresetInheritsHelper(
 					preset.configurePreset,
 				),
 			);
+
 			errorHandler?.errorList.push([
 				localize(
 					"configure.preset.not.found",
@@ -2743,6 +2917,7 @@ async function getBuildPresetInheritsHelper(
 		}
 
 		preset.__binaryDir = expandedConfigurePreset.binaryDir;
+
 		preset.__generator = expandedConfigurePreset.generator;
 
 		if (preset.inheritConfigureEnvironment !== false) {
@@ -2751,6 +2926,7 @@ async function getBuildPresetInheritsHelper(
 				inheritedEnv,
 				expandedConfigurePreset.environment,
 			]);
+
 			inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 				inheritedParentEnv,
 				expandedConfigurePreset.__parentEnvironment,
@@ -2764,6 +2940,7 @@ async function getBuildPresetInheritsHelper(
 		inheritedEnv,
 		preset.environment,
 	]);
+
 	preset.__parentEnvironment = EnvironmentUtils.mergePreserveNull([
 		inheritedParentEnv,
 		preset.__parentEnvironment,
@@ -2837,6 +3014,7 @@ export async function expandBuildPresetVariables(
 			}
 		}
 	}
+
 	if (preset.nativeToolOptions) {
 		expandedPreset.nativeToolOptions = [];
 
@@ -2900,6 +3078,7 @@ export async function getTestPresetInherits(
 		errorHandler,
 		inheritedByPreset,
 	);
+
 	errorHandlerHelper(name, errorHandler);
 
 	return preset;
@@ -2993,6 +3172,7 @@ async function getTestPresetInheritsImpl(
 			name,
 		),
 	);
+
 	errorHandler?.errorList.push([
 		localize("test.preset.not.found", "Could not find test preset"),
 		name,
@@ -3026,6 +3206,7 @@ async function getTestPresetInheritsHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.test.preset",
@@ -3043,6 +3224,7 @@ async function getTestPresetInheritsHelper(
 	if (!preset.environment) {
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
+
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
 
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
@@ -3052,6 +3234,7 @@ async function getTestPresetInheritsHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parentName of preset.inherits) {
 			const parent = await getTestPresetInheritsImpl(
 				folder,
@@ -3072,6 +3255,7 @@ async function getTestPresetInheritsHelper(
 					parent.environment,
 					inheritedEnv,
 				]);
+
 				inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 					parent.__parentEnvironment,
 					inheritedParentEnv,
@@ -3111,6 +3295,7 @@ async function getTestPresetInheritsHelper(
 					preset.configurePreset,
 				),
 			);
+
 			errorHandler?.errorList.push([
 				localize(
 					"configure.preset.not.found",
@@ -3123,6 +3308,7 @@ async function getTestPresetInheritsHelper(
 		}
 
 		preset.__binaryDir = expandedConfigurePreset.binaryDir;
+
 		preset.__generator = expandedConfigurePreset.generator;
 
 		if (preset.inheritConfigureEnvironment !== false) {
@@ -3131,6 +3317,7 @@ async function getTestPresetInheritsHelper(
 				inheritedEnv,
 				expandedConfigurePreset.environment,
 			]);
+
 			inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 				inheritedParentEnv,
 				expandedConfigurePreset.__parentEnvironment,
@@ -3144,6 +3331,7 @@ async function getTestPresetInheritsHelper(
 		inheritedEnv,
 		preset.environment,
 	]);
+
 	preset.__parentEnvironment = EnvironmentUtils.mergePreserveNull([
 		inheritedParentEnv,
 		preset.__parentEnvironment,
@@ -3202,7 +3390,9 @@ export async function expandTestPresetVariables(
 
 		for (
 			let index = 0;
+
 			index < preset.overwriteConfigurationFile.length;
+
 			index++
 		) {
 			expandedPreset.overwriteConfigurationFile[index] =
@@ -3213,6 +3403,7 @@ export async function expandTestPresetVariables(
 				);
 		}
 	}
+
 	if (preset.output?.outputLogFile) {
 		expandedPreset.output = {
 			outputLogFile: util.lightNormalizePath(
@@ -3223,8 +3414,10 @@ export async function expandTestPresetVariables(
 				),
 			),
 		};
+
 		merge(expandedPreset.output, preset.output);
 	}
+
 	if (preset.output?.outputJUnitFile) {
 		expandedPreset.output = {
 			outputJUnitFile: util.lightNormalizePath(
@@ -3235,8 +3428,10 @@ export async function expandTestPresetVariables(
 				),
 			),
 		};
+
 		merge(expandedPreset.output, preset.output);
 	}
+
 	if (preset.filter) {
 		expandedPreset.filter = {};
 
@@ -3250,6 +3445,7 @@ export async function expandTestPresetVariables(
 					errorHandler,
 				);
 			}
+
 			if (util.isString(preset.filter.include.index)) {
 				expandedPreset.filter.include.index = await expandString(
 					preset.filter.include.index,
@@ -3257,8 +3453,10 @@ export async function expandTestPresetVariables(
 					errorHandler,
 				);
 			}
+
 			merge(expandedPreset.filter.include, preset.filter.include);
 		}
+
 		if (preset.filter.exclude) {
 			expandedPreset.filter.exclude = {};
 
@@ -3269,6 +3467,7 @@ export async function expandTestPresetVariables(
 					errorHandler,
 				);
 			}
+
 			if (preset.filter.exclude.name) {
 				expandedPreset.filter.exclude.name = await expandString(
 					preset.filter.exclude.name,
@@ -3276,6 +3475,7 @@ export async function expandTestPresetVariables(
 					errorHandler,
 				);
 			}
+
 			if (preset.filter.exclude.fixtures) {
 				expandedPreset.filter.exclude.fixtures = {};
 
@@ -3287,6 +3487,7 @@ export async function expandTestPresetVariables(
 							errorHandler,
 						);
 				}
+
 				if (preset.filter.exclude.fixtures.setup) {
 					expandedPreset.filter.exclude.fixtures.setup =
 						await expandString(
@@ -3295,6 +3496,7 @@ export async function expandTestPresetVariables(
 							errorHandler,
 						);
 				}
+
 				if (preset.filter.exclude.fixtures.cleanup) {
 					expandedPreset.filter.exclude.fixtures.cleanup =
 						await expandString(
@@ -3303,15 +3505,19 @@ export async function expandTestPresetVariables(
 							errorHandler,
 						);
 				}
+
 				merge(
 					expandedPreset.filter.exclude.fixtures,
 					preset.filter.exclude.fixtures,
 				);
 			}
+
 			merge(expandedPreset.filter.exclude, preset.filter.exclude);
 		}
+
 		merge(expandedPreset.filter, preset.filter);
 	}
+
 	if (preset.execution?.resourceSpecFile) {
 		expandedPreset.execution = {
 			resourceSpecFile: util.lightNormalizePath(
@@ -3322,6 +3528,7 @@ export async function expandTestPresetVariables(
 				),
 			),
 		};
+
 		merge(expandedPreset.execution, preset.execution);
 	}
 
@@ -3376,6 +3583,7 @@ export async function getPackagePresetInherits(
 		errorHandler,
 		inheritedByPreset,
 	);
+
 	errorHandlerHelper(name, errorHandler);
 
 	return preset;
@@ -3469,6 +3677,7 @@ async function getPackagePresetInheritsImpl(
 			name,
 		),
 	);
+
 	errorHandler?.errorList.push([
 		localize("package.preset.not.found", "Could not find package preset"),
 		name,
@@ -3502,6 +3711,7 @@ async function getPackagePresetInheritsHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.package.preset",
@@ -3519,6 +3729,7 @@ async function getPackagePresetInheritsHelper(
 	if (!preset.environment) {
 		preset.environment = EnvironmentUtils.createPreserveNull();
 	}
+
 	let inheritedEnv = EnvironmentUtils.createPreserveNull();
 
 	let inheritedParentEnv = EnvironmentUtils.createPreserveNull();
@@ -3528,6 +3739,7 @@ async function getPackagePresetInheritsHelper(
 		if (util.isString(preset.inherits)) {
 			preset.inherits = [preset.inherits];
 		}
+
 		for (const parentName of preset.inherits) {
 			const parent = await getPackagePresetInheritsImpl(
 				folder,
@@ -3548,6 +3760,7 @@ async function getPackagePresetInheritsHelper(
 					parent.environment,
 					inheritedEnv,
 				]);
+
 				inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 					parent.__parentEnvironment,
 					inheritedParentEnv,
@@ -3587,6 +3800,7 @@ async function getPackagePresetInheritsHelper(
 					preset.configurePreset,
 				),
 			);
+
 			errorHandler?.errorList.push([
 				localize(
 					"configure.preset.not.found",
@@ -3599,6 +3813,7 @@ async function getPackagePresetInheritsHelper(
 		}
 
 		preset.__binaryDir = expandedConfigurePreset.binaryDir;
+
 		preset.__generator = expandedConfigurePreset.generator;
 
 		if (preset.inheritConfigureEnvironment !== false) {
@@ -3607,6 +3822,7 @@ async function getPackagePresetInheritsHelper(
 				inheritedEnv,
 				expandedConfigurePreset.environment,
 			]);
+
 			inheritedParentEnv = EnvironmentUtils.mergePreserveNull([
 				inheritedParentEnv,
 				expandedConfigurePreset.__parentEnvironment,
@@ -3620,6 +3836,7 @@ async function getPackagePresetInheritsHelper(
 		inheritedEnv,
 		preset.environment,
 	]);
+
 	preset.__parentEnvironment = EnvironmentUtils.mergePreserveNull([
 		inheritedParentEnv,
 		preset.__parentEnvironment,
@@ -3733,6 +3950,7 @@ export async function getWorkflowPresetInherits(
 
 	// According to CMake docs, no other fields support macro expansion in a workflow preset.
 	merge(expandedPreset, preset);
+
 	expandedPreset.steps = preset.steps;
 
 	return expandedPreset;
@@ -3821,6 +4039,7 @@ async function getWorkflowPresetInheritsImpl(
 			errorHandler,
 		);
 	}
+
 	log.error(
 		localize(
 			"workflow.preset.not.found",
@@ -3828,6 +4047,7 @@ async function getWorkflowPresetInheritsImpl(
 			name,
 		),
 	);
+
 	errorHandler?.errorList.push([
 		localize("workflow.preset.not.found", "Could not find workflow preset"),
 		name,
@@ -3860,6 +4080,7 @@ async function getWorkflowPresetInheritsHelper(
 				preset.name,
 			),
 		);
+
 		errorHandler?.errorList.push([
 			localize(
 				"circular.inherits.in.workflow.preset",
@@ -3892,6 +4113,7 @@ async function getWorkflowPresetInheritsHelper(
 			if (!configurePresetInherits) {
 				return null;
 			}
+
 			await tryApplyVsDevEnv(
 				configurePresetInherits,
 				workspaceFolder,
@@ -3914,6 +4136,7 @@ async function getWorkflowPresetInheritsHelper(
 				workflowConfigurePreset,
 			);
 		}
+
 		if (!expandedConfigurePreset) {
 			log.error(
 				localize(
@@ -3922,6 +4145,7 @@ async function getWorkflowPresetInheritsHelper(
 					workflowConfigurePreset,
 				),
 			);
+
 			errorHandler?.errorList.push([
 				localize(
 					"configure.preset.not.found",
@@ -3947,9 +4171,11 @@ async function getWorkflowPresetInheritsHelper(
 					if (buildStepPr) {
 						buildStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
+
 						buildStepPr.__generator =
 							expandedConfigurePreset.generator;
 					}
+
 					break;
 
 				case "test":
@@ -3961,9 +4187,11 @@ async function getWorkflowPresetInheritsHelper(
 					if (testStepPr) {
 						testStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
+
 						testStepPr.__generator =
 							expandedConfigurePreset.generator;
 					}
+
 					break;
 
 				case "package":
@@ -3975,9 +4203,11 @@ async function getWorkflowPresetInheritsHelper(
 					if (packageStepPr) {
 						packageStepPr.__binaryDir =
 							expandedConfigurePreset.binaryDir;
+
 						packageStepPr.__generator =
 							expandedConfigurePreset.generator;
 					}
+
 					break;
 			}
 		}
@@ -4005,6 +4235,7 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 	if (preset.toolchainFile) {
 		result.push(`-DCMAKE_TOOLCHAIN_FILE=${preset.toolchainFile}`);
 	}
+
 	if (preset.installDir) {
 		result.push(`-DCMAKE_INSTALL_PREFIX=${preset.installDir}`);
 	}
@@ -4014,6 +4245,7 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 		if (preset.warnings.dev !== undefined) {
 			result.push(preset.warnings.dev ? "-Wdev" : "-Wno-dev");
 		}
+
 		if (preset.warnings.deprecated !== undefined) {
 			result.push(
 				preset.warnings.deprecated ? "-Wdeprecated" : "-Wno-deprecated",
@@ -4021,8 +4253,10 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 		}
 
 		preset.warnings.uninitialized && result.push("--warn-uninitialized");
+
 		preset.warnings.unusedCli === false &&
 			result.push("--no-warn-unused-cli");
+
 		preset.warnings.systemVars && result.push("--check-system-vars");
 	}
 
@@ -4031,6 +4265,7 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 		if (preset.errors.dev !== undefined) {
 			result.push(preset.errors.dev ? "-Werror=dev" : "-Wno-error=dev");
 		}
+
 		if (preset.errors.deprecated !== undefined) {
 			result.push(
 				preset.errors.deprecated
@@ -4043,7 +4278,9 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 	// Debug
 	if (preset.debug) {
 		preset.debug.output && result.push("--debug-output");
+
 		preset.debug.tryCompile && result.push("--debug-trycompile");
+
 		preset.debug.find && result.push("--debug-find");
 	}
 
@@ -4055,12 +4292,14 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 				: preset.trace.mode === TraceMode.Expand
 					? result.push("--trace-expand")
 					: false);
+
 		preset.trace.format &&
 			(preset.trace.format === FormatMode.Human
 				? result.push("--trace-format=human")
 				: preset.trace.format === FormatMode.Json
 					? result.push("--trace-format=json-v1")
 					: false);
+
 		preset.trace.source &&
 			preset.trace.source.length > 0 &&
 			preset.trace.source.forEach((s) => {
@@ -4068,6 +4307,7 @@ export function configureArgs(preset: ConfigurePreset): string[] {
 					result.push(`--trace-source=${s}`);
 				}
 			});
+
 		preset.trace.redirect &&
 			preset.trace.redirect.length > 0 &&
 			result.push(`--trace-redirect=${preset.trace.redirect}`);
@@ -4084,9 +4324,13 @@ export function buildArgs(
 	const result: string[] = [];
 
 	preset.__binaryDir && result.push("--build", preset.__binaryDir);
+
 	preset.jobs && result.push("--parallel", preset.jobs.toString());
+
 	preset.configuration && result.push("--config", preset.configuration);
+
 	preset.cleanFirst && result.push("--clean-first");
+
 	preset.verbose && result.push("--verbose");
 
 	if (util.isString(preset.__targets)) {
@@ -4099,7 +4343,9 @@ export function buildArgs(
 
 	if (preset.nativeToolOptions || tempOverrideBuildToolArgs) {
 		result.push("--");
+
 		preset.nativeToolOptions && result.push(...preset.nativeToolOptions);
+
 		tempOverrideBuildToolArgs && result.push(...tempOverrideBuildToolArgs);
 	}
 
@@ -4120,34 +4366,47 @@ export function testArgs(preset: TestPreset): string[] {
 	// Output
 	if (preset.output) {
 		preset.output.shortProgress && result.push("--progress");
+
 		preset.output.verbosity === "verbose" && result.push("--verbose");
+
 		preset.output.verbosity === "extra" && result.push("--extra-verbose");
+
 		preset.output.debug && result.push("--debug");
+
 		preset.output.outputOnFailure && result.push("--output-on-failure");
+
 		preset.output.quiet && result.push("--quiet");
+
 		preset.output.outputLogFile &&
 			result.push("--output-log", preset.output.outputLogFile);
+
 		preset.output.outputJUnitFile &&
 			result.push("--output-junit", preset.output.outputJUnitFile);
+
 		preset.output.labelSummary === false &&
 			result.push("--no-label-summary");
+
 		preset.output.subprojectSummary === false &&
 			result.push("--no-subproject-summary");
+
 		preset.output.maxPassedTestOutputSize &&
 			result.push(
 				"--test-output-size-passed",
 				preset.output.maxPassedTestOutputSize.toString(),
 			);
+
 		preset.output.maxFailedTestOutputSize &&
 			result.push(
 				"--test-output-size-failed",
 				preset.output.maxFailedTestOutputSize.toString(),
 			);
+
 		preset.output.testOutputTruncation &&
 			result.push(
 				"--test-output-truncation",
 				preset.output.testOutputTruncation.toString(),
 			);
+
 		preset.output.maxTestNameWidth &&
 			result.push(
 				"--max-width",
@@ -4159,8 +4418,10 @@ export function testArgs(preset: TestPreset): string[] {
 	if (preset.filter?.include) {
 		preset.filter.include.name &&
 			result.push("--tests-regex", preset.filter.include.name);
+
 		preset.filter.include.label &&
 			result.push("--label-regex", preset.filter.include.label);
+
 		preset.filter.include.useUnion && result.push("--union");
 
 		if (preset.filter.include.index) {
@@ -4176,58 +4437,76 @@ export function testArgs(preset: TestPreset): string[] {
 				const specificTests = preset.filter.include.index.specificTests
 					? `,${preset.filter.include.index.specificTests.join(",")}`
 					: "";
+
 				result.push(
 					`--tests-information ${start},${end},${stride}${specificTests}`,
 				);
 			}
 		}
 	}
+
 	if (preset.filter?.exclude) {
 		preset.filter.exclude.name &&
 			result.push("--exclude-regex", preset.filter.exclude.name);
+
 		preset.filter.exclude.label &&
 			result.push("--label-exclude", preset.filter.exclude.label);
+
 		preset.filter.exclude.fixtures?.any &&
 			result.push(
 				"--fixture-exclude-any",
 				preset.filter.exclude.fixtures.any,
 			);
+
 		preset.filter.exclude.fixtures?.setup &&
 			result.push(
 				"--fixture-exclude-setup",
 				preset.filter.exclude.fixtures.setup,
 			);
+
 		preset.filter.exclude.fixtures?.cleanup &&
 			result.push(
 				"--fixture-exclude-cleanup",
 				preset.filter.exclude.fixtures.cleanup,
 			);
 	}
+
 	if (preset.execution) {
 		preset.execution.stopOnFailure && result.push("--stop-on-failure");
+
 		preset.execution.enableFailover && result.push("-F");
+
 		preset.execution.jobs &&
 			result.push("--parallel", preset.execution.jobs.toString());
+
 		preset.execution.resourceSpecFile &&
 			result.push(
 				"--resource-spec-file",
 				preset.execution.resourceSpecFile,
 			);
+
 		preset.execution.testLoad &&
 			result.push("--test-load", preset.execution.testLoad.toString());
+
 		preset.execution.showOnly &&
 			result.push("--show-only", preset.execution.showOnly);
+
 		preset.execution.repeat &&
 			result.push(
 				`--repeat ${preset.execution.repeat.mode}:${preset.execution.repeat.count}`,
 			);
+
 		preset.execution.interactiveDebugging &&
 			result.push("--interactive-debug-mode 1");
+
 		preset.execution.interactiveDebugging === false &&
 			result.push("--interactive-debug-mode 0");
+
 		preset.execution.scheduleRandom && result.push("--schedule-random");
+
 		preset.execution.timeout &&
 			result.push("--timeout", preset.execution.timeout.toString());
+
 		preset.execution.noTestsAction &&
 			preset.execution.noTestsAction !== "default" &&
 			result.push("--no-tests=" + preset.execution.noTestsAction);
@@ -4241,9 +4520,11 @@ export function packageArgs(preset: PackagePreset): string[] {
 
 	// -C semicolon;separated;list;of;configurations;to;pack
 	const configurations: string | undefined = preset.configurations?.join(";");
+
 	configurations && result.push(`-C ${configurations}`); // should this be 2 args or 1 with space in between -C and configurations list?
 	// -G semicolon;separated;list;of;generators;used
 	const generators: string | undefined = preset.generators?.join(";");
+
 	generators && result.push(`-G ${generators}`); // should this be 2 args or 1 with space in between -G and generators list?
 
 	// cpack variables: -D var=val
@@ -4254,13 +4535,17 @@ export function packageArgs(preset: PackagePreset): string[] {
 	}
 
 	preset.configFile && result.push("--config", preset.configFile);
+
 	preset.packageName && result.push("-P", preset.packageName);
+
 	preset.packageVersion && result.push("-R", preset.packageVersion);
+
 	preset.packageDirectory && result.push("-B", preset.packageDirectory);
 
 	// Output
 	if (preset.output) {
 		preset.output.verbose && result.push("-V");
+
 		preset.output.debug && result.push("--debug");
 	}
 
@@ -4282,6 +4567,7 @@ export function configurePresetChangeNeedsClean(
 
 		return false;
 	}
+
 	const important_params = (preset: ConfigurePreset) => ({
 		preferredGenerator: preset.generator,
 	});
@@ -4320,5 +4606,6 @@ export function getStringValueFromCacheVar(
 	} else if (variable && typeof variable === "object") {
 		return util.isString(variable.value) ? variable.value : null;
 	}
+
 	return null;
 }

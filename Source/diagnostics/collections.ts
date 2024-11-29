@@ -21,6 +21,7 @@ class LazyCollection implements vscode.Disposable {
 				this.name,
 			);
 		}
+
 		return this._collection;
 	}
 
@@ -31,6 +32,7 @@ class LazyCollection implements vscode.Disposable {
 		if (this._collection) {
 			this._collection.dispose();
 		}
+
 		this._collection = undefined;
 	}
 }
@@ -40,7 +42,9 @@ class LazyCollection implements vscode.Disposable {
  */
 class Collections {
 	private readonly _cmake = new LazyCollection("cmake-configure-diags");
+
 	private readonly _build = new LazyCollection("cmake-build-diags");
+
 	private readonly _presets = new LazyCollection("cmake-presets-diags");
 
 	/**
@@ -66,7 +70,9 @@ class Collections {
 
 	reset() {
 		this._cmake.dispose();
+
 		this._build.dispose();
+
 		this._presets.dispose();
 	}
 }

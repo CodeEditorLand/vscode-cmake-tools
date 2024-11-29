@@ -130,8 +130,11 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 	// Information from cmake file api
 	private _cache: Map<string, CacheEntry> = new Map<string, CacheEntry>();
+
 	private _cmakeFiles: string[] | null = null;
+
 	private _generatorInformation: Index.GeneratorInformation | null = null;
+
 	private _target_map: Map<string, Target[]> = new Map();
 
 	async getGeneratorFromCache(
@@ -204,6 +207,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 			this._generatorInformation = this.generator;
 		}
+
 		if (
 			!(
 				this.cmake.isDefaultGeneratorSupported &&
@@ -217,6 +221,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 		this._cacheWatcher.onDidChange(() => {
 			log.debug(`Reload CMake cache: ${this.cachePath} changed`);
+
 			rollbar.invokeAsync("Reloading CMake Cache", () =>
 				this.updateCodeModel(),
 			);
@@ -225,14 +230,17 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 	async doConfigureSettingsChange(): Promise<void> {
 		this._needsReconfigure = true;
+
 		await onConfigureSettingsChange();
 	}
+
 	async checkNeedsReconfigure(): Promise<boolean> {
 		return this._needsReconfigure;
 	}
 
 	async doSetKit(cb: () => Promise<void>): Promise<void> {
 		this._needsReconfigure = true;
+
 		await cb();
 
 		if (
@@ -255,6 +263,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 		if (need_clean) {
 			await this._cleanPriorConfiguration();
 		}
+
 		await cb();
 	}
 
@@ -276,6 +285,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 	async asyncDispose() {
 		this._codeModelChanged.dispose();
+
 		this._cacheWatcher.dispose();
 	}
 
@@ -285,6 +295,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 	async doCacheConfigure(): Promise<number> {
 		this._needsReconfigure = true;
+
 		await this.updateCodeModel();
 
 		return 0;
@@ -303,6 +314,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 		const binaryDir = configurePreset?.binaryDir ?? this.binaryDir;
 
 		const api_path = this.getCMakeFileApiPath(binaryDir);
+
 		await createQueryFileForApi(api_path);
 
 		// Dup args so we can modify them
@@ -317,6 +329,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 		}
 		// -S and -B were introduced in CMake 3.13 and this driver assumes CMake >= 3.15
 		args.push(`-S${util.lightNormalizePath(this.sourceDir)}`);
+
 		args.push(`-B${util.lightNormalizePath(binaryDir)}`);
 
 		if (!has_gen) {
@@ -335,14 +348,19 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			if (generator) {
 				if (generator.name) {
 					args.push("-G");
+
 					args.push(generator.name);
 				}
+
 				if (generator.toolset) {
 					args.push("-T");
+
 					args.push(generator.toolset);
 				}
+
 				if (generator.platform) {
 					args.push("-A");
+
 					args.push(generator.platform);
 				}
 			}
@@ -352,17 +370,21 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 		if (debuggerInformation) {
 			args.push("--debugger");
+
 			args.push("--debugger-pipe");
+
 			args.push(`${debuggerInformation.pipeName}`);
 
 			if (debuggerInformation.dapLog) {
 				args.push("--debugger-dap-log");
+
 				args.push(debuggerInformation.dapLog);
 			}
 		}
 
 		if (showCommandOnly) {
 			log.showChannel();
+
 			log.info(proc.buildCmdStr(this.cmake.path, args));
 
 			return 0;
@@ -371,6 +393,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			trigger === ConfigureTrigger.setVariant
 		) {
 			this._needsReconfigure = false;
+
 			await this.updateCodeModel(binaryDir);
 
 			return 0;
@@ -378,6 +401,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			log.debug(
 				`Configuring using ${this.useCMakePresets ? "preset" : "kit"}`,
 			);
+
 			log.debug(
 				"Invoking CMake",
 				cmake,
@@ -394,6 +418,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 				environment: env,
 				cwd: options?.cwd ?? binaryDir,
 			});
+
 			this.configureProcess = child;
 
 			if (debuggerInformation) {
@@ -413,8 +438,11 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			}
 
 			const result = await child.result;
+
 			this.configureProcess = null;
+
 			log.trace(result.stderr);
+
 			log.trace(result.stdout);
 
 			if (result.retc === 0) {
@@ -426,8 +454,10 @@ export class CMakeFileApiDriver extends CMakeDriver {
 				) {
 					this._needsReconfigure = false;
 				}
+
 				await this.updateCodeModel(binaryDir);
 			}
+
 			return result.retc === null ? -1 : result.retc;
 		}
 	}
@@ -441,6 +471,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 	private getCMakeFileApiPath(binaryDir?: string) {
 		return path.join(binaryDir ?? this.binaryDir, ".cmake", "api", "v1");
 	}
+
 	private getCMakeReplyPath(binaryDir?: string) {
 		const api_path = this.getCMakeFileApiPath(binaryDir);
 
@@ -448,6 +479,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 	}
 
 	private toolchainWarningProvided: boolean = false;
+
 	private async updateCodeModel(binaryDir?: string): Promise<boolean> {
 		const initialReplyPath = this.getCMakeReplyPath(binaryDir);
 
@@ -482,10 +514,12 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			if (!codemodel_obj) {
 				throw Error("No code model object found");
 			}
+
 			this._target_map = await loadConfigurationTargetMap(
 				reply_path,
 				codemodel_obj.jsonFile,
 			);
+
 			this._codeModelContent = await loadExtCodeModelContent(
 				reply_path,
 				codemodel_obj.jsonFile,
@@ -501,6 +535,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 			if (!toolchains_obj) {
 				if (!this.toolchainWarningProvided) {
 					this.toolchainWarningProvided = true;
+
 					log.info(
 						localize(
 							"toolchains.object.unsupported",
@@ -531,6 +566,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 
 			this._codeModelChanged.fire(this._codeModelContent);
 		}
+
 		return indexFile !== null;
 	}
 
@@ -543,11 +579,13 @@ export class CMakeFileApiDriver extends CMakeDriver {
 	get cmakeCacheEntries(): Map<string, CacheEntry> {
 		return this._cache;
 	}
+
 	get generatorName(): string | null {
 		return this._generatorInformation
 			? this._generatorInformation.name
 			: null;
 	}
+
 	get targets(): Target[] {
 		const targets = this._target_map.get(this.currentBuildType);
 
@@ -610,6 +648,7 @@ export class CMakeFileApiDriver extends CMakeDriver {
 				}
 			}
 		}
+
 		return executableTargetsWithInstall;
 	}
 
@@ -635,6 +674,7 @@ function targetReducer(set: Target[], t: Target): Target[] {
 	if (!set.find((t2) => compareTargets(t, t2))) {
 		set.push(t);
 	}
+
 	return set;
 }
 
@@ -646,6 +686,7 @@ function compareTargets(a: Target, b: Target): boolean {
 
 		if (a.type === "rich" && b.type === "rich") {
 			same = same && a.filepath === b.filepath;
+
 			same = same && a.targetType === b.targetType;
 		}
 	}

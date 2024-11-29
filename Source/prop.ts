@@ -39,6 +39,7 @@ export class Property<T> {
 				case FireLate:
 					break;
 			}
+
 			return ret;
 		};
 	}
@@ -46,8 +47,10 @@ export class Property<T> {
 	get value() {
 		return this._value;
 	}
+
 	set(v: T) {
 		this._value = v;
+
 		this._emitter.fire(this._value);
 	}
 

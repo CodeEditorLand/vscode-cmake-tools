@@ -146,16 +146,23 @@ export enum ConfigureTrigger {
 
 export interface DiagnosticsConfiguration {
 	folder: string;
+
 	cmakeVersion: string;
+
 	compilers: { C?: string; CXX?: string };
+
 	usesPresets: boolean;
+
 	generator: string;
+
 	configured: boolean;
 }
 
 export interface DiagnosticsSettings {
 	communicationMode: CMakeCommunicationMode;
+
 	useCMakePresets: UseCMakePresets;
+
 	configureOnOpen: boolean;
 }
 
@@ -180,15 +187,24 @@ export interface ConfigureCancelInformation {
  */
 export class CMakeProject {
 	private wasUsingCMakePresets: boolean | undefined;
+
 	private onDidOpenTextDocumentListener: vscode.Disposable | undefined;
+
 	private disposables: vscode.Disposable[] = [];
+
 	private readonly onUseCMakePresetsChangedEmitter =
 		new vscode.EventEmitter<boolean>();
+
 	public projectController: ProjectController | undefined;
+
 	public readonly cTestController: CTestDriver;
+
 	public readonly cPackageController: CPackDriver;
+
 	public readonly workflowController: WorkflowDriver;
+
 	public kitsController!: KitsController;
+
 	public presetsController!: PresetsController;
 
 	/**
@@ -209,16 +225,21 @@ export class CMakeProject {
 				"Constructing new CMakeProject instance",
 			),
 		);
+
 		this.projectController = projectController;
+
 		this.cTestController = new CTestDriver(
 			workspaceContext,
 			projectController,
 		);
+
 		this.cPackageController = new CPackDriver(workspaceContext);
+
 		this.workflowController = new WorkflowDriver(
 			workspaceContext,
 			projectController,
 		);
+
 		this.onCodeModelChanged(FireLate, (_) =>
 			this._codeModelChangedApiEventEmitter.fire(),
 		);
@@ -257,6 +278,7 @@ export class CMakeProject {
 	get useCMakePresets(): boolean {
 		return this._useCMakePresets;
 	}
+
 	async setUseCMakePresets(useCMakePresets: boolean) {
 		if (this.targetName.value === this.initTargetName) {
 			if (useCMakePresets) {
@@ -265,12 +287,14 @@ export class CMakeProject {
 				this.targetName.set("all");
 			}
 		}
+
 		if (
 			!useCMakePresets &&
 			this.targetName.value === this.targetsInPresetName
 		) {
 			this.targetName.set("all");
 		}
+
 		const oldValue = this.useCMakePresets;
 
 		if (oldValue !== useCMakePresets) {
@@ -282,7 +306,9 @@ export class CMakeProject {
 				log.debug(
 					localize("disposing.driver", "Disposing CMake driver"),
 				);
+
 				await drv.asyncDispose();
+
 				this.cmakeDriver = Promise.resolve(null);
 			}
 		}
@@ -295,6 +321,7 @@ export class CMakeProject {
 	get onStatusMessageChanged() {
 		return this.statusMessage.changeEvent;
 	}
+
 	private readonly statusMessage = new Property<string>(
 		localize("initializing", "Initializing"),
 	);
@@ -314,6 +341,7 @@ export class CMakeProject {
 	get onActiveConfigurePresetChanged() {
 		return this._configurePreset.changeEvent;
 	}
+
 	private readonly _configurePreset =
 		new Property<preset.ConfigurePreset | null>(null);
 
@@ -328,15 +356,23 @@ export class CMakeProject {
 		);
 
 		this._configurePreset.set(null);
+
 		this._buildPreset.set(null);
+
 		this._testPreset.set(null);
+
 		this._packagePreset.set(null);
+
 		this._workflowPreset.set(null);
 
 		await driver?.setConfigurePreset(null);
+
 		await driver?.setBuildPreset(null);
+
 		await driver?.setTestPreset(null);
+
 		await driver?.setPackagePreset(null);
+
 		await driver?.setWorkflowPreset(null);
 	}
 
@@ -346,6 +382,7 @@ export class CMakeProject {
 		if (!configurePreset) {
 			return undefined;
 		}
+
 		log.debug(
 			localize(
 				"resolving.config.preset",
@@ -410,6 +447,7 @@ export class CMakeProject {
 
 			return undefined;
 		}
+
 		if (
 			expandedConfigurePreset.__file &&
 			expandedConfigurePreset.__file.version <= 2
@@ -426,6 +464,7 @@ export class CMakeProject {
 
 				return undefined;
 			}
+
 			if (!expandedConfigurePreset.generator) {
 				log.error(
 					localize(
@@ -473,6 +512,7 @@ export class CMakeProject {
 
 				return;
 			}
+
 			const priorCMakePath = await this.getCMakePathofProject(); // used for later comparison to determine if we need to update the driver's cmake.
 			this._configurePreset.set(expandedConfigurePreset);
 
@@ -482,6 +522,7 @@ export class CMakeProject {
 			) {
 				await this.shutDownCMakeDriver();
 			}
+
 			log.debug(
 				localize(
 					"loading.new.config.preset",
@@ -494,6 +535,7 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setConfigurePreset(expandedConfigurePreset);
 
 					const updatedCMakePath = await this.getCMakePathofProject();
@@ -508,6 +550,7 @@ export class CMakeProject {
 						configurePreset,
 						this.isMultiProjectFolder,
 					);
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -517,6 +560,7 @@ export class CMakeProject {
 							`"${error}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.config.preset",
@@ -524,7 +568,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					await this.resetPresets(drv);
 				}
 			} else {
@@ -546,9 +592,11 @@ export class CMakeProject {
 	get buildPreset() {
 		return this._buildPreset.value;
 	}
+
 	get onActiveBuildPresetChanged() {
 		return this._buildPreset.changeEvent;
 	}
+
 	private readonly _buildPreset = new Property<preset.BuildPreset | null>(
 		null,
 	);
@@ -559,6 +607,7 @@ export class CMakeProject {
 		if (!buildPreset) {
 			return undefined;
 		}
+
 		log.debug(
 			localize(
 				"resolving.build.preset",
@@ -631,6 +680,7 @@ export class CMakeProject {
 
 				return;
 			}
+
 			this._buildPreset.set(expandedBuildPreset);
 
 			if (!expandedBuildPreset.configurePreset) {
@@ -642,10 +692,12 @@ export class CMakeProject {
 						buildPreset,
 					),
 				);
+
 				this._buildPreset.set(null);
 
 				return;
 			}
+
 			log.debug(
 				localize(
 					"loading.new.build.preset",
@@ -658,13 +710,16 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setBuildPreset(expandedBuildPreset);
+
 					await this.workspaceContext.state.setBuildPresetName(
 						this.folderName,
 						expandedBuildPreset.configurePreset,
 						buildPreset,
 						this.isMultiProjectFolder,
 					);
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -674,6 +729,7 @@ export class CMakeProject {
 							`"${error}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.build.preset",
@@ -681,7 +737,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					this._buildPreset.set(null);
 				}
 			} else {
@@ -695,6 +753,7 @@ export class CMakeProject {
 			}
 		} else {
 			this._buildPreset.set(null);
+
 			await drv?.setBuildPreset(null);
 
 			if (this.configurePreset) {
@@ -714,9 +773,11 @@ export class CMakeProject {
 	get testPreset() {
 		return this._testPreset.value;
 	}
+
 	get onActiveTestPresetChanged() {
 		return this._testPreset.changeEvent;
 	}
+
 	private readonly _testPreset = new Property<preset.TestPreset | null>(null);
 
 	async expandTestPresetbyName(
@@ -725,6 +786,7 @@ export class CMakeProject {
 		if (!testPreset) {
 			return undefined;
 		}
+
 		log.debug(
 			localize(
 				"resolving.test.preset",
@@ -752,6 +814,7 @@ export class CMakeProject {
 				this.sourceDir,
 			);
 		}
+
 		if (!expandedTestPreset) {
 			log.error(
 				localize(
@@ -763,6 +826,7 @@ export class CMakeProject {
 
 			return undefined;
 		}
+
 		if (!expandedTestPreset.configurePreset) {
 			log.error(
 				localize(
@@ -814,7 +878,9 @@ export class CMakeProject {
 
 				return;
 			}
+
 			this._testPreset.set(expandedTestPreset);
+
 			log.debug(
 				localize(
 					"loading.new.test.preset",
@@ -827,6 +893,7 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setTestPreset(expandedTestPreset);
 
 					if (expandedTestPreset.configurePreset) {
@@ -837,6 +904,7 @@ export class CMakeProject {
 							this.isMultiProjectFolder,
 						);
 					}
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -846,6 +914,7 @@ export class CMakeProject {
 							`"${error}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.test.preset",
@@ -853,7 +922,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					this._testPreset.set(null);
 				}
 			} else {
@@ -869,6 +940,7 @@ export class CMakeProject {
 			}
 		} else {
 			this._testPreset.set(null);
+
 			await drv?.setTestPreset(null);
 
 			if (this.configurePreset) {
@@ -888,9 +960,11 @@ export class CMakeProject {
 	get packagePreset() {
 		return this._packagePreset.value;
 	}
+
 	get onActivePackagePresetChanged() {
 		return this._packagePreset.changeEvent;
 	}
+
 	private readonly _packagePreset = new Property<preset.PackagePreset | null>(
 		null,
 	);
@@ -901,6 +975,7 @@ export class CMakeProject {
 		if (!packagePreset) {
 			return undefined;
 		}
+
 		log.debug(
 			localize(
 				"resolving.package.preset",
@@ -928,6 +1003,7 @@ export class CMakeProject {
 				this.sourceDir,
 			);
 		}
+
 		if (!expandedPackagePreset) {
 			log.error(
 				localize(
@@ -939,6 +1015,7 @@ export class CMakeProject {
 
 			return undefined;
 		}
+
 		if (!expandedPackagePreset.configurePreset) {
 			log.error(
 				localize(
@@ -990,7 +1067,9 @@ export class CMakeProject {
 
 				return;
 			}
+
 			this._packagePreset.set(expandedPackagePreset);
+
 			log.debug(
 				localize(
 					"loading.new.package.preset",
@@ -1003,6 +1082,7 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setPackagePreset(expandedPackagePreset);
 
 					if (expandedPackagePreset.configurePreset) {
@@ -1013,6 +1093,7 @@ export class CMakeProject {
 							this.isMultiProjectFolder,
 						);
 					}
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -1022,6 +1103,7 @@ export class CMakeProject {
 							`"${error}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.package.preset",
@@ -1029,7 +1111,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					this._packagePreset.set(null);
 				}
 			} else {
@@ -1045,6 +1129,7 @@ export class CMakeProject {
 			}
 		} else {
 			this._packagePreset.set(null);
+
 			await drv?.setPackagePreset(null);
 
 			if (this.configurePreset) {
@@ -1064,9 +1149,11 @@ export class CMakeProject {
 	get workflowPreset() {
 		return this._workflowPreset.value;
 	}
+
 	get onActiveWorkflowPresetChanged() {
 		return this._workflowPreset.changeEvent;
 	}
+
 	private readonly _workflowPreset =
 		new Property<preset.WorkflowPreset | null>(null);
 
@@ -1076,6 +1163,7 @@ export class CMakeProject {
 		if (!workflowPreset) {
 			return undefined;
 		}
+
 		log.debug(
 			localize(
 				"resolving.workflow.preset",
@@ -1103,6 +1191,7 @@ export class CMakeProject {
 
 			return undefined;
 		}
+
 		if (!expandedWorkflowPreset.steps[0].name) {
 			log.error(
 				localize(
@@ -1115,6 +1204,7 @@ export class CMakeProject {
 
 			return undefined;
 		}
+
 		return expandedWorkflowPreset;
 	}
 
@@ -1139,7 +1229,9 @@ export class CMakeProject {
 
 				return;
 			}
+
 			this._workflowPreset.set(expandedWorkflowPreset);
+
 			log.debug(
 				localize(
 					"loading.new.workflow.preset",
@@ -1152,6 +1244,7 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setWorkflowPreset(expandedWorkflowPreset);
 					// We need to associate this workflow preset with the current configure preset of the project,
 					// not the configure preset of step0 (which may even differ).
@@ -1163,6 +1256,7 @@ export class CMakeProject {
 							this.isMultiProjectFolder,
 						);
 					}
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -1172,6 +1266,7 @@ export class CMakeProject {
 							`"${error}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.workflow.preset",
@@ -1179,7 +1274,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					this._workflowPreset.set(null);
 				}
 			} else {
@@ -1195,6 +1292,7 @@ export class CMakeProject {
 			}
 		} else {
 			this._workflowPreset.set(null);
+
 			await drv?.setWorkflowPreset(null);
 
 			if (this.configurePreset) {
@@ -1214,7 +1312,9 @@ export class CMakeProject {
 	get onTargetNameChanged() {
 		return this.targetName.changeEvent;
 	}
+
 	private readonly initTargetName = "__init__";
+
 	private readonly targetName = new Property<string>(this.initTargetName);
 
 	/**
@@ -1223,9 +1323,11 @@ export class CMakeProject {
 	get activeVariantName() {
 		return this.activeVariant.value;
 	}
+
 	get onActiveVariantNameChanged() {
 		return this.activeVariant.changeEvent;
 	}
+
 	private readonly activeVariant = new Property<string>("Unconfigured");
 
 	/**
@@ -1234,9 +1336,11 @@ export class CMakeProject {
 	get launchTargetName() {
 		return this._launchTargetName.value;
 	}
+
 	get onLaunchTargetNameChanged() {
 		return this._launchTargetName.changeEvent;
 	}
+
 	private readonly _launchTargetName = new Property<string | null>(null);
 
 	/**
@@ -1245,9 +1349,11 @@ export class CMakeProject {
 	get ctestEnabled() {
 		return this._ctestEnabled.value;
 	}
+
 	get onCTestEnabledChanged() {
 		return this._ctestEnabled.changeEvent;
 	}
+
 	private readonly _ctestEnabled = new Property<boolean>(false);
 
 	/**
@@ -1256,9 +1362,11 @@ export class CMakeProject {
 	get cpackEnabled() {
 		return this._cpackEnabled.value;
 	}
+
 	get onCPackEnabledChanged() {
 		return this._cpackEnabled.changeEvent;
 	}
+
 	private readonly _cpackEnabled = new Property<boolean>(false);
 
 	/**
@@ -1267,6 +1375,7 @@ export class CMakeProject {
 	get onIsBusyChanged() {
 		return this.isBusy.changeEvent;
 	}
+
 	private readonly isBusy = new Property<boolean>(false);
 
 	/**
@@ -1275,17 +1384,21 @@ export class CMakeProject {
 	get codeModelContent() {
 		return this._codeModelContent.value;
 	}
+
 	get onCodeModelChanged() {
 		return this._codeModelContent.changeEvent;
 	}
+
 	private readonly _codeModelContent = new Property<CodeModelContent | null>(
 		null,
 	);
+
 	private codeModelDriverSub: vscode.Disposable | null = null;
 
 	get onCodeModelChangedApiEvent() {
 		return this._codeModelChangedApiEventEmitter.event;
 	}
+
 	private readonly _codeModelChangedApiEventEmitter =
 		new vscode.EventEmitter<void>();
 
@@ -1294,9 +1407,11 @@ export class CMakeProject {
 	) {
 		this._onSelectedConfigurationChangedApiEvent.fire(configurationType);
 	}
+
 	get onSelectedConfigurationChangedApiEvent() {
 		return this._onSelectedConfigurationChangedApiEvent.event;
 	}
+
 	private readonly _onSelectedConfigurationChangedApiEvent =
 		new vscode.EventEmitter<ConfigurationType>();
 
@@ -1321,6 +1436,7 @@ export class CMakeProject {
 					"Restarting the CMake driver after a generator change.",
 				),
 			);
+
 			await this.reloadCMakeDriver();
 		},
 	);
@@ -1335,6 +1451,7 @@ export class CMakeProject {
 						"Restarting the CMake driver after a preferredGenerators change.",
 					),
 				);
+
 				await this.reloadCMakeDriver();
 			},
 		);
@@ -1354,6 +1471,7 @@ export class CMakeProject {
 						'"cmake.cmakePath"',
 					),
 				);
+
 				telemetry.logEvent("CMakeExecutableNotFound");
 			}
 
@@ -1395,6 +1513,7 @@ export class CMakeProject {
 	get onDispose() {
 		return this.disposeEmitter.event;
 	}
+
 	private readonly disposeEmitter = new vscode.EventEmitter<void>();
 
 	/**
@@ -1404,8 +1523,11 @@ export class CMakeProject {
 		log.debug(
 			localize("disposing.extension", "Disposing CMake Tools extension"),
 		);
+
 		this.disposeEmitter.fire();
+
 		this.termCloseSub.dispose();
+
 		this.launchTerminals.forEach((term) => term.dispose());
 
 		for (const sub of [
@@ -1416,7 +1538,9 @@ export class CMakeProject {
 		]) {
 			sub.dispose();
 		}
+
 		this.kitsController.dispose();
+
 		rollbar.invokeAsync(
 			localize("extension.dispose", "Extension dispose"),
 			() => this.asyncDispose(),
@@ -1438,6 +1562,7 @@ export class CMakeProject {
 		if (drv) {
 			await drv.asyncDispose();
 		}
+
 		for (const disp of [
 			this.statusMessage,
 			this.targetName,
@@ -1469,6 +1594,7 @@ export class CMakeProject {
 					userGenerator,
 				),
 			);
+
 			userPreferred.unshift({
 				name: userGenerator,
 				platform: this.workspaceContext.config.platform || undefined,
@@ -1540,6 +1666,7 @@ export class CMakeProject {
 						this.folderName,
 						this.isMultiProjectFolder,
 					) || this.workspaceContext.config.ignoreCMakeListsMissing;
+
 				telemetryProperties["ignoreCMakeListsMissing"] =
 					ignoreCMakeListsMissing.toString();
 
@@ -1555,9 +1682,11 @@ export class CMakeProject {
 					} else {
 						telemetryProperties["hasCMakeLists"] = "false";
 					}
+
 					interface FileItem extends vscode.QuickPickItem {
 						fullPath: string;
 					}
+
 					const items: FileItem[] = existingCmakeListsFiles
 						? existingCmakeListsFiles.map<FileItem>((file) => ({
 								label:
@@ -1587,6 +1716,7 @@ export class CMakeProject {
 						"do.not.ask.again",
 						"[Don't Show Again]",
 					);
+
 					items.push({
 						label: browse,
 						fullPath: "",
@@ -1595,6 +1725,7 @@ export class CMakeProject {
 							"Search for CMakeLists.txt on this computer",
 						),
 					});
+
 					items.push({
 						label: dontAskAgain,
 						fullPath: "",
@@ -1617,6 +1748,7 @@ export class CMakeProject {
 											"Select CMakeLists.txt",
 										),
 						});
+
 					telemetryProperties["missingCMakeListsUserAction"] =
 						selection === undefined
 							? "cancel"
@@ -1661,8 +1793,10 @@ export class CMakeProject {
 						// selection.label is the relative path to the selected CMakeLists.txt.
 						selectedFile = selection.label;
 					}
+
 					if (selectedFile) {
 						const newSourceDirectory = path.dirname(selectedFile);
+
 						await this.setSourceDir(
 							await util.normalizeAndVerifySourceDir(
 								newSourceDirectory,
@@ -1671,6 +1805,7 @@ export class CMakeProject {
 								),
 							),
 						);
+
 						void vscode.workspace
 							.getConfiguration("cmake", this.workspaceFolder.uri)
 							.update("sourceDirectory", this._sourceDir);
@@ -1694,6 +1829,7 @@ export class CMakeProject {
 									telemetryEvent,
 									telemetryProperties,
 								);
+
 								await vscode.commands.executeCommand(
 									"cmake.configure",
 								);
@@ -1781,6 +1917,7 @@ export class CMakeProject {
 			if (!cmake.isFileApiModeSupported) {
 				if (cmake.isServerModeSupported) {
 					communicationMode = serverApi;
+
 					log.warning(
 						localize(
 							"switch.to.serverapi",
@@ -1813,6 +1950,7 @@ export class CMakeProject {
 					),
 				);
 			}
+
 			switch (communicationMode) {
 				case fileApi:
 					drv = await CMakeFileApiDriver.create(
@@ -1898,6 +2036,7 @@ export class CMakeProject {
 		if (this.targetName.value !== newTargetName) {
 			this.targetName.set(newTargetName);
 		}
+
 		this.cTestController.clearTests(drv);
 
 		// All set up. Fulfill the driver promise.
@@ -1913,6 +2052,7 @@ export class CMakeProject {
 	get onReconfigured() {
 		return this.onReconfiguredEmitter.event;
 	}
+
 	private readonly onReconfiguredEmitter = new vscode.EventEmitter<void>();
 
 	private readonly onTargetChangedEmitter = new vscode.EventEmitter<void>();
@@ -1966,7 +2106,9 @@ export class CMakeProject {
 			log.debug(
 				localize("shutting.down.driver", "Shutting down CMake driver"),
 			);
+
 			await drv.asyncDispose();
+
 			this.cmakeDriver = Promise.resolve(null);
 		}
 	}
@@ -1982,6 +2124,7 @@ export class CMakeProject {
 				log.debug(
 					localize("reloading.driver", "Reloading CMake driver"),
 				);
+
 				await drv?.asyncDispose();
 
 				return (this.cmakeDriver = this.startNewCMakeDriver(
@@ -2005,6 +2148,7 @@ export class CMakeProject {
 				"Starting CMake Tools second-phase init",
 			),
 		);
+
 		await this.setSourceDir(
 			await util.normalizeAndVerifySourceDir(
 				sourceDirectory,
@@ -2013,6 +2157,7 @@ export class CMakeProject {
 				),
 			),
 		);
+
 		this.doStatusChange(this.workspaceContext.config.options);
 		// Restore the debug target
 		this._launchTargetName.set(
@@ -2026,6 +2171,7 @@ export class CMakeProject {
 		this.cTestController.onTestingEnabledChanged((enabled) =>
 			this._ctestEnabled.set(enabled),
 		);
+
 		this.cPackageController.onPackagingEnabledChanged((enabled) =>
 			this._cpackEnabled.set(enabled),
 		);
@@ -2033,6 +2179,7 @@ export class CMakeProject {
 		this.statusMessage.set(localize("ready.status", "Ready"));
 
 		this.kitsController = await KitsController.init(this);
+
 		this.presetsController = await PresetsController.init(
 			this,
 			this.kitsController,
@@ -2059,6 +2206,7 @@ export class CMakeProject {
 					"Active build variant changed",
 				),
 			);
+
 			rollbar.invokeAsync(
 				localize("changing.build.variant", "Changing build variant"),
 				async () => {
@@ -2069,6 +2217,7 @@ export class CMakeProject {
 							this.variantManager.activeVariantOptions,
 							this.variantManager.activeKeywordSetting,
 						);
+
 						this.activeVariant.set(
 							this.variantManager.activeVariantOptions.short,
 						);
@@ -2081,6 +2230,7 @@ export class CMakeProject {
 		this.disposables.push(
 			this.onPresetsChanged(() => this.doUseCMakePresetsChange()),
 		);
+
 		this.disposables.push(
 			this.onUserPresetsChanged(() => this.doUseCMakePresetsChange()),
 		);
@@ -2093,6 +2243,7 @@ export class CMakeProject {
 		) {
 			return true;
 		}
+
 		return false;
 	}
 
@@ -2100,6 +2251,7 @@ export class CMakeProject {
 		if (useCMakePresets === undefined) {
 			useCMakePresets = this.workspaceContext.config.useCMakePresets;
 		}
+
 		this._useCMakePresets =
 			useCMakePresets === "always"
 				? true
@@ -2111,7 +2263,9 @@ export class CMakeProject {
 
 		if (usingCMakePresets !== this.wasUsingCMakePresets) {
 			this.wasUsingCMakePresets = usingCMakePresets;
+
 			await this.setUseCMakePresets(usingCMakePresets);
+
 			await this.initializeKitOrPresets();
 
 			const config = this.workspaceContext.config;
@@ -2162,6 +2316,7 @@ export class CMakeProject {
 			} else {
 				if (this.onDidOpenTextDocumentListener) {
 					this.onDidOpenTextDocumentListener.dispose();
+
 					this.onDidOpenTextDocumentListener = undefined;
 				}
 			}
@@ -2256,12 +2411,15 @@ export class CMakeProject {
 					this.statusMessage.set(
 						localize("reloading.status", "Reloading..."),
 					);
+
 					await drv.setKit(kit, this.getPreferredGenerators());
+
 					await this.workspaceContext.state.setActiveKitName(
 						this.folderName,
 						kit.name,
 						this.isMultiProjectFolder,
 					);
+
 					this.statusMessage.set(localize("ready.status", "Ready"));
 				} catch (error: any) {
 					void vscode.window.showErrorMessage(
@@ -2271,6 +2429,7 @@ export class CMakeProject {
 							`"${error.message}"`,
 						),
 					);
+
 					this.statusMessage.set(
 						localize(
 							"error.on.switch.status",
@@ -2278,7 +2437,9 @@ export class CMakeProject {
 							error.message,
 						),
 					);
+
 					this.cmakeDriver = Promise.resolve(null);
+
 					this._activeKit = null;
 				}
 			} else {
@@ -2323,6 +2484,7 @@ export class CMakeProject {
 				),
 			);
 		}
+
 		return cmakeExe;
 	}
 
@@ -2358,6 +2520,7 @@ export class CMakeProject {
 						'"cmake.cmakePath"',
 					),
 				);
+
 				telemetry.logEvent("CMakeExecutableNotFound");
 
 				return null;
@@ -2370,6 +2533,7 @@ export class CMakeProject {
 						"Starting new CMake driver",
 					),
 				);
+
 				this.cmakeDriver = this.startNewCMakeDriver(cmake);
 
 				try {
@@ -2415,6 +2579,7 @@ export class CMakeProject {
 													),
 												);
 											}
+
 											try {
 												await fs.rmdir(
 													path.join(
@@ -2434,6 +2599,7 @@ export class CMakeProject {
 													),
 												);
 											}
+
 											await this.cleanConfigure(
 												ConfigureTrigger.badHomeDir,
 											);
@@ -2446,18 +2612,23 @@ export class CMakeProject {
 							"generator.not.found",
 							"Unable to determine what CMake generator to use. Please install or configure a preferred generator, or update settings.json, your Kit configuration or PATH variable.",
 						);
+
 						log.error(message, e);
+
 						void vscode.window.showErrorMessage(message);
 					} else {
 						throw e;
 					}
+
 					return null;
 				}
 
 				if (this.codeModelDriverSub) {
 					this.codeModelDriverSub.dispose();
 				}
+
 				const drv = await this.cmakeDriver;
+
 				console.assert(
 					drv !== null,
 					"Null driver immediately after creation?",
@@ -2500,7 +2671,9 @@ export class CMakeProject {
 			projectController,
 			isMultiProjectFolder,
 		);
+
 		await inst.init(sourceDirectory);
+
 		log.debug(
 			localize(
 				"initialization.complete",
@@ -2584,6 +2757,7 @@ export class CMakeProject {
 									"compile_commands.json",
 								),
 							);
+
 							await fs.mkdir_p(parentDir);
 
 							try {
@@ -2625,6 +2799,7 @@ export class CMakeProject {
 				);
 			}
 		}
+
 		if (!this.workspaceContext.config.loadCompileCommands) {
 			this.compilationDatabase = null;
 		} else if (compdbPaths.length > 0) {
@@ -2632,6 +2807,7 @@ export class CMakeProject {
 				// Read the compilation database, and update our db property
 				const newDB =
 					await CompilationDatabase.fromFilePaths(compdbPaths);
+
 				this.compilationDatabase = newDB;
 				// Now try to dump the compdb to the user-requested path
 				const mergeDest =
@@ -2640,6 +2816,7 @@ export class CMakeProject {
 				if (!mergeDest) {
 					return;
 				}
+
 				let expandedDest = await expandString(mergeDest, opts);
 
 				const pardir = path.dirname(expandedDest);
@@ -2659,6 +2836,7 @@ export class CMakeProject {
 
 					return;
 				}
+
 				if (
 					(await fs.exists(expandedDest)) &&
 					(await fs.stat(expandedDest)).isDirectory()
@@ -2671,6 +2849,7 @@ export class CMakeProject {
 						"merged_compile_commands.json",
 					);
 				}
+
 				try {
 					await fs.writeFile(
 						expandedDest,
@@ -2738,7 +2917,9 @@ export class CMakeProject {
 			} else {
 				log.showChannel(true);
 			}
+
 			await this.cTestController.refreshTests(drv);
+
 			this.onReconfiguredEmitter.fire();
 
 			return result;
@@ -2772,9 +2953,11 @@ export class CMakeProject {
 				const cancelInformation: ConfigureCancelInformation = {
 					canceled: false,
 				};
+
 				cancel.onCancellationRequested(() => {
 					// We need to update the canceled information by reference before starting the cancel to ensure it's updated before the process is cancelled.
 					cancelInformation.canceled = true;
+
 					rollbar.invokeAsync(
 						localize(
 							"stop.on.cancellation",
@@ -2796,7 +2979,9 @@ export class CMakeProject {
 								cancelInformation.canceled = true;
 
 								forciblyCanceled = true;
+
 								await this.cancelConfiguration();
+
 								trackerFactoryDisposable.dispose();
 							}),
 						);
@@ -2835,6 +3020,7 @@ export class CMakeProject {
 
 									if (increment >= 1) {
 										oldProgress += increment;
+
 										progress.report({ increment });
 									}
 								});
@@ -2845,6 +3031,7 @@ export class CMakeProject {
 									});
 
 									let result: ConfigureResult;
+
 									await setContextAndStore(
 										isConfiguringKey,
 										true,
@@ -2925,6 +3112,7 @@ export class CMakeProject {
 													),
 													{ type },
 												);
+
 												result =
 													await this.configureInternal(
 														trigger,
@@ -2934,6 +3122,7 @@ export class CMakeProject {
 
 												break;
 										}
+
 										await setContextAndStore(
 											isConfiguringKey,
 											false,
@@ -2950,6 +3139,7 @@ export class CMakeProject {
 
 									if (result.result === 0) {
 										await enableFullFeatureSet(true);
+
 										await this.refreshCompileDatabase(
 											drv.expansionOptions,
 										);
@@ -2976,6 +3166,7 @@ export class CMakeProject {
 											"options.configureWithDebuggerOnFail.do.not.show",
 											"Don't Show Again",
 										);
+
 										void vscode.window
 											.showErrorMessage<MessageItem>(
 												localize(
@@ -3036,6 +3227,7 @@ export class CMakeProject {
 									await this.cTestController.refreshTests(
 										drv,
 									);
+
 									this.onReconfiguredEmitter.fire();
 
 									return result;
@@ -3044,12 +3236,14 @@ export class CMakeProject {
 										isConfiguringKey,
 										false,
 									);
+
 									progress.report({
 										message: localize(
 											"finishing.configure",
 											"Finishing configure",
 										),
 									});
+
 									progressSub.dispose();
 								}
 							} else {
@@ -3070,6 +3264,7 @@ export class CMakeProject {
 					);
 				} catch (e: any) {
 					const error = e as Error;
+
 					progress.report({ message: error.message });
 
 					return {
@@ -3083,6 +3278,7 @@ export class CMakeProject {
 		if (res.result !== 0) {
 			log.showChannel(true);
 		}
+
 		return res;
 	}
 
@@ -3187,6 +3383,7 @@ export class CMakeProject {
 						vscode.ConfigurationTarget.Global,
 					);
 				}
+
 				return (
 					chosen !== undefined &&
 					(chosen.title === yesButtonTitle ||
@@ -3194,6 +3391,7 @@ export class CMakeProject {
 				);
 			}
 		}
+
 		return true;
 	}
 
@@ -3217,6 +3415,7 @@ export class CMakeProject {
 		) {
 			return { result: -1, resultType: ConfigureResultType.Other };
 		}
+
 		if (!this.useCMakePresets) {
 			if (!this.activeKit) {
 				await vscode.window.showErrorMessage(
@@ -3225,6 +3424,7 @@ export class CMakeProject {
 						"Cannot configure: No kit is active for this CMake project",
 					),
 				);
+
 				log.debug(
 					localize(
 						"no.kit.abort",
@@ -3238,6 +3438,7 @@ export class CMakeProject {
 			if (!this.variantManager.hasInitialized()) {
 				await this.variantManager.initialize(this.folderName);
 			}
+
 			if (!this.variantManager.haveVariant) {
 				progress.report({
 					message: localize(
@@ -3245,6 +3446,7 @@ export class CMakeProject {
 						"Waiting on variant selection",
 					),
 				});
+
 				await this.variantManager.selectVariant();
 
 				if (!this.variantManager.haveVariant) {
@@ -3268,6 +3470,7 @@ export class CMakeProject {
 					"Cannot configure: No configure preset is active for this CMake project",
 				),
 			);
+
 			log.debug(
 				localize(
 					"no.preset.abort",
@@ -3277,11 +3480,13 @@ export class CMakeProject {
 
 			return { result: -1, resultType: ConfigureResultType.Other };
 		}
+
 		log.showChannel();
 
 		const consumer = new CMakeOutputConsumer(this.sourceDir, cmakeLogger);
 
 		const result = await cb(consumer);
+
 		populateCollection(collections.cmake, consumer.diagnostics);
 
 		return result;
@@ -3299,6 +3504,7 @@ export class CMakeProject {
 	get allTargetName() {
 		return this.allTargetNameAsync();
 	}
+
 	private async allTargetNameAsync(): Promise<string> {
 		const drv = await this.getCMakeDriverInstance();
 
@@ -3308,6 +3514,7 @@ export class CMakeProject {
 			if (!this.useCMakePresets && !this.activeKit) {
 				return localize("targets.status", "[N/A - Select Kit]");
 			}
+
 			return "";
 		}
 	}
@@ -3326,6 +3533,7 @@ export class CMakeProject {
 
 		if (!needsReconfigure && !(await fs.exists(drv.binaryDir))) {
 			needsReconfigure = true;
+
 			log.info(
 				localize(
 					"cmake.cache.dir.missing",
@@ -3365,6 +3573,7 @@ export class CMakeProject {
 		if (!(await this.maybeAutoSaveAll())) {
 			return -1;
 		}
+
 		if (await this.needsReconfigure()) {
 			return (
 				await this.configureInternal(
@@ -3437,6 +3646,7 @@ export class CMakeProject {
 					if (this.workspaceContext.config.clearOutputBeforeBuild) {
 						log.clearOutputChannel();
 					}
+
 					await this.configureInternal(
 						ConfigureTrigger.cmakeListsChange,
 						[],
@@ -3450,6 +3660,7 @@ export class CMakeProject {
 						"Changes were detected in CMakeLists.txt but we could not reconfigure the project because another operation is already in progress.",
 					),
 				);
+
 				log.debug(
 					localize(
 						"needs.reconfigure",
@@ -3500,6 +3711,7 @@ export class CMakeProject {
 				targets && targets.length > 0 ? targets.join(", ") : "",
 			);
 		}
+
 		let drv: CMakeDriver | null;
 
 		if (showCommandOnly) {
@@ -3513,12 +3725,14 @@ export class CMakeProject {
 					),
 				);
 			}
+
 			const buildCmd = await drv.getCMakeBuildCommand(
 				targets || (await this.getDefaultBuildTargets()),
 			);
 
 			if (buildCmd) {
 				log.showChannel();
+
 				log.info(buildCmdStr(buildCmd.command, buildCmd.args));
 			} else {
 				throw new Error(
@@ -3528,6 +3742,7 @@ export class CMakeProject {
 					),
 				);
 			}
+
 			return 0;
 		}
 
@@ -3543,6 +3758,7 @@ export class CMakeProject {
 		} else if (configResult !== 0) {
 			return configResult;
 		}
+
 		drv = await this.getCMakeDriverInstance();
 
 		if (!drv) {
@@ -3553,6 +3769,7 @@ export class CMakeProject {
 				),
 			);
 		}
+
 		let newTargets = targets;
 
 		let targetName: string;
@@ -3564,7 +3781,9 @@ export class CMakeProject {
 				newTargets && newTargets.length > 0
 					? newTargets
 					: defaultBuildTargets;
+
 			targetName = `${this.buildPreset?.displayName || this.buildPreset?.name || ""}${newTargets ? ": " + newTargets.join(", ") : ""}`;
+
 			targetName =
 				targetName ||
 				this.buildPreset?.displayName ||
@@ -3575,6 +3794,7 @@ export class CMakeProject {
 				newTargets && newTargets.length > 0
 					? newTargets
 					: defaultBuildTargets!;
+
 			targetName = newTargets.join(", ");
 		}
 
@@ -3584,18 +3804,22 @@ export class CMakeProject {
 
 		try {
 			this.statusMessage.set(localize("building.status", "Building"));
+
 			this.isBusy.set(true);
 
 			let rc: number | null;
 
 			if (taskConsumer) {
 				buildLogger.info(localize("starting.build", "Starting build"));
+
 				await setContextAndStore(isBuildingKey, true);
+
 				rc = await drv!.build(newTargets, taskConsumer, isBuildCommand);
 
 				if (rc !== 0) {
 					log.showChannel(true); // in case build has failed
 				}
+
 				await setContextAndStore(isBuildingKey, false);
 
 				if (rc === null) {
@@ -3614,6 +3838,7 @@ export class CMakeProject {
 						),
 					);
 				}
+
 				return rc === null ? -1 : rc;
 			} else {
 				consumer = new CMakeBuildConsumer(buildLogger, drv.config);
@@ -3630,6 +3855,7 @@ export class CMakeProject {
 					},
 					async (progress, cancel) => {
 						let oldProgress = 0;
+
 						consumer!.onProgress((pr) => {
 							const increment = pr.value - oldProgress;
 
@@ -3638,9 +3864,11 @@ export class CMakeProject {
 									increment,
 									message: `${pr.value}%`,
 								});
+
 								oldProgress += increment;
 							}
 						});
+
 						cancel.onCancellationRequested(() =>
 							rollbar.invokeAsync(
 								localize(
@@ -3650,10 +3878,13 @@ export class CMakeProject {
 								() => this.stop(),
 							),
 						);
+
 						log.showChannel();
+
 						buildLogger.info(
 							localize("starting.build", "Starting build"),
 						);
+
 						await setContextAndStore(isBuildingKey, true);
 
 						const rc = await drv!.build(
@@ -3661,11 +3892,13 @@ export class CMakeProject {
 							consumer,
 							isBuildCommand,
 						);
+
 						await setContextAndStore(isBuildingKey, false);
 
 						if (rc !== 0) {
 							log.showChannel(true); // in case build has failed
 						}
+
 						if (rc === null) {
 							buildLogger.info(
 								localize(
@@ -3682,6 +3915,7 @@ export class CMakeProject {
 								),
 							);
 						}
+
 						const fileDiags: FileDiagnostic[] | undefined = drv!
 							.config.parseBuildDiagnostics
 							? await consumer!.compileConsumer.resolveDiagnostics(
@@ -3693,7 +3927,9 @@ export class CMakeProject {
 						if (fileDiags) {
 							populateCollection(collections.build, fileDiags);
 						}
+
 						await this.cTestController.refreshTests(drv!);
+
 						await this.refreshCompileDatabase(
 							drv!.expansionOptions,
 						);
@@ -3704,7 +3940,9 @@ export class CMakeProject {
 			}
 		} finally {
 			await setContextAndStore(isBuildingKey, false);
+
 			this.statusMessage.set(localize("ready.status", "Ready"));
+
 			this.isBusy.set(false);
 
 			if (consumer) {
@@ -3743,19 +3981,23 @@ export class CMakeProject {
 			// Config failed?
 			return null;
 		}
+
 		if (!this.compilationDatabase) {
 			return null;
 		}
+
 		const cmd = this.compilationDatabase.get(filePath);
 
 		if (!cmd) {
 			return null;
 		}
+
 		const drv = await this.getCMakeDriverInstance();
 
 		if (!drv) {
 			return null;
 		}
+
 		return drv.runCompileCommand(cmd);
 	}
 
@@ -3824,6 +4066,7 @@ export class CMakeProject {
 					);
 				},
 			);
+
 			await this.cacheEditorWebview.initPanel();
 
 			this.cacheEditorWebview.panel.onDidDispose(() => {
@@ -3842,11 +4085,13 @@ export class CMakeProject {
 		if (target === null) {
 			return -1;
 		}
+
 		let targets: string | string[] | undefined = target;
 
 		if (target === this.targetsInPresetName) {
 			targets = this.buildPreset?.targets;
 		}
+
 		return this.build(util.isString(targets) ? [targets] : targets);
 	}
 
@@ -3871,6 +4116,7 @@ export class CMakeProject {
 
 		if (this.useCMakePresets && this.buildPreset?.targets) {
 			const targets = [this.targetsInPresetName];
+
 			targets.push(
 				...(util.isString(this.buildPreset.targets)
 					? [this.buildPreset.targets]
@@ -3908,6 +4154,7 @@ export class CMakeProject {
 							),
 						};
 					}
+
 					case "rich": {
 						return {
 							label: t.name,
@@ -3945,6 +4192,7 @@ export class CMakeProject {
 		if (cleanResult !== 0) {
 			return cleanResult;
 		}
+
 		return this.build();
 	}
 
@@ -3969,6 +4217,7 @@ export class CMakeProject {
 		) {
 			extensionManager.cleanOutputChannel();
 		}
+
 		const buildResult = await this.build(undefined, false, false);
 
 		if (buildResult !== 0) {
@@ -3985,6 +4234,7 @@ export class CMakeProject {
 				),
 			);
 		}
+
 		return drv;
 	}
 
@@ -4002,6 +4252,7 @@ export class CMakeProject {
 		const drv = await this.preTest(fromWorkflow);
 
 		const retc = await this.cPackageController.runCPack(drv);
+
 		this.isBusy.set(false);
 
 		return retc ? 0 : -1;
@@ -4105,7 +4356,9 @@ export class CMakeProject {
 		return drv.stopCurrentProcess().then(
 			async () => {
 				await this.activeBuild;
+
 				this.cmakeDriver = Promise.resolve(null);
+
 				this.isBusy.set(false);
 
 				return true;
@@ -4124,6 +4377,7 @@ export class CMakeProject {
 		return drv.stopCurrentProcess().then(
 			async () => {
 				await this.activeBuild;
+
 				this.cmakeDriver = Promise.resolve(null);
 
 				return true;
@@ -4150,8 +4404,10 @@ export class CMakeProject {
 					ConfigureType.Normal,
 				);
 			}
+
 			return 0; // succeeded
 		}
+
 		return 1; // failed
 	}
 
@@ -4164,12 +4420,14 @@ export class CMakeProject {
 			this.isMultiProjectFolder,
 		);
 	}
+
 	private async setDefaultBuildTarget(v: string) {
 		await this.workspaceContext.state.setDefaultBuildTarget(
 			this.folderName,
 			v,
 			this.isMultiProjectFolder,
 		);
+
 		this.targetName.set(v);
 	}
 
@@ -4184,9 +4442,11 @@ export class CMakeProject {
 		) {
 			targets = this.buildPreset?.targets;
 		}
+
 		if (!this.useCMakePresets && !defaultTarget) {
 			targets = await this.allTargetName;
 		}
+
 		return util.isString(targets) ? [targets] : targets;
 	}
 
@@ -4198,9 +4458,11 @@ export class CMakeProject {
 		if (!target) {
 			target = await this.showTargetSelector();
 		}
+
 		if (!target) {
 			return;
 		}
+
 		await this.setDefaultBuildTarget(target);
 	}
 
@@ -4211,6 +4473,7 @@ export class CMakeProject {
 		if (this.useCMakePresets) {
 			return this.defaultBuildTarget || this.targetsInPresetName;
 		}
+
 		return this.defaultBuildTarget || this.allTargetName;
 	}
 
@@ -4236,18 +4499,22 @@ export class CMakeProject {
 				return null;
 			}
 		}
+
 		const executableTargets = await this.executableTargets;
 
 		if (executableTargets.length === 0) {
 			return null;
 		}
+
 		if (executableTargets.length === 1) {
 			const target = executableTargets[0];
+
 			await this.workspaceContext.state.setLaunchTargetName(
 				this.folderName,
 				target.name,
 				this.isMultiProjectFolder,
 			);
+
 			this._launchTargetName.set(target.name);
 
 			return target.path;
@@ -4272,14 +4539,17 @@ export class CMakeProject {
 		} else {
 			chosen = choices.find((choice) => choice.label === name);
 		}
+
 		if (!chosen) {
 			return null;
 		}
+
 		await this.workspaceContext.state.setLaunchTargetName(
 			this.folderName,
 			chosen.label,
 			this.isMultiProjectFolder,
 		);
+
 		this._launchTargetName.set(chosen.label);
 
 		return chosen.detail;
@@ -4298,6 +4568,7 @@ export class CMakeProject {
 		if (!target) {
 			return null;
 		}
+
 		return target;
 	}
 
@@ -4309,21 +4580,26 @@ export class CMakeProject {
 
 		if (!executable) {
 			log.showChannel();
+
 			log.warning(
 				"=======================================================",
 			);
+
 			log.warning(
 				localize(
 					"no.executable.target.found.to.launch",
 					"No executable target was found to launch. Please check:",
 				),
 			);
+
 			log.warning(
 				` - ${localize("have.you.called.add_executable", "Have you called add_executable() in your CMake project?")}`,
 			);
+
 			log.warning(
 				` - ${localize("have.you.configured", "Have you executed a successful CMake configure?")}`,
 			);
+
 			log.warning(
 				localize(
 					"no.program.will.be.executed",
@@ -4333,6 +4609,7 @@ export class CMakeProject {
 
 			return null;
 		}
+
 		return executable.path;
 	}
 
@@ -4345,6 +4622,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.dirname(targetPath);
 	}
 
@@ -4357,6 +4635,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.basename(targetPath);
 	}
 
@@ -4369,6 +4648,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.parse(targetPath).name;
 	}
 
@@ -4387,25 +4667,31 @@ export class CMakeProject {
 				return null;
 			}
 		}
+
 		const target = await this.getOrSelectLaunchTarget();
 
 		if (!target) {
 			log.showChannel();
+
 			log.warning(
 				"=======================================================",
 			);
+
 			log.warning(
 				localize(
 					"no.executable.target.found.to.launch",
 					"No executable target was found to launch. Please check:",
 				),
 			);
+
 			log.warning(
 				` - ${localize("have.you.called.add_executable", "Have you called add_executable() in your CMake project?")}`,
 			);
+
 			log.warning(
 				` - ${localize("have.you.configured", "Have you executed a successful CMake configure?")}`,
 			);
+
 			log.warning(
 				localize(
 					"no.program.will.be.executed",
@@ -4428,6 +4714,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.dirname(targetPath);
 	}
 
@@ -4440,6 +4727,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.basename(targetPath);
 	}
 
@@ -4452,6 +4740,7 @@ export class CMakeProject {
 		if (targetPath === null) {
 			return null;
 		}
+
 		return path.parse(targetPath).name;
 	}
 
@@ -4484,6 +4773,7 @@ export class CMakeProject {
 					} catch (e: any) {}
 				}
 			}
+
 			if (
 				!buildType &&
 				this.configurePreset &&
@@ -4503,6 +4793,7 @@ export class CMakeProject {
 			buildType =
 				this.variantManager.activeVariantOptions.buildType || null;
 		}
+
 		return buildType;
 	}
 
@@ -4527,6 +4818,7 @@ export class CMakeProject {
 
 		if (binaryDir) {
 			const binaryDirUri = vscode.Uri.file(binaryDir);
+
 			vscode.workspace.updateWorkspaceFolders(
 				vscode.workspace.workspaceFolders
 					? vscode.workspace.workspaceFolders.length
@@ -4591,6 +4883,7 @@ export class CMakeProject {
 			if (!found) {
 				return null;
 			}
+
 			chosen = found;
 		} else {
 			const current = await this.getOrSelectLaunchTarget();
@@ -4598,6 +4891,7 @@ export class CMakeProject {
 			if (!current) {
 				return null;
 			}
+
 			chosen = current;
 		}
 
@@ -4634,6 +4928,7 @@ export class CMakeProject {
 				}
 			}
 		}
+
 		return chosen;
 	}
 
@@ -4693,6 +4988,7 @@ export class CMakeProject {
 				env[envPair.name] = await expandString(envPair.value, options);
 			}
 		}
+
 		return env;
 	}
 
@@ -4712,6 +5008,7 @@ export class CMakeProject {
 
 			return null;
 		}
+
 		if (drv instanceof CMakeLegacyDriver) {
 			void vscode.window
 				.showWarningMessage(
@@ -4753,6 +5050,7 @@ export class CMakeProject {
 
 		try {
 			const cache = await CMakeCache.fromPath(drv.cachePath);
+
 			debugConfig = await debuggerModule.getDebugConfigurationFromCache(
 				cache,
 				targetExecutable,
@@ -4760,6 +5058,7 @@ export class CMakeProject {
 				this.workspaceContext.config.debugConfig?.MIMode,
 				this.workspaceContext.config.debugConfig?.miDebuggerPath,
 			);
+
 			log.debug(
 				localize(
 					"debug.configuration.from.cache",
@@ -4783,6 +5082,7 @@ export class CMakeProject {
 						);
 					}
 				});
+
 			log.debug(
 				localize(
 					"problem.getting.debug",
@@ -4801,6 +5101,7 @@ export class CMakeProject {
 					"Failed to generate debugger configuration",
 				),
 			);
+
 			void vscode.window.showErrorMessage(
 				localize(
 					"unable.to.generate.debugging.configuration",
@@ -4813,13 +5114,16 @@ export class CMakeProject {
 
 		// Add debug configuration from settings.
 		const userConfig = this.workspaceContext.config.debugConfig;
+
 		Object.assign(debugConfig, userConfig);
 
 		const launchEnv = await this.getTargetLaunchEnvironment(
 			drv,
 			debugConfig.environment,
 		);
+
 		debugConfig.environment = util.makeDebuggerEnvironmentVars(launchEnv);
+
 		log.debug(
 			localize(
 				"starting.debugger.with",
@@ -4847,6 +5151,7 @@ export class CMakeProject {
 		} else {
 			dbg = "(unset)";
 		}
+
 		const telemetryProperties: telemetry.Properties = {
 			customSetting: customSetting.toString(),
 			debugger: dbg,
@@ -4860,8 +5165,10 @@ export class CMakeProject {
 	}
 
 	private launchTerminals = new Map<number, vscode.Terminal>();
+
 	private launchTerminalTargetName =
 		"_CMAKE_TOOLS_LAUNCH_TERMINAL_TARGET_NAME";
+
 	private launchTerminalPath = "_CMAKE_TOOLS_LAUNCH_TERMINAL_PATH";
 	// Watch for the user closing our terminal
 	private readonly termCloseSub = vscode.window.onDidCloseTerminal(
@@ -4896,6 +5203,7 @@ export class CMakeProject {
 
 		if (options && options.env) {
 			options.env[this.launchTerminalTargetName] = executable.name;
+
 			options.env[this.launchTerminalPath] = vscode.env.shell;
 		}
 
@@ -4952,6 +5260,7 @@ export class CMakeProject {
 
 			if (process.platform === "win32") {
 				executablePath = executablePath.replace(/\\/g, "/");
+
 				launchTerminalPath = launchTerminalPath?.toLocaleLowerCase();
 
 				if (
@@ -4977,6 +5286,7 @@ export class CMakeProject {
 				userConfig.args,
 				await this.getExpansionOptions(),
 			);
+
 			args.forEach((arg) =>
 				terminal.sendText(` ${shlex.quote(arg)}`, false),
 			);
@@ -4987,6 +5297,7 @@ export class CMakeProject {
 		terminal.show(true);
 
 		const processId = await terminal.processId;
+
 		this.launchTerminals.set(processId!, terminal);
 
 		return terminal;
@@ -5001,6 +5312,7 @@ export class CMakeProject {
 		if (!workspaceFolder) {
 			workspaceFolder = this.workspaceContext.folder;
 		}
+
 		if (!workspaceFolder) {
 			void vscode.window.showErrorMessage(
 				localize("no.folder.open", "No folder is open."),
@@ -5017,6 +5329,7 @@ export class CMakeProject {
 			if ((await this.createCMakeListsFile(mainListFile)) !== 0) {
 				return -1;
 			}
+
 			log.info(
 				localize(
 					"cmakelists.created",
@@ -5043,6 +5356,7 @@ export class CMakeProject {
 		} else {
 			if (!(await this.presetsController.selectConfigurePreset(true))) {
 				await this.kitsController.setKitByName(SpecialKits.Unspecified);
+
 				log.info(
 					localize(
 						"cmakepresets.not.created",
@@ -5085,12 +5399,14 @@ export class CMakeProject {
 						"A project name is required",
 					);
 				}
+
 				if (value.includes(" ")) {
 					return localize(
 						"project.name.no.spaces",
 						"Project name cannot contain spaces",
 					);
 				}
+
 				return "";
 			},
 		});
@@ -5193,6 +5509,7 @@ export class CMakeProject {
 						langExt,
 					),
 				);
+
 				failedToCreate = true;
 			}
 		}
@@ -5236,6 +5553,7 @@ export class CMakeProject {
 		await fs.writeFile(mainListFile, init);
 
 		const doc = await vscode.workspace.openTextDocument(mainListFile);
+
 		await vscode.window.showTextDocument(doc);
 
 		return 0;
@@ -5308,6 +5626,7 @@ export class CMakeProject {
 				return 0;
 			}
 		}
+
 		return -1;
 	}
 
@@ -5331,12 +5650,14 @@ export class CMakeProject {
 
 	async setSourceDir(sourceDir: string) {
 		this._sourceDir = sourceDir;
+
 		this.cmakeListsExists = await fs.exists(
 			path.join(this._sourceDir, "CMakeLists.txt"),
 		);
 	}
 
 	private cmakeListsExists: boolean = false;
+
 	hasCMakeLists(): boolean {
 		return this.cmakeListsExists;
 	}
@@ -5348,6 +5669,7 @@ export class CMakeProject {
 			if (!d) {
 				return "";
 			}
+
 			return d.mainListFile;
 		});
 	}
@@ -5359,6 +5681,7 @@ export class CMakeProject {
 			if (!d) {
 				return "";
 			}
+
 			return d.binaryDir;
 		});
 	}
@@ -5370,6 +5693,7 @@ export class CMakeProject {
 			if (!d) {
 				return "";
 			}
+
 			return d.cachePath;
 		});
 	}
@@ -5381,6 +5705,7 @@ export class CMakeProject {
 			if (!d) {
 				return [];
 			}
+
 			return d.targets;
 		});
 	}
@@ -5392,6 +5717,7 @@ export class CMakeProject {
 			if (!d) {
 				return [];
 			}
+
 			return d.executableTargets;
 		});
 	}
@@ -5508,6 +5834,7 @@ export class CMakeProject {
 				return drv.getDiagnostics();
 			}
 		} catch {}
+
 		return {
 			folder: this.isMultiProjectFolder
 				? this.sourceDir
@@ -5532,6 +5859,7 @@ export class CMakeProject {
 				};
 			}
 		} catch {}
+
 		return {
 			communicationMode: "automatic",
 			useCMakePresets: "auto",
@@ -5544,7 +5872,9 @@ export class CMakeProject {
 	}
 
 	public hideBuildButton: boolean = false;
+
 	public hideDebugButton: boolean = false;
+
 	public hideLaunchButton: boolean = false;
 
 	doStatusChange(options: OptionConfig) {
@@ -5553,11 +5883,13 @@ export class CMakeProject {
 			options?.advanced?.build?.projectStatusVisibility === "hidden"
 				? true
 				: false;
+
 		this.hideDebugButton =
 			options?.advanced?.debug?.statusBarVisibility === "hidden" &&
 			options?.advanced?.debug?.projectStatusVisibility === "hidden"
 				? true
 				: false;
+
 		this.hideLaunchButton =
 			options?.advanced?.launch?.statusBarVisibility === "hidden" &&
 			options?.advanced?.launch?.projectStatusVisibility === "hidden"

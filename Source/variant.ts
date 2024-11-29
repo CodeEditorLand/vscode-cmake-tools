@@ -212,6 +212,7 @@ export class VariantManager implements vscode.Disposable {
 	get onActiveVariantChanged() {
 		return this._activeVariantChanged.event;
 	}
+
 	private readonly _activeVariantChanged = new vscode.EventEmitter<void>();
 
 	/**
@@ -221,6 +222,7 @@ export class VariantManager implements vscode.Disposable {
 		ignoreInitial: true,
 		followSymlinks: false,
 	});
+
 	private customVariantsFileExists: boolean = false;
 
 	/**
@@ -230,6 +232,7 @@ export class VariantManager implements vscode.Disposable {
 
 	dispose() {
 		void this._variantFileWatcher.close();
+
 		this._activeVariantChanged.dispose();
 	}
 
@@ -261,6 +264,7 @@ export class VariantManager implements vscode.Disposable {
 				path.join(workspaceFolder.uri.fsPath, filename),
 			);
 		}
+
 		util.chokidarOnAnyChange(this._variantFileWatcher, (filePath) =>
 			rollbar.invokeAsync(
 				localize(
@@ -351,6 +355,7 @@ export class VariantManager implements vscode.Disposable {
 
 		if (!is_valid) {
 			const errors = validate.errors as ajv.ErrorObject[];
+
 			log.error(
 				localize("invalid.variants", "Invalid variants specified:"),
 			);
@@ -358,7 +363,9 @@ export class VariantManager implements vscode.Disposable {
 			for (const err of errors) {
 				log.error(` >> ${err.dataPath}: ${err.message}`);
 			}
+
 			new_variants = DEFAULT_VARIANTS;
+
 			log.info(
 				localize("loaded.default.variants", "Loaded default variants"),
 			);
@@ -408,6 +415,7 @@ export class VariantManager implements vscode.Disposable {
 
 					return unknown_choice;
 				}
+
 				const found_choice = found_setting.choices.find(
 					(o) => o.key === opt_key,
 				);
@@ -422,6 +430,7 @@ export class VariantManager implements vscode.Disposable {
 
 					return unknown_choice;
 				}
+
 				return found_choice;
 			},
 		);
@@ -470,6 +479,7 @@ export class VariantManager implements vscode.Disposable {
 		if (!kws) {
 			return invalid_variant;
 		}
+
 		const vars = this._variants;
 
 		if (!vars) {
@@ -485,6 +495,7 @@ export class VariantManager implements vscode.Disposable {
 					"Last variant selection is incompatible with present variant definition.",
 				),
 			);
+
 			log.warning(">> " + options_or_error);
 
 			log.warning(
@@ -495,6 +506,7 @@ export class VariantManager implements vscode.Disposable {
 			);
 
 			const defaultKws = this.findDefaultChoiceCombination();
+
 			options_or_error =
 				this.variantConfigurationOptionsForKWs(defaultKws);
 		}
@@ -535,6 +547,7 @@ export class VariantManager implements vscode.Disposable {
 					return true;
 				}
 			}
+
 			return false;
 		} else if (util.isTestMode()) {
 			await this.publishActiveKeywordSettings(
@@ -581,6 +594,7 @@ export class VariantManager implements vscode.Disposable {
 			keywordSettings,
 			this.isMultiProject,
 		);
+
 		this._activeVariantChanged.fire();
 	}
 
@@ -595,6 +609,7 @@ export class VariantManager implements vscode.Disposable {
 		choiceCombination: { settingKey: string; settingValue: string }[],
 	): Map<string, string> {
 		const keywords = new Map<string, string>();
+
 		choiceCombination.forEach((kv) =>
 			keywords.set(kv.settingKey, kv.settingValue),
 		);
@@ -617,6 +632,7 @@ export class VariantManager implements vscode.Disposable {
 
 	async initialize(folderName: string) {
 		await this._reloadVariantsFile();
+
 		this.folderName = folderName;
 
 		if (
@@ -626,6 +642,7 @@ export class VariantManager implements vscode.Disposable {
 			) === null
 		) {
 			const defaultChoices = this.findDefaultChoiceCombination();
+
 			await this.publishActiveKeywordSettings(defaultChoices);
 		}
 

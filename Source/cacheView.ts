@@ -19,7 +19,9 @@ export interface IOption {
 	key: string; // same as CMake cache variable key names
 	type: string; // "Bool" for boolean and "String" for anything else for now
 	helpString: string;
+
 	choices: string[];
+
 	value: string; // value from the cache file or changed in the UI
 	dirty: boolean; // if the variable was edited in the UI
 }
@@ -39,6 +41,7 @@ export class ConfigurationWebview {
 	get isDirty(): boolean {
 		return this.dirtyFlag;
 	}
+
 	set isDirty(d: boolean) {
 		this.dirtyFlag = d;
 
@@ -55,6 +58,7 @@ export class ConfigurationWebview {
 			}
 		}
 	}
+
 	public readonly panel: vscode.WebviewPanel;
 
 	private options: IOption[] = [];
@@ -80,12 +84,15 @@ export class ConfigurationWebview {
 			telemetry.logEvent("editCMakeCache", {
 				command: "saveCMakeCacheUI",
 			});
+
 			await this.saveCmakeCache(this.options);
+
 			void vscode.window.showInformationMessage(
 				localize("cmake.cache.saved", "CMake options have been saved."),
 			);
 			// start configure
 			this.save();
+
 			this.isDirty = false;
 		}
 	}
@@ -102,6 +109,7 @@ export class ConfigurationWebview {
 			const mergedOptions: IOption[] = [];
 
 			let conflictsExist = false;
+
 			newOptions.forEach((option) => {
 				const index = this.options.findIndex(
 					(opt) => opt.key === option.key,
@@ -118,6 +126,7 @@ export class ConfigurationWebview {
 					// Log the cache value mismatch in the Output Channel, until we display the conflicts
 					// more friendly in the UI.
 					conflictsExist = true;
+
 					log.info(
 						`Detected a cache merge conflict for entry "${option.key}": ` +
 							`value in CMakeCache.txt="${option.value}", ` +
@@ -139,6 +148,7 @@ export class ConfigurationWebview {
 			// represent deleted cache entries. Remember them because in the 'ignore' case below
 			// we need to keep them.
 			const deletedOptions: IOption[] = [];
+
 			this.options.forEach((option) => {
 				if (
 					newOptions.findIndex((opt) => opt.key === option.key) === -1
@@ -169,6 +179,7 @@ export class ConfigurationWebview {
 
 				if (result === fromUI) {
 					this.options = mergedOptions;
+
 					await this.persistCacheEntries();
 				} else if (result === fromCache) {
 					this.options = newOptions;
@@ -242,8 +253,11 @@ export class ConfigurationWebview {
 
 				if (this.options[index].value !== option.value) {
 					this.isDirty = true;
+
 					this.options[index].dirty = true;
+
 					this.options[index].type = option.type;
+
 					this.options[index].value = option.value;
 				}
 			}
@@ -252,6 +266,7 @@ export class ConfigurationWebview {
 
 	async saveCmakeCache(options: IOption[]) {
 		const cmakeCache = await CMakeCache.fromPath(this.cachePath);
+
 		await cmakeCache.saveAll(options);
 	}
 
@@ -279,6 +294,7 @@ export class ConfigurationWebview {
 				});
 			}
 		}
+
 		return options;
 	}
 
@@ -335,12 +351,19 @@ export class ConfigurationWebview {
 
           input {
             height: 17px;
+
             padding: 6px;
+
             border: solid 1px;
+
             font-size: 13px;
+
             font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+
             color: var(--vscode-settings-textInputForeground);
+
             background: var(--vscode-settings-textInputBackground);
+
             border: 1px solid var(--vscode-settings-textInputBorder);
           }
 
@@ -385,16 +408,21 @@ export class ConfigurationWebview {
           .vscode-light table,
           .vscode-high-contrast table {
             border: 1px solid var(--vscode-settings-textInputBorder);
+
             border-collapse: collapse;
           }
           .vscode-dark table {
             border: 1px solid rgb(255,255,255,0.3);
+
             border-collapse: collapse;
           }
           .container {
             padding-right: 15px;
+
             padding-left: 15px;
+
             width: 760px;
+
             margin: 30px auto;
           }
           tr {
@@ -408,10 +436,15 @@ export class ConfigurationWebview {
           }
           input#search {
             width: 98%;
+
             padding: 11px 0px 11px 11px;
+
             margin: 10px 0;
+
             color: var(--vscode-settings-textInputForeground);
+
             background: var(--vscode-settings-textInputBackground);
+
             border: 1px solid var(--vscode-settings-textInputBorder);
           }
           .invisible {
@@ -419,27 +452,41 @@ export class ConfigurationWebview {
           }
           button#save {
             float: right;
+
             padding: 10px 25px;
+
             margin-top: 15px;
+
             background: var(--vscode-button-background);
+
             color: var(--vscode-button-foreground);
+
             text-transform: uppercase;
+
             font-weight: bold;
+
             border: solid 1px var(--vscode-contrastBorder);
+
             transition: 100ms ease-in-out;
           }
           button#save:hover {
             cursor: pointer;
+
             background-color: var(--vscode-button-hoverBackground);
           }
           button#save:focus,
           button#save input:focus,
           button#save select:focus {
             outline: 1px solid -webkit-focus-ring-color;
+
             outline-offset: 2px;
+
             border-color: var(--vscode-focusBorder);
+
             border: var(--vscode-focusBorder);
+
             contrastBorder: var(--vscode-focusBorder);
+
             contrastActiveBorder: var(--vscode-focusBorder);
           }
           button#save:active {
@@ -449,14 +496,18 @@ export class ConfigurationWebview {
           checkbox:active,
           checkbox {
             color: var(--vscode-settings-checkboxForeground);
+
             background: var(--vscode-settings-checkboxForeground);
+
             border: var(--vscode-settings-checkboxBorder);
           }
 
           .vscode-light cmake-input-bool input:checked,
           .vscode-dark cmake-input-bool {
             color: var(--vscode-settings-checkboxForeground);
+
             background: var(--vscode-settings-checkboxForeground);
+
             border: var(--vscode-settings-checkboxBorder);
           }
 
@@ -464,7 +515,9 @@ export class ConfigurationWebview {
           .cmake-input-bool:active,
           .cmake-input-bool {
             color: var(--vscode-settings-checkboxForeground);
+
             background: var(--vscode-settings-checkboxForeground);
+
             border: var(--vscode-settings-checkboxBorder);
           }
           a:focus,
@@ -485,6 +538,7 @@ export class ConfigurationWebview {
           }
           function toggleKey(checkbox) {
             updateCheckboxState(checkbox);
+
             vscode.postMessage({key: checkbox.id, type: "Bool", value: checkbox.checked});
 
             document.getElementById('not-saved').classList.remove('invisible');
@@ -505,12 +559,14 @@ export class ConfigurationWebview {
           }
           function edit(editbox) {
             validateInput(editbox);
+
             vscode.postMessage({key: editbox.id, type: "String", value: editbox.value});
 
             document.getElementById('not-saved').classList.remove('invisible');
           }
           function save() {
             document.getElementById('not-saved').classList.add('invisible');
+
             vscode.postMessage(false);
           }
           function search() {
@@ -583,6 +639,7 @@ export class ConfigurationWebview {
             ${option.choices.map((ch) => `<option value="${escapeAttribute(ch)}">`).join()}
           </datalist>`;
 				}
+
 				editControls += `<input class="cmake-input-text" id="${id}" value="${escapeAttribute(option.value)}" style="width: 90%;"
           type="text" ${hasChoices ? `list="CHOICES_${id}"` : ""}>`;
 			}

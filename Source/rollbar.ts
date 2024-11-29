@@ -57,6 +57,7 @@ export function cleanStack(stack?: string): string {
 	);
 	// As a last resort, remove anything that looks like it could be a path.
 	const strings: string[] = stack.split("\n");
+
 	strings.forEach((value, index, array) => {
 		array[index] = cleanString(value);
 	});
@@ -73,6 +74,7 @@ export function cleanString(message?: string): string {
 	if (!message) {
 		return "No message provided";
 	}
+
 	const backSlash = message.indexOf("\\");
 
 	const slash = message.indexOf("/");
@@ -91,6 +93,7 @@ export function cleanString(message?: string): string {
 
 		return message.substr(0, first) + " <path removed>";
 	}
+
 	return message;
 }
 
@@ -129,10 +132,13 @@ class RollbarController {
 				lodash.toString(additional),
 			);
 		}
+
 		const callstack = cleanStack(exception.stack);
 
 		const message = cleanString(exception.message);
+
 		logEvent("exception2", { message, callstack });
+
 		console.error(exception);
 		// debugger;
 	}
@@ -176,7 +182,9 @@ class RollbarController {
 		additional: object,
 		func: () => Thenable<T>,
 	): void;
+
 	invokeAsync<T>(what: string, func: () => Thenable<T>): void;
+
 	invokeAsync<T>(
 		what: string,
 		additional: object,
@@ -184,8 +192,10 @@ class RollbarController {
 	): void {
 		if (!func) {
 			func = additional as () => Thenable<T>;
+
 			additional = {};
 		}
+
 		log.trace(
 			localize(
 				"invoking.async.function.rollbar",
@@ -196,6 +206,7 @@ class RollbarController {
 		);
 
 		const pr = func();
+
 		this.takePromise(what, additional, pr);
 	}
 
@@ -206,12 +217,16 @@ class RollbarController {
 	 * @param func The block to call
 	 */
 	invoke<T>(what: string, additional: object, func: () => T): T;
+
 	invoke<T>(what: string, func: () => T): T;
+
 	invoke<T>(what: string, additional: object, func?: () => T): T {
 		if (!func) {
 			func = additional as () => T;
+
 			additional = {};
 		}
+
 		try {
 			log.trace(
 				localize(

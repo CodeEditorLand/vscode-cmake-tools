@@ -51,6 +51,7 @@ export namespace fs {
 		if (str.charCodeAt(0) === 0xfeff) {
 			return str.slice(1);
 		}
+
 		return str;
 	}
 
@@ -138,6 +139,7 @@ export namespace fs {
 				);
 			}
 		}
+
 		if (!(await exists(fspath))) {
 			await mkdir(fspath);
 		} else {
@@ -163,11 +165,16 @@ export namespace fs {
 			() =>
 				new Promise<void>((resolve, reject) => {
 					const reader = fs_.createReadStream(inpath);
+
 					reader.on("error", (e) => reject(e));
+
 					reader.on("open", (_fd) => {
 						const writer = fs_.createWriteStream(outpath);
+
 						writer.on("error", (e) => reject(e));
+
 						writer.on("open", (_fd2) => reader.pipe(writer));
+
 						writer.on("close", () => resolve());
 					});
 				}),

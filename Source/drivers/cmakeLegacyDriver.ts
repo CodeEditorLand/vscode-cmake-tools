@@ -73,14 +73,17 @@ export class CMakeLegacyDriver extends CMakeDriver {
 
 	async doConfigureSettingsChange(): Promise<void> {
 		this._needsReconfigure = true;
+
 		await onConfigureSettingsChange();
 	}
+
 	async checkNeedsReconfigure(): Promise<boolean> {
 		return this._needsReconfigure;
 	}
 
 	async doSetKit(cb: () => Promise<void>): Promise<void> {
 		this._needsReconfigure = true;
+
 		await cb();
 	}
 
@@ -93,6 +96,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 		if (need_clean) {
 			await this._cleanPriorConfiguration();
 		}
+
 		await cb();
 	}
 
@@ -128,10 +132,12 @@ export class CMakeLegacyDriver extends CMakeDriver {
 	): Promise<number> {
 		// Ensure the binary directory exists
 		const binaryDir = configurePreset?.binaryDir ?? this.binaryDir;
+
 		await fs.mkdir_p(binaryDir);
 
 		// Dup args so we can modify them
 		const args = Array.from(args_);
+
 		args.push(util.lightNormalizePath(this.sourceDir));
 
 		const generator = configurePreset
@@ -149,14 +155,19 @@ export class CMakeLegacyDriver extends CMakeDriver {
 		if (generator) {
 			if (generator.name) {
 				args.push("-G");
+
 				args.push(generator.name);
 			}
+
 			if (generator.toolset) {
 				args.push("-T");
+
 				args.push(generator.toolset);
 			}
+
 			if (generator.platform) {
 				args.push("-A");
+
 				args.push(generator.platform);
 			}
 		}
@@ -165,6 +176,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 
 		if (showCommandOnly) {
 			log.showChannel();
+
 			log.info(proc.buildCmdStr(this.cmake.path, args));
 
 			return 0;
@@ -185,11 +197,15 @@ export class CMakeLegacyDriver extends CMakeDriver {
 				),
 				cwd: options?.cwd ?? binaryDir,
 			});
+
 			this.configureProcess = child;
 
 			const result = await child.result;
+
 			this.configureProcess = null;
+
 			log.trace(result.stderr);
+
 			log.trace(result.stdout);
 
 			if (
@@ -201,9 +217,11 @@ export class CMakeLegacyDriver extends CMakeDriver {
 			) {
 				this._needsReconfigure = false;
 			}
+
 			if (!configurePreset) {
 				await this._reloadPostConfigure();
 			}
+
 			return result.retc === null ? -1 : result.retc;
 		}
 	}
@@ -222,6 +240,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 		if (await fs.exists(this.cachePath)) {
 			await this._reloadPostConfigure();
 		}
+
 		this._cacheWatcher.onDidChange(() => {
 			log.debug(
 				localize(
@@ -230,6 +249,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 					this.cachePath,
 				),
 			);
+
 			rollbar.invokeAsync(
 				localize("reloading.cmake.cache", "Reloading CMake Cache"),
 				() => this._reloadPostConfigure(),
@@ -284,12 +304,15 @@ export class CMakeLegacyDriver extends CMakeDriver {
 	get targets() {
 		return [];
 	}
+
 	get executableTargets() {
 		return [];
 	}
+
 	get uniqueTargets() {
 		return [];
 	}
+
 	get cmakeFiles() {
 		return [];
 	}
@@ -304,11 +327,13 @@ export class CMakeLegacyDriver extends CMakeDriver {
 	get cmakeCache() {
 		return this._cmakeCache;
 	}
+
 	private _cmakeCache: CMakeCache | null = null;
 
 	private async _reloadPostConfigure() {
 		// Force await here so that any errors are thrown into rollbar
 		const new_cache = await CMakeCache.fromPath(this.cachePath);
+
 		this._cmakeCache = new_cache;
 	}
 
@@ -320,6 +345,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 				acc.set(entry.key, entry),
 			);
 		}
+
 		return ret;
 	}
 
@@ -327,6 +353,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 		if (!this.cmakeCache) {
 			return null;
 		}
+
 		const gen = this.cmakeCache.get("CMAKE_GENERATOR");
 
 		return gen ? gen.as<string>() : null;
@@ -335,6 +362,7 @@ export class CMakeLegacyDriver extends CMakeDriver {
 	get codeModelContent(): CodeModelContent | null {
 		return null;
 	}
+
 	get onCodeModelChanged() {
 		return new vscode.EventEmitter<null>().event;
 	}

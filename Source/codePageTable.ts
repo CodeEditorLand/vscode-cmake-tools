@@ -205,6 +205,7 @@ async function getWindowsActiveCodePage(): Promise<string> {
 
 		return "utf-8";
 	}
+
 	const numberString = (chcpResult.stdout ?? "").replace(/[^0-9]/gi, "");
 
 	const codePageNumber = parseInt(numberString);

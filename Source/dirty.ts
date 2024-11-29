@@ -21,6 +21,7 @@ export class InputFile {
 		if (this.mtime === null) {
 			return true;
 		}
+
 		let stat: Stats;
 
 		try {
@@ -30,6 +31,7 @@ export class InputFile {
 			// Failed to stat: Treat the file as out-of-date
 			return true;
 		}
+
 		return stat.mtime.valueOf() > this.mtime.valueOf();
 	}
 
@@ -41,6 +43,7 @@ export class InputFile {
 		} catch (_) {
 			return new InputFile(filePath, null);
 		}
+
 		return new InputFile(filePath, stat.mtime);
 	}
 }
@@ -54,6 +57,7 @@ export class InputFileSet {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -70,6 +74,7 @@ export class InputFileSet {
 							path.join(cmakeInputs.sourceDirectory, src),
 						);
 					}
+
 					return InputFile.create(src);
 				},
 			),

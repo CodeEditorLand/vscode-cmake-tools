@@ -31,6 +31,7 @@ export class CMakeOutputConsumer implements OutputConsumer {
 	get diagnostics() {
 		return this._diagnostics;
 	}
+
 	private readonly _diagnostics = [] as FileDiagnostic[];
 
 	/**
@@ -42,6 +43,7 @@ export class CMakeOutputConsumer implements OutputConsumer {
 	get stateMessages() {
 		return this._stateMessages;
 	}
+
 	private readonly _stateMessages: StateMessage[] = [];
 
 	/**
@@ -52,7 +54,9 @@ export class CMakeOutputConsumer implements OutputConsumer {
 		if (this.logger) {
 			this.logger.info(line);
 		}
+
 		this._parseDiags(line);
+
 		this._parseStateMessages(line);
 	}
 
@@ -88,6 +92,7 @@ export class CMakeOutputConsumer implements OutputConsumer {
 		if (this.logger) {
 			this.logger.error(line);
 		}
+
 		this._parseDiags(line);
 	}
 
@@ -126,19 +131,26 @@ export class CMakeOutputConsumer implements OutputConsumer {
 						full,
 						diagmap[level],
 					);
+
 					vsdiag.source = `CMake (${command})`;
+
 					vsdiag.relatedInformation = [];
 
 					const filepath = util.resolvePath(filename, this.sourceDir);
+
 					this._errorState.diag = {
 						filepath,
 						diag: vsdiag,
 					};
+
 					this._errorState.state = "diag";
+
 					this._errorState.blankLines = 0;
 				}
+
 				break;
 			}
+
 			case "diag": {
 				console.assert(this._errorState.diag, "No diagnostic?");
 
@@ -148,15 +160,18 @@ export class CMakeOutputConsumer implements OutputConsumer {
 				if (call_stack_re.test(line)) {
 					// We're in call stack mode!
 					this._errorState.state = "stack";
+
 					this._errorState.blankLines = 0;
 
 					break;
 				}
+
 				if (line === "") {
 					// A blank line!
 					if (this._errorState.blankLines === 0) {
 						// First blank. Okay
 						this._errorState.blankLines++;
+
 						this._errorState.diag!.diag.message += "\n";
 					} else {
 						// Second blank line. Now we commit the diagnostic.
@@ -169,10 +184,13 @@ export class CMakeOutputConsumer implements OutputConsumer {
 					this._errorState.blankLines = 0;
 					// Add this line to the current diag accumulator
 					const trimmed = line.replace(/^  /, "");
+
 					this._errorState.diag!.diag.message += trimmed + "\n";
 				}
+
 				break;
 			}
+
 			case "stack": {
 				// Meh... vscode doesn't really let us provide call stacks to diagnostics.
 				// We can't really do anything...
@@ -205,12 +223,15 @@ export class CMakeOutputConsumer implements OutputConsumer {
 							),
 							`In call to '${command}' here`,
 						);
+
 						console.assert(this._errorState.diag);
+
 						this._errorState.diag!.diag.relatedInformation!.push(
 							related,
 						);
 					}
 				}
+
 				break;
 			}
 		}
@@ -223,9 +244,13 @@ export class CMakeOutputConsumer implements OutputConsumer {
 		const diag = this._errorState.diag!;
 		// Remove the final newline(s) from the message, for prettiness
 		diag.diag.message = diag.diag.message.replace(/\n+$/, "");
+
 		this._diagnostics.push(this._errorState.diag!);
+
 		this._errorState.diag = null;
+
 		this._errorState.blankLines = 0;
+
 		this._errorState.state = "init";
 	}
 }

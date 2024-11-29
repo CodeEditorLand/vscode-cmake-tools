@@ -29,17 +29,25 @@ export enum FeedLineResult {
 
 export interface RawRelated {
 	file: string;
+
 	location: vscode.Range;
+
 	message: string;
 }
 
 export interface RawDiagnostic {
 	full: string;
+
 	file: string;
+
 	location: vscode.Range;
+
 	severity: string;
+
 	message: string;
+
 	code?: string;
+
 	related: RawRelated[];
 }
 
@@ -79,6 +87,7 @@ export function populateCollection(
 			if (!by_file.has(fdiag.filepath)) {
 				by_file.set(fdiag.filepath, []);
 			}
+
 			by_file.get(fdiag.filepath)!.push(fdiag.diag);
 
 			return by_file;
@@ -100,6 +109,7 @@ export abstract class RawDiagnosticParser {
 	get diagnostics(): readonly RawDiagnostic[] {
 		return this._diagnostics;
 	}
+
 	private readonly _diagnostics: RawDiagnostic[] = [];
 
 	/**
@@ -147,5 +157,6 @@ export enum MatchType {
  */
 export interface RegexPattern {
 	regexPattern: RegExp;
+
 	matchTypes: MatchType[];
 }

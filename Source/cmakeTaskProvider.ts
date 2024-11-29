@@ -30,16 +30,21 @@ const endOfLine: string = "\r\n";
 
 export interface CMakeTaskDefinition extends vscode.TaskDefinition {
 	type: string;
+
 	label: string;
+
 	command: string; // Command is either "build", "configure", "install", "test", "package" or "workflow".
 	targets?: string[]; // only in "build" command
 	preset?: string;
+
 	options?: { cwd?: string; environment?: Environment };
 }
 
 export class CMakeTask extends vscode.Task {
 	detail?: string;
+
 	isDefault?: boolean;
+
 	isTemplate?: boolean;
 }
 
@@ -63,27 +68,35 @@ const localizeCommandType = (cmd: CommandType): string => {
 		case CommandType.build: {
 			return localize("build", "build");
 		}
+
 		case CommandType.install: {
 			return localize("install", "install");
 		}
+
 		case CommandType.test: {
 			return localize("test", "test");
 		}
+
 		case CommandType.package: {
 			return localize("package", "package");
 		}
+
 		case CommandType.workflow: {
 			return localize("workflow", "workflow");
 		}
+
 		case CommandType.config: {
 			return localize("configure", "configure");
 		}
+
 		case CommandType.clean: {
 			return localize("clean", "clean");
 		}
+
 		case CommandType.cleanRebuild: {
 			return localize("clean.rebuild", "clean rebuild");
 		}
+
 		default: {
 			return "";
 		}
@@ -180,11 +193,13 @@ async function getDefaultPresetName(
 		default:
 			return undefined;
 	}
+
 	return result;
 }
 
 export class CMakeTaskProvider implements vscode.TaskProvider {
 	static CMakeScriptType: string = "cmake";
+
 	static CMakeSourceStr: string = "CMake";
 
 	constructor() {}
@@ -204,6 +219,7 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.build,
@@ -211,36 +227,42 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 					targets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.install,
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.test,
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.package,
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.workflow,
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.clean,
 					project?.useCMakePresets,
 				),
 			);
+
 			result.push(
 				await CMakeTaskProvider.provideTask(
 					CommandType.cleanRebuild,
@@ -271,6 +293,7 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 		) {
 			buildTargets = targets;
 		}
+
 		if (presetName) {
 			preset = presetName;
 		} else if (useCMakePresets) {
@@ -304,11 +327,13 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 			),
 			[],
 		);
+
 		task.group =
 			commandType === CommandType.build ||
 			commandType === CommandType.cleanRebuild
 				? vscode.TaskGroup.Build
 				: undefined;
+
 		task.detail = localize(
 			"cmake.template.task",
 			"CMake template {0} task",
@@ -348,6 +373,7 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 
 			return resolvedTask;
 		}
+
 		return undefined;
 	}
 
@@ -383,6 +409,7 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 
 			return resolvedTask;
 		}
+
 		return task;
 	}
 
@@ -439,11 +466,13 @@ export class CMakeTaskProvider implements vscode.TaskProvider {
 					task.definition.label,
 					CMakeTaskProvider.CMakeSourceStr,
 				);
+
 				buildTask.detail = task.detail;
 
 				if (task.group.isDefault) {
 					buildTask.isDefault = true;
 				}
+
 				return buildTask;
 			}),
 		);
@@ -539,10 +568,13 @@ export class CustomBuildTaskTerminal
 	implements vscode.Pseudoterminal, proc.OutputConsumer
 {
 	private writeEmitter = new vscode.EventEmitter<string>();
+
 	private closeEmitter = new vscode.EventEmitter<number>();
+
 	public get onDidWrite(): vscode.Event<string> {
 		return this.writeEmitter.event;
 	}
+
 	public get onDidClose(): vscode.Event<number> {
 		return this.closeEmitter.event;
 	}
@@ -615,6 +647,7 @@ export class CustomBuildTaskTerminal
 						`"${this.command}"`,
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(-1);
 
 				return;
@@ -628,6 +661,7 @@ export class CustomBuildTaskTerminal
 			if (this._process.child) {
 				await util.termProc(this._process.child);
 			}
+
 			this._process = undefined;
 		}
 	}
@@ -666,6 +700,7 @@ export class CustomBuildTaskTerminal
 					(await project.allTargetName),
 			];
 		}
+
 		return targets;
 	}
 
@@ -682,6 +717,7 @@ export class CustomBuildTaskTerminal
 		if (!isNotCompatible) {
 			return true;
 		}
+
 		const change: string = localize(
 			"enable.cmake.presets",
 			"Enable CMakePresets",
@@ -709,16 +745,19 @@ export class CustomBuildTaskTerminal
 						const newValue: UseCMakePresets = presetDefined
 							? "always"
 							: "never";
+
 						void config.update("cmake.useCMakePresets", newValue);
 					}
 				}
 			});
+
 		this.writeEmitter.fire(
 			localize(
 				"task.not.compatible.with.preset.setting",
 				"The selected task is not compatible with preset setting.",
 			) + endOfLine,
 		);
+
 		this.closeEmitter.fire(-1);
 
 		return false;
@@ -732,6 +771,7 @@ export class CustomBuildTaskTerminal
 		if (preset !== undefined) {
 			return preset;
 		}
+
 		return useCMakePresets
 			? getDefaultPresetName(commandType, true)
 			: undefined;
@@ -744,11 +784,14 @@ export class CustomBuildTaskTerminal
 			log.debug(
 				localize("cmake.tools.not.found", "CMake Tools not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("task.failed", "Task failed.") + endOfLine,
 			);
+
 			this.closeEmitter.fire(-1);
 		}
+
 		return project;
 	}
 
@@ -762,10 +805,12 @@ export class CustomBuildTaskTerminal
 		if (!project || !(await this.isTaskCompatibleWithPresets(project))) {
 			return;
 		}
+
 		telemetry.logEvent("task", {
 			taskType: "configure",
 			useCMakePresets: String(project.useCMakePresets),
 		});
+
 		await this.correctTargets(project, CommandType.config);
 
 		const cmakeDriver: CMakeDriver | undefined =
@@ -809,6 +854,7 @@ export class CustomBuildTaskTerminal
 						"Configure was terminated",
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(-1);
 			} else {
 				this.writeEmitter.fire(
@@ -818,15 +864,18 @@ export class CustomBuildTaskTerminal
 						result.result,
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(result.result);
 			}
 		} else {
 			log.debug(
 				localize("cmake.driver.not.found", "CMake driver not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("configure.failed", "Configure failed.") + endOfLine,
 			);
+
 			this.closeEmitter.fire(-1);
 		}
 	}
@@ -855,12 +904,14 @@ export class CustomBuildTaskTerminal
 				return -1;
 			}
 		}
+
 		if (generateLog) {
 			telemetry.logEvent("task", {
 				taskType: commandType,
 				useCMakePresets: String(project.useCMakePresets),
 			});
 		}
+
 		targets = await this.correctTargets(project, commandType);
 
 		const cmakeDriver: CMakeDriver | undefined =
@@ -874,6 +925,7 @@ export class CustomBuildTaskTerminal
 			if (!this.options) {
 				this.options = {};
 			}
+
 			this.preset = await this.resolvePresetName(
 				this.preset,
 				project.useCMakePresets,
@@ -891,6 +943,7 @@ export class CustomBuildTaskTerminal
 							"Build preset not found.",
 						),
 					);
+
 					this.writeEmitter.fire(
 						localize(
 							"build.no.preset.failed",
@@ -903,8 +956,10 @@ export class CustomBuildTaskTerminal
 					if (doCloseEmitter) {
 						this.closeEmitter.fire(-1);
 					}
+
 					return -1;
 				}
+
 				fullCommand = await cmakeDriver.generateBuildCommandFromPreset(
 					buildPreset,
 					targets,
@@ -912,7 +967,9 @@ export class CustomBuildTaskTerminal
 
 				if (fullCommand) {
 					cmakePath = fullCommand.command;
+
 					args = fullCommand.args || [];
+
 					this.options.environment = EnvironmentUtils.merge(
 						[fullCommand.build_env, this.options.environment],
 						{ preserveNull: true },
@@ -924,7 +981,9 @@ export class CustomBuildTaskTerminal
 
 				if (fullCommand) {
 					cmakePath = fullCommand.command;
+
 					args = fullCommand.args ? fullCommand.args : [];
+
 					this.options.environment = EnvironmentUtils.merge([
 						fullCommand.build_env,
 						this.options.environment,
@@ -935,6 +994,7 @@ export class CustomBuildTaskTerminal
 			log.debug(
 				localize("cmake.driver.not.found", "CMake driver not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("build.failed", "{0} failed.", taskName) + endOfLine,
 			);
@@ -942,18 +1002,22 @@ export class CustomBuildTaskTerminal
 			if (doCloseEmitter) {
 				this.closeEmitter.fire(-1);
 			}
+
 			return -1;
 		}
+
 		this.writeEmitter.fire(
 			localize("build.started", "{0} task started....", taskName) +
 				endOfLine,
 		);
+
 		this.writeEmitter.fire(proc.buildCmdStr(cmakePath, args) + endOfLine);
 
 		try {
 			this._process = proc.execute(cmakePath, args, this, this.options);
 
 			const result: proc.ExecutionResult = await this._process.result;
+
 			this._process = undefined;
 
 			if (result.retc) {
@@ -984,9 +1048,11 @@ export class CustomBuildTaskTerminal
 					) + endOfLine,
 				);
 			}
+
 			if (doCloseEmitter) {
 				this.closeEmitter.fire(result.retc ?? 0);
 			}
+
 			return result.retc ?? 0;
 		} catch {
 			this.writeEmitter.fire(
@@ -1000,6 +1066,7 @@ export class CustomBuildTaskTerminal
 			if (doCloseEmitter) {
 				this.closeEmitter.fire(-1);
 			}
+
 			return -1;
 		}
 	}
@@ -1014,10 +1081,12 @@ export class CustomBuildTaskTerminal
 		if (!project || !(await this.isTaskCompatibleWithPresets(project))) {
 			return;
 		}
+
 		telemetry.logEvent("task", {
 			taskType: "test",
 			useCMakePresets: String(project.useCMakePresets),
 		});
+
 		await this.correctTargets(project, CommandType.test);
 
 		const cmakeDriver: CMakeDriver | undefined =
@@ -1025,6 +1094,7 @@ export class CustomBuildTaskTerminal
 
 		if (cmakeDriver) {
 			let testPreset: preset.TestPreset | undefined;
+
 			this.preset = await this.resolvePresetName(
 				this.preset,
 				project.useCMakePresets,
@@ -1041,6 +1111,7 @@ export class CustomBuildTaskTerminal
 							"Test preset not found.",
 						),
 					);
+
 					this.writeEmitter.fire(
 						localize(
 							"ctest.failed",
@@ -1048,11 +1119,13 @@ export class CustomBuildTaskTerminal
 							this.preset,
 						) + endOfLine,
 					);
+
 					this.closeEmitter.fire(-1);
 
 					return;
 				}
 			}
+
 			const result: number | undefined = cmakeDriver
 				? await project?.runCTestCustomized(
 						cmakeDriver,
@@ -1068,20 +1141,24 @@ export class CustomBuildTaskTerminal
 						"CTest run was terminated",
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(-1);
 			} else {
 				this.writeEmitter.fire(
 					localize("ctest.finished", "CTest finished") + endOfLine,
 				);
+
 				this.closeEmitter.fire(0);
 			}
 		} else {
 			log.debug(
 				localize("cmake.driver.not.found", "CMake driver not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("test.failed", "CTest run failed.") + endOfLine,
 			);
+
 			this.closeEmitter.fire(-1);
 		}
 	}
@@ -1096,10 +1173,12 @@ export class CustomBuildTaskTerminal
 		if (!project || !(await this.isTaskCompatibleWithPresets(project))) {
 			return;
 		}
+
 		telemetry.logEvent("task", {
 			taskType: "package",
 			useCMakePresets: String(project.useCMakePresets),
 		});
+
 		await this.correctTargets(project, CommandType.package);
 
 		const cmakeDriver: CMakeDriver | undefined =
@@ -1107,6 +1186,7 @@ export class CustomBuildTaskTerminal
 
 		if (cmakeDriver) {
 			let packagePreset: preset.PackagePreset | undefined;
+
 			this.preset = await this.resolvePresetName(
 				this.preset,
 				project.useCMakePresets,
@@ -1125,6 +1205,7 @@ export class CustomBuildTaskTerminal
 							"Package preset not found.",
 						),
 					);
+
 					this.writeEmitter.fire(
 						localize(
 							"cpack.failed",
@@ -1132,11 +1213,13 @@ export class CustomBuildTaskTerminal
 							this.preset,
 						) + endOfLine,
 					);
+
 					this.closeEmitter.fire(-1);
 
 					return;
 				}
 			}
+
 			const result: number | undefined = cmakeDriver
 				? await project?.runCPack(cmakeDriver, packagePreset, this)
 				: undefined;
@@ -1148,20 +1231,24 @@ export class CustomBuildTaskTerminal
 						"CPack run was terminated",
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(-1);
 			} else {
 				this.writeEmitter.fire(
 					localize("cpack.finished", "CPack finished") + endOfLine,
 				);
+
 				this.closeEmitter.fire(0);
 			}
 		} else {
 			log.debug(
 				localize("cmake.driver.not.found", "CMake driver not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("cpack.failed", "CPack run failed.") + endOfLine,
 			);
+
 			this.closeEmitter.fire(-1);
 		}
 	}
@@ -1177,16 +1264,19 @@ export class CustomBuildTaskTerminal
 		if (!project || !(await this.isTaskCompatibleWithPresets(project))) {
 			return;
 		}
+
 		telemetry.logEvent("task", {
 			taskType: "workflow",
 			useCMakePresets: String(project.useCMakePresets),
 		});
+
 		await this.correctTargets(project, CommandType.workflow); // ?????
 		const cmakeDriver: CMakeDriver | undefined =
 			(await project?.getCMakeDriverInstance()) || undefined;
 
 		if (cmakeDriver) {
 			let workflowPreset: preset.WorkflowPreset | undefined;
+
 			this.preset = await this.resolvePresetName(
 				this.preset,
 				project.useCMakePresets,
@@ -1205,6 +1295,7 @@ export class CustomBuildTaskTerminal
 							"Workflow preset not found.",
 						),
 					);
+
 					this.writeEmitter.fire(
 						localize(
 							"workflow.failed",
@@ -1212,11 +1303,13 @@ export class CustomBuildTaskTerminal
 							this.preset,
 						) + endOfLine,
 					);
+
 					this.closeEmitter.fire(-1);
 
 					return;
 				}
 			}
+
 			const result: number | undefined = cmakeDriver
 				? await project?.runWorkflow(cmakeDriver, workflowPreset, this)
 				: undefined;
@@ -1228,21 +1321,25 @@ export class CustomBuildTaskTerminal
 						"Workflow run was terminated",
 					) + endOfLine,
 				);
+
 				this.closeEmitter.fire(-1);
 			} else {
 				this.writeEmitter.fire(
 					localize("workflow.finished", "Workflow finished") +
 						endOfLine,
 				);
+
 				this.closeEmitter.fire(0);
 			}
 		} else {
 			log.debug(
 				localize("cmake.driver.not.found", "CMake driver not found."),
 			);
+
 			this.writeEmitter.fire(
 				localize("workflow.failed", "Workflow run failed.") + endOfLine,
 			);
+
 			this.closeEmitter.fire(-1);
 		}
 	}
@@ -1253,6 +1350,7 @@ export class CustomBuildTaskTerminal
 		if (!project || !(await this.isTaskCompatibleWithPresets(project))) {
 			return;
 		}
+
 		telemetry.logEvent("task", {
 			taskType: "cleanRebuild",
 			useCMakePresets: String(project.useCMakePresets),

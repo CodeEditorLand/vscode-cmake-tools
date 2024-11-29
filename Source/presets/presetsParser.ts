@@ -36,19 +36,28 @@ type SetPresetsFileFunc = (
  */
 export class PresetsParser {
 	private folderPath: string;
+
 	private _sourceDir: string;
+
 	private workspaceFolder: string;
+
 	private presetsFileErrorReporter: (
 		path: string,
 		expansionErrors: ExpansionErrorHandler,
 	) => Promise<void>;
+
 	private showPresetsFileVersionError: (file: string) => Promise<void>;
+
 	private _presetsFileExists = false;
+
 	private _userPresetsFileExists = false;
+
 	private collectionsModifier: (filePath: string) => void;
+
 	private presetsChangedHandler: (
 		presets: preset.PresetsFile | undefined,
 	) => void;
+
 	private userPresetsChangedHandler: (
 		presets: preset.PresetsFile | undefined,
 	) => void;
@@ -82,12 +91,19 @@ export class PresetsParser {
 		) => void,
 	) {
 		this.folderPath = folderPath;
+
 		this._sourceDir = sourceDir;
+
 		this.workspaceFolder = workspaceFolder;
+
 		this.presetsFileErrorReporter = presetsFileErrorReporter;
+
 		this.showPresetsFileVersionError = showPresetsFileVersionError;
+
 		this.collectionsModifier = collectionsModifier;
+
 		this.presetsChangedHandler = presetsChangedHandler;
+
 		this.userPresetsChangedHandler = userPresetsChangedHandler;
 	}
 
@@ -122,6 +138,7 @@ export class PresetsParser {
 			allowCommentsInPresetsFile,
 			allowUnsupportedPresetsVersions,
 		);
+
 		await this.resetPresetsFile(
 			this.userPresetsPath,
 			this._setExpandedUserPresetsFile,
@@ -139,7 +156,9 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setExpandedPresets(folder, clone);
+
 		this.presetsChangedHandler(clone);
 	};
 
@@ -148,7 +167,9 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setExpandedUserPresetsFile(folder, clone);
+
 		this.userPresetsChangedHandler(clone);
 	};
 
@@ -157,7 +178,9 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setPresetsPlusIncluded(folder, clone);
+
 		this.presetsChangedHandler(clone);
 	};
 
@@ -166,7 +189,9 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setUserPresetsPlusIncluded(folder, clone);
+
 		this.userPresetsChangedHandler(clone);
 	};
 
@@ -175,6 +200,7 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setOriginalPresetsFile(folder, clone);
 	};
 
@@ -183,6 +209,7 @@ export class PresetsParser {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setOriginalUserPresetsFile(folder, clone);
 	};
 
@@ -240,6 +267,7 @@ export class PresetsParser {
 		if (!is_valid) {
 			const showErrors = (logFunc: (x: string) => void) => {
 				const errors = validator.errors!;
+
 				logFunc(
 					localize(
 						"unsupported.presets",
@@ -270,8 +298,10 @@ export class PresetsParser {
 			} else {
 				showErrors((x) => {
 					log.error(x);
+
 					expansionErrors.errorList.push([x, file]);
 				});
+
 				log.error(
 					localize(
 						"unsupported.presets.disable",
@@ -510,6 +540,7 @@ export class PresetsParser {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.buildPresets) {
 						presetsFile.buildPresets = lodash.unionWith(
 							referencedIncludeFile.buildPresets,
@@ -517,6 +548,7 @@ export class PresetsParser {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.testPresets) {
 						presetsFile.testPresets = lodash.unionWith(
 							referencedIncludeFile.testPresets,
@@ -524,6 +556,7 @@ export class PresetsParser {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.packagePresets) {
 						presetsFile.packagePresets = lodash.unionWith(
 							referencedIncludeFile.packagePresets,
@@ -531,6 +564,7 @@ export class PresetsParser {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.workflowPresets) {
 						presetsFile.workflowPresets = lodash.unionWith(
 							referencedIncludeFile.workflowPresets,
@@ -538,6 +572,7 @@ export class PresetsParser {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.cmakeMinimumRequired) {
 						if (
 							!presetsFile.cmakeMinimumRequired ||
@@ -551,6 +586,7 @@ export class PresetsParser {
 						}
 					}
 				}
+
 				continue;
 			}
 			// Record the file as referenced, even if the file does not exist.
@@ -567,6 +603,7 @@ export class PresetsParser {
 						fullIncludePath,
 					),
 				);
+
 				expansionErrors.errorList.push([
 					localize(
 						"included.presets.file.not.found",
@@ -584,7 +621,9 @@ export class PresetsParser {
 				fullIncludePath,
 				allowCommentsInPresetsFile,
 			);
+
 			referencedFiles.set(fullIncludePath, includeFile);
+
 			includeFile = await this.validatePresetsFile(
 				includeFile,
 				fullIncludePath,
@@ -616,6 +655,7 @@ export class PresetsParser {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.buildPresets) {
 				presetsFile.buildPresets = lodash.unionWith(
 					includeFile.buildPresets,
@@ -623,6 +663,7 @@ export class PresetsParser {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.testPresets) {
 				presetsFile.testPresets = lodash.unionWith(
 					includeFile.testPresets,
@@ -630,6 +671,7 @@ export class PresetsParser {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.packagePresets) {
 				presetsFile.packagePresets = lodash.unionWith(
 					includeFile.packagePresets,
@@ -637,6 +679,7 @@ export class PresetsParser {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.workflowPresets) {
 				presetsFile.workflowPresets = lodash.unionWith(
 					includeFile.workflowPresets,
@@ -644,6 +687,7 @@ export class PresetsParser {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.cmakeMinimumRequired) {
 				if (
 					!presetsFile.cmakeMinimumRequired ||
@@ -665,12 +709,14 @@ export class PresetsParser {
 			expansionErrors.tempErrorList.forEach((error) =>
 				expansionErrors.errorList.unshift(error),
 			);
+
 			log.error(
 				localize(
 					"expansion.errors",
 					"Expansion errors found in the presets file.",
 				),
 			);
+
 			expansionErrors.tempErrorList = [];
 		} else {
 			this.collectionsModifier(presetsFile.__path || "");
@@ -681,6 +727,7 @@ export class PresetsParser {
 		if (!(await fs.exists(file))) {
 			return undefined;
 		}
+
 		log.debug(
 			localize("reading.presets.file", "Reading presets file {0}", file),
 		);
@@ -717,6 +764,7 @@ export class PresetsParser {
 
 			return undefined;
 		}
+
 		return presetsFile;
 	}
 
@@ -921,9 +969,13 @@ export class PresetsParser {
 			// cache everything that we just expanded
 			// we'll only need to expand again on set preset - to apply the vs dev env if needed
 			presetsFile.configurePresets = expandedConfigurePresets;
+
 			presetsFile.buildPresets = expandedBuildPresets;
+
 			presetsFile.testPresets = expandedTestPresets;
+
 			presetsFile.packagePresets = expandedPackagePresets;
+
 			presetsFile.workflowPresets = expandedWorkflowPresets;
 
 			// clear out the errors since there are none now
@@ -954,6 +1006,7 @@ export class PresetsParser {
 			file,
 			allowCommentsInPresetsFile,
 		);
+
 		referencedFiles.set(file, presetsFile);
 
 		if (presetsFile) {
@@ -977,6 +1030,7 @@ export class PresetsParser {
 		if (presetsFile) {
 			// Private fields must be set after validation, otherwise validation would fail.
 			this.populatePrivatePresetsFields(presetsFile, file);
+
 			await this.mergeIncludeFiles(
 				presetsFile,
 				file,
@@ -997,6 +1051,7 @@ export class PresetsParser {
 
 				// set the pre-expanded version so we can call expandPresetsFile on it
 				setExpandedPresets(this.folderPath, presetsFile);
+
 				presetsFile = await this.expandPresetsFile(
 					presetsFile,
 					expansionErrors,

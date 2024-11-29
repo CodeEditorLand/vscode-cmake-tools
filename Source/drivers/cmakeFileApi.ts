@@ -25,12 +25,14 @@ import * as nls from "vscode-nls";
 
 export interface ApiVersion {
 	major: number;
+
 	minor: number;
 }
 
 export namespace Index {
 	export interface GeneratorInformation {
 		name: string;
+
 		platform?: string;
 	}
 
@@ -40,12 +42,15 @@ export namespace Index {
 
 	export interface ObjectKind {
 		kind: string;
+
 		version: ApiVersion;
+
 		jsonFile: string;
 	}
 
 	export interface IndexFile {
 		cmake: CMake;
+
 		objects: ObjectKind[];
 	}
 }
@@ -53,18 +58,23 @@ export namespace Index {
 export namespace Cache {
 	export interface CacheContent {
 		version: ApiVersion;
+
 		entries: CMakeCacheEntry[];
 	}
 
 	export interface CacheEntryProperties {
 		name: string;
+
 		value: string;
 	}
 
 	export interface CMakeCacheEntry {
 		name: string;
+
 		properties: CacheEntryProperties[];
+
 		type: string;
+
 		value: string;
 	}
 }
@@ -72,37 +82,49 @@ export namespace Cache {
 export namespace CodeModelKind {
 	export interface PathInfo {
 		build: string;
+
 		source: string;
 	}
 
 	export interface DirectoryMetadata {
 		source: string;
+
 		build: string;
+
 		hasInstallRule: boolean;
 	}
 
 	export interface ProjectMetadata {
 		name: string;
+
 		targetIndexes?: number[];
+
 		directoryIndexes: number[];
 	}
 
 	export interface Configuration {
 		name: string;
+
 		targets: Target[];
+
 		directories: DirectoryMetadata[];
+
 		projects: ProjectMetadata[];
 	}
 
 	export interface Content {
 		version: ApiVersion;
+
 		paths: PathInfo;
+
 		configurations: Configuration[];
 	}
 
 	export interface Target {
 		name: string;
+
 		type: string;
+
 		jsonFile: string;
 	}
 
@@ -120,6 +142,7 @@ export namespace CodeModelKind {
 
 	export interface InstallInfo {
 		destinations: InstallDestination[];
+
 		prefix: InstallPrefix;
 	}
 
@@ -137,15 +160,21 @@ export namespace CodeModelKind {
 
 	export interface FrameworkMetadata {
 		isSystem?: boolean;
+
 		path: string;
 	}
 
 	export interface CompileGroup {
 		language: string;
+
 		includes: IncludeMetadata[];
+
 		defines: PreprocessorDefinitionMetadata[];
+
 		compileCommandFragments: CompileCommandFragments[];
+
 		sourceIndexes: number[];
+
 		sysroot: SysRoot;
 
 		// Added in CMake 3.27, codemodel version 2.6.
@@ -158,12 +187,15 @@ export namespace CodeModelKind {
 
 	export interface TargetSourcefile {
 		path: string;
+
 		compileGroupIndex?: number;
+
 		isGenerated?: boolean;
 	}
 
 	export interface Dependency {
 		backtrace: number;
+
 		id: string;
 	}
 
@@ -173,15 +205,25 @@ export namespace CodeModelKind {
 
 	export interface TargetObject {
 		name: string;
+
 		type: string;
+
 		artifacts: ArtifactPath[];
+
 		nameOnDisk: string;
+
 		paths: PathInfo;
+
 		sources: TargetSourcefile[];
+
 		compileGroups?: CompileGroup[];
+
 		dependencies?: Dependency[];
+
 		folder?: Folder;
+
 		isGeneratorProvided?: boolean;
+
 		install?: InstallInfo;
 	}
 }
@@ -189,27 +231,37 @@ export namespace CodeModelKind {
 export namespace Toolchains {
 	export interface Content {
 		version: ApiVersion;
+
 		toolchains: Toolchain[];
 	}
 
 	export interface Toolchain {
 		language: string;
+
 		compiler: Compiler;
+
 		sourceFileExtensions?: string[];
 	}
 
 	export interface Compiler {
 		path?: string;
+
 		id?: string;
+
 		version?: string;
+
 		target?: string;
+
 		implicit: ImplicitCompilerInfo;
 	}
 
 	export interface ImplicitCompilerInfo {
 		includeDirectories?: string[];
+
 		linkDirectories?: string[];
+
 		linkFrameworkDirectories?: string[];
+
 		linkLibraries?: string[];
 	}
 }
@@ -217,19 +269,25 @@ export namespace Toolchains {
 export namespace CMakeFiles {
 	export interface Content {
 		version: ApiVersion;
+
 		paths: PathInfo[];
+
 		inputs: InputFileInfo[];
 	}
 
 	export interface PathInfo {
 		build: string;
+
 		source: string;
 	}
 
 	export interface InputFileInfo {
 		path: string;
+
 		isGenerated?: boolean;
+
 		isExternal?: boolean;
+
 		isCMake?: boolean;
 	}
 }
@@ -280,6 +338,7 @@ export async function createQueryFileForApi(apiPath: string): Promise<string> {
 
 	try {
 		await fs.mkdir_p(queryPath);
+
 		await fs.writeFile(queryFilePath, JSON.stringify(requests));
 	} catch (e: any) {
 		rollbar.exception(
@@ -293,6 +352,7 @@ export async function createQueryFileForApi(apiPath: string): Promise<string> {
 
 		throw e;
 	}
+
 	return queryFilePath;
 }
 
@@ -306,6 +366,7 @@ export async function loadIndexFile(
 	}
 
 	const files = await fs.readdir(replyPath);
+
 	log.debug(`Found index files: ${JSON.stringify(files)}`);
 
 	const indexFiles = files
@@ -315,6 +376,7 @@ export async function loadIndexFile(
 	if (indexFiles.length === 0) {
 		throw Error("No index file found.");
 	}
+
 	const indexFilePath = path.join(
 		replyPath,
 		indexFiles[indexFiles.length - 1],
@@ -325,6 +387,7 @@ export async function loadIndexFile(
 	if (!fileContent) {
 		return null;
 	}
+
 	return JSON.parse(fileContent.toString()) as Index.IndexFile;
 }
 
@@ -336,6 +399,7 @@ export async function loadCacheContent(
 	if (!fileContent) {
 		return new Map();
 	}
+
 	const cmakeCacheContent = JSON.parse(
 		fileContent.toString(),
 	) as Cache.CacheContent;
@@ -369,6 +433,7 @@ export async function loadCMakeFiles(filename: string): Promise<string[]> {
 	if (!fileContent) {
 		return [];
 	}
+
 	const cmakeFilesContent = JSON.parse(
 		fileContent.toString(),
 	) as CMakeFiles.Content;
@@ -438,9 +503,11 @@ function convertFileApiCacheToExtensionCache(
 
 			return acc;
 		}
+
 		const helpString = findPropertyValue(el, "HELPSTRING");
 
 		const advanced = findPropertyValue(el, "ADVANCED");
+
 		acc.set(
 			el.name,
 			new cache.CacheEntry(
@@ -464,6 +531,7 @@ export async function loadCodeModelContent(
 	if (!fileContent) {
 		return null;
 	}
+
 	const codemodel = JSON.parse(
 		fileContent.toString(),
 	) as CodeModelKind.Content;
@@ -499,6 +567,7 @@ export async function loadTargetObject(
 	if (!fileContent) {
 		return null;
 	}
+
 	return JSON.parse(fileContent.toString()) as CodeModelKind.TargetObject;
 }
 
@@ -568,6 +637,7 @@ export async function loadAllTargetsForBuildTypeConfiguration(
 			targetType: "META",
 		});
 	}
+
 	const targetsList = await Promise.all(
 		configuration.targets.map((t) =>
 			convertTargetObjectFileToExtensionTarget(
@@ -594,6 +664,7 @@ export async function loadConfigurationTargetMap(
 	if (!codeModelContent) {
 		return new Map();
 	}
+
 	const buildDirectory = codeModelContent.paths.build;
 
 	const targets = await Promise.all(
@@ -656,6 +727,7 @@ function convertToExtCodeModelFileGroup(
 		targetObject.paths.source,
 		rootPaths.source,
 	);
+
 	targetObject.sources.forEach((sourceFile) => {
 		const fileAbsolutePath = convertToAbsolutePath(
 			sourceFile.path,
@@ -705,6 +777,7 @@ async function loadCodeModelTarget(
 				!!x.sysroot ? x.sysroot.path : undefined,
 			),
 		);
+
 		sysroot = allSysroots.length !== 0 ? allSysroots[0] : undefined;
 	}
 
@@ -802,6 +875,7 @@ export async function loadExtCodeModelContent(
 	if (!codeModelContent) {
 		return null;
 	}
+
 	const configurations = await Promise.all(
 		codeModelContent.configurations.map((config_element) =>
 			loadConfig(codeModelContent.paths, replyPath, config_element),
@@ -819,6 +893,7 @@ export async function loadToolchains(
 	if (!fileContent) {
 		return new Map();
 	}
+
 	const toolchains = JSON.parse(fileContent.toString()) as Toolchains.Content;
 
 	const expectedVersion = { major: 1, minor: 0 };
@@ -852,6 +927,7 @@ export async function loadToolchains(
 				acc.set(el.language, { path: el.compiler.path });
 			}
 		}
+
 		return acc;
 	}, new Map<string, CodeModelToolchain>());
 }

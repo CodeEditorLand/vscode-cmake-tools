@@ -54,6 +54,7 @@ const regexPatterns: RegexPattern[] = [
 
 interface PendingTemplateBacktrace {
 	rootInstantiation: string;
+
 	requiredFrom: RawRelated[];
 }
 
@@ -72,6 +73,7 @@ export class Parser extends RawDiagnosticParser {
 
 		if (mat) {
 			const [, , message] = mat;
+
 			this._pendingTemplateError = {
 				rootInstantiation: message,
 				requiredFrom: [],
@@ -79,6 +81,7 @@ export class Parser extends RawDiagnosticParser {
 
 			return FeedLineResult.Ok;
 		}
+
 		if (this._pendingTemplateError) {
 			// Detect the second line of a pending C++ template error
 			mat = /(.*):(\d+):(\d+):(  +required from.+)/.exec(line);
@@ -87,6 +90,7 @@ export class Parser extends RawDiagnosticParser {
 				const [, file, linestr, column, message] = mat;
 
 				const lineNo = oneLess(linestr);
+
 				this._pendingTemplateError.requiredFrom.push({
 					file,
 					location: new vscode.Range(
@@ -107,6 +111,7 @@ export class Parser extends RawDiagnosticParser {
 
 		if (mat && this._prevDiag && this._prevDiag.related.length !== 0) {
 			const prevRelated = this._prevDiag.related[0];
+
 			this._prevDiag.related.push({
 				file: prevRelated.file,
 				location: prevRelated.location,
@@ -172,6 +177,7 @@ export class Parser extends RawDiagnosticParser {
 							break;
 					}
 				}
+
 				break;
 			}
 		}
@@ -206,7 +212,9 @@ export class Parser extends RawDiagnosticParser {
 						file,
 						message: this._pendingTemplateError.rootInstantiation,
 					});
+
 					related.push(...this._pendingTemplateError.requiredFrom);
+
 					this._pendingTemplateError = undefined;
 				}
 

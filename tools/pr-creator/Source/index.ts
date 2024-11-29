@@ -31,14 +31,23 @@ const sourceRepo: string = "vscode-cmake-tools";
 
 interface Settings {
 	orgUrl: string;
+
 	project: string;
+
 	repo: string;
+
 	sourceBranch: string;
+
 	targetBranch: string;
+
 	targetLocation: string;
+
 	token: string;
+
 	username: string;
+
 	email: string;
+
 	title: string;
 }
 
@@ -65,12 +74,15 @@ export function gitExtraArgs(
 	if (token) {
 		args.push(`-c ${gitAuthHeader(token, redact)}`);
 	}
+
 	return args.join(" ");
 }
 
 class Session {
 	private api: Possibly<WebApi>;
+
 	private git: Possibly<IGitApi>;
+
 	private initialized: boolean = false;
 
 	public constructor(private readonly settings: Settings) {}
@@ -89,7 +101,9 @@ class Session {
 		}
 
 		this.initialized = true;
+
 		this.api = await this.getWebApi();
+
 		this.git = await this.api.getGitApi();
 	}
 
@@ -103,6 +117,7 @@ class Session {
 		const repo = (await this.getRepos()).find(
 			(repo) => repo.name === this.settings.repo,
 		);
+
 		assertNotNull(repo);
 
 		return repo;
@@ -121,6 +136,7 @@ class Session {
 			withAuth ? this.settings.token : "",
 			true,
 		)} ${command}`;
+
 		console.log(redactedCliString);
 
 		const cliString = `git ${gitExtraArgs(
@@ -130,6 +146,7 @@ class Session {
 		)} ${command}`;
 
 		const result = cp.execSync(cliString).toString("utf8");
+
 		console.log(result);
 
 		return result;
@@ -144,6 +161,7 @@ class Session {
 			// --verify returns error code 1 when branch exists
 			return (error as { status: number }).status !== 1;
 		}
+
 		return true;
 	}
 
@@ -157,9 +175,11 @@ class Session {
 		const lines = output.toString().split("\n");
 
 		let anyChanges = false;
+
 		lines.forEach((line) => {
 			if (line !== "") {
 				console.log("Change detected: " + line);
+
 				anyChanges = true;
 			}
 		});
@@ -207,6 +227,7 @@ class Session {
 		assertNotNull(this.git);
 
 		const repoId = (await this.getTargetRepo()).id;
+
 		assertNotNull(repoId);
 
 		const pullRequests = await this.git.getPullRequests(repoId, {
@@ -226,10 +247,13 @@ class Session {
 			description:
 				"An automatic PR to share code between the CMake Tools repository and the target repo.",
 		};
+
 		assertNotNull(this.git);
 
 		const repoId = (await this.getTargetRepo()).id;
+
 		assertNotNull(repoId);
+
 		console.log("Creating Pull Request", request, repoId);
 
 		const response = await this.git.createPullRequest(request, repoId);
@@ -239,14 +263,17 @@ class Session {
 		const createdBy = response.createdBy;
 
 		const pullRequestId = response.pullRequestId;
+
 		assertNotNull(
 			createdBy,
 			"Response is missing expected property: createdBy",
 		);
+
 		assertNotNull(
 			pullRequestId,
 			"Response is missing expected property: pullRequestId",
 		);
+
 		await this.git.updatePullRequest(
 			{ autoCompleteSetBy: createdBy },
 			repoId,
@@ -261,6 +288,7 @@ class Session {
 		} catch (error) {
 			// ok if the branch doesn't exist
 		}
+
 		try {
 			// remove remote
 			this.runGit(`remote remove target`);
@@ -278,7 +306,9 @@ class Session {
 
 				return;
 			}
+
 			this.prepareSourceBranch();
+
 			await this.publishPullRequest();
 		} catch (error) {
 			console.error(error);
@@ -307,9 +337,13 @@ export function copyFiles(
 		parentRoot,
 		`${targetRepo}/${targetLocation}`,
 	);
+
 	console.log(absoluteSourceLocation);
+
 	console.log(absoluteTargetLocation);
+
 	cp.execSync(`copy ${absoluteSourceLocation} ${absoluteTargetLocation}`);
+
 	console.log(
 		`Copying files from ${absoluteSourceLocation} to ${absoluteTargetLocation}`,
 	);
@@ -343,9 +377,13 @@ if (
 	);
 
 	assertNotNull(process.env.SYSTEM_ACCESSTOKEN);
+
 	assertNotNull(process.env.USERNAME);
+
 	assertNotNull(process.env.EMAIL);
+
 	assertNotNull(process.env.ORGURL);
+
 	assertNotNull(process.env.SYSTEM_TEAMPROJECT);
 
 	const buildIdentifier: string = process.env.BUILD_BUILDNUMBER

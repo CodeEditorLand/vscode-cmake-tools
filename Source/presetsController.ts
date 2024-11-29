@@ -45,16 +45,23 @@ type SetPresetsFileFunc = (
 
 export class PresetsController implements vscode.Disposable {
 	private _presetsWatchers: FileWatcher | undefined;
+
 	private _sourceDir: string = "";
+
 	private _sourceDirChangedSub: vscode.Disposable | undefined;
+
 	private _presetsFileExists = false;
+
 	private _userPresetsFileExists = false;
+
 	private _isChangingPresets = false;
+
 	private _referencedFiles: string[] = [];
 
 	private readonly _presetsChangedEmitter = new vscode.EventEmitter<
 		preset.PresetsFile | undefined
 	>();
+
 	private readonly _userPresetsChangedEmitter = new vscode.EventEmitter<
 		preset.PresetsFile | undefined
 	>();
@@ -107,6 +114,7 @@ export class PresetsController implements vscode.Disposable {
 			"allowCommentsInPresetsFile",
 			async () => {
 				await presetsController.reapplyPresets();
+
 				vscode.workspace.textDocuments.forEach((doc) => {
 					const fileName = path.basename(doc.uri.fsPath);
 
@@ -200,7 +208,9 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setExpandedPresets(folder, clone);
+
 		this._presetsChangedEmitter.fire(clone);
 	};
 
@@ -209,7 +219,9 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setExpandedUserPresetsFile(folder, clone);
+
 		this._userPresetsChangedEmitter.fire(clone);
 	};
 
@@ -218,7 +230,9 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setPresetsPlusIncluded(folder, clone);
+
 		this._presetsChangedEmitter.fire(clone);
 	};
 
@@ -227,7 +241,9 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setUserPresetsPlusIncluded(folder, clone);
+
 		this._userPresetsChangedEmitter.fire(clone);
 	};
 
@@ -236,6 +252,7 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setOriginalPresetsFile(folder, clone);
 	};
 
@@ -244,6 +261,7 @@ export class PresetsController implements vscode.Disposable {
 		presetsFile: preset.PresetsFile | undefined,
 	) => {
 		const clone = lodash.cloneDeep(presetsFile);
+
 		preset.setOriginalUserPresetsFile(folder, clone);
 	};
 
@@ -262,6 +280,7 @@ export class PresetsController implements vscode.Disposable {
 
 		// Record the file as referenced, even if the file does not exist.
 		let presetsFile = await this.parsePresetsFile(presetsFileBuffer, file);
+
 		referencedFiles.set(file, presetsFile);
 
 		if (presetsFile) {
@@ -280,6 +299,7 @@ export class PresetsController implements vscode.Disposable {
 		if (presetsFile) {
 			// Private fields must be set after validation, otherwise validation would fail.
 			this.populatePrivatePresetsFields(presetsFile, file);
+
 			await this.mergeIncludeFiles(
 				presetsFile,
 				file,
@@ -298,6 +318,7 @@ export class PresetsController implements vscode.Disposable {
 
 				// set the pre-expanded version so we can call expandPresetsFile on it
 				setExpandedPresets(this.folderPath, presetsFile);
+
 				presetsFile = await this.expandPresetsFile(
 					presetsFile,
 					expansionErrors,
@@ -323,6 +344,7 @@ export class PresetsController implements vscode.Disposable {
 			(exists) => (this._presetsFileExists = exists),
 			referencedFiles,
 		);
+
 		await this.resetPresetsFile(
 			this.userPresetsPath,
 			this._setExpandedUserPresetsFile,
@@ -386,6 +408,7 @@ export class PresetsController implements vscode.Disposable {
 				),
 			});
 		}
+
 		items.push(
 			{
 				name: SpecialOptions.ToolchainFile,
@@ -460,6 +483,7 @@ export class PresetsController implements vscode.Disposable {
 						) {
 							continue;
 						}
+
 						let duplicate = false;
 
 						if (kit.visualStudio && !kit.compilers) {
@@ -479,6 +503,7 @@ export class PresetsController implements vscode.Disposable {
 								}
 							}
 						}
+
 						if (!duplicate) {
 							filteredKits.push(kit);
 						}
@@ -535,6 +560,7 @@ export class PresetsController implements vscode.Disposable {
 					interface KitItem extends vscode.QuickPickItem {
 						kit: Kit;
 					}
+
 					log.debug(
 						localize(
 							"opening.compiler.selection",
@@ -634,6 +660,7 @@ export class PresetsController implements vscode.Disposable {
 										"/",
 									);
 							}
+
 							if (
 								util.isString(
 									cacheVariables["CMAKE_CXX_COMPILER"],
@@ -644,12 +671,14 @@ export class PresetsController implements vscode.Disposable {
 										"CMAKE_CXX_COMPILER"
 									].replace(/\\/g, "/");
 							}
+
 							isMultiConfigGenerator =
 								util.isMultiConfGeneratorFast(generator);
 
 							if (!isMultiConfigGenerator) {
 								cacheVariables["CMAKE_BUILD_TYPE"] = "Debug";
 							}
+
 							newPreset = {
 								name: "__placeholder__",
 								displayName: chosen_kit.kit.name,
@@ -665,8 +694,10 @@ export class PresetsController implements vscode.Disposable {
 							};
 						}
 					}
+
 					break;
 				}
+
 				case SpecialOptions.InheritConfigurationPreset: {
 					const placeHolder = localize(
 						"select.one.or.more.config.preset.placeholder",
@@ -680,6 +711,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder, canPickMany: true },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -689,6 +721,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.ToolchainFile: {
 					const displayName = localize(
 						"custom.configure.preset.toolchain.file",
@@ -699,6 +732,7 @@ export class PresetsController implements vscode.Disposable {
 						"description.custom.configure.preset",
 						"Sets Ninja generator, build and install directory",
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						displayName,
@@ -715,6 +749,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.Custom: {
 					const displayName = localize(
 						"custom.configure.preset",
@@ -725,6 +760,7 @@ export class PresetsController implements vscode.Disposable {
 						"description.custom.configure.preset",
 						"Sets Ninja generator, build and install directory",
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						displayName,
@@ -740,6 +776,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				default:
 					// Shouldn't reach here
 					break;
@@ -757,7 +794,9 @@ export class PresetsController implements vscode.Disposable {
 				if (!name) {
 					return false;
 				}
+
 				newPreset.name = name;
+
 				await this.addPresetAddUpdate(newPreset, "configurePresets");
 
 				// Ensure that we update our local copies of the PresetsFile so that adding the build preset happens as expected.
@@ -770,6 +809,7 @@ export class PresetsController implements vscode.Disposable {
 						configurePreset: newPreset.name,
 						configuration: "Debug",
 					};
+
 					await this.addPresetAddUpdate(buildPreset, "buildPresets");
 				}
 
@@ -781,6 +821,7 @@ export class PresetsController implements vscode.Disposable {
 							JSON.stringify(newPreset.name),
 						),
 					);
+
 					await this.setConfigurePreset(newPreset.name);
 				}
 			}
@@ -859,6 +900,7 @@ export class PresetsController implements vscode.Disposable {
 				),
 			});
 		}
+
 		items.push({
 			name: SpecialOptions.Custom,
 			label: localize("custom.build.preset", "Custom"),
@@ -902,6 +944,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -911,6 +954,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.InheritBuildPreset: {
 					const placeHolder = localize(
 						"select.one.or.more.build.preset.placeholder",
@@ -924,6 +968,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder, canPickMany: true },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -933,6 +978,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.Custom: {
 					newPreset = {
 						name: "__placeholder__",
@@ -942,6 +988,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				default:
 					break;
 			}
@@ -954,6 +1001,7 @@ export class PresetsController implements vscode.Disposable {
 				}
 
 				newPreset.name = name;
+
 				await this.addPresetAddUpdate(newPreset, "buildPresets");
 			}
 
@@ -1003,6 +1051,7 @@ export class PresetsController implements vscode.Disposable {
 				),
 			});
 		}
+
 		items.push({
 			name: SpecialOptions.Custom,
 			label: localize("custom.test.preset", "Custom"),
@@ -1046,6 +1095,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -1055,6 +1105,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.InheritTestPreset: {
 					const placeHolder = localize(
 						"select.one.or.more.test.preset.placeholder",
@@ -1068,6 +1119,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder, canPickMany: true },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -1077,6 +1129,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.Custom: {
 					newPreset = {
 						name: "__placeholder__",
@@ -1086,6 +1139,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				default:
 					break;
 			}
@@ -1098,8 +1152,10 @@ export class PresetsController implements vscode.Disposable {
 				}
 
 				newPreset.name = name;
+
 				await this.addPresetAddUpdate(newPreset, "testPresets");
 			}
+
 			return true;
 		}
 	}
@@ -1146,6 +1202,7 @@ export class PresetsController implements vscode.Disposable {
 				),
 			});
 		}
+
 		items.push({
 			name: SpecialOptions.Custom,
 			label: localize("custom.package.preset", "Custom"),
@@ -1189,6 +1246,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -1198,6 +1256,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.InheritPackagePreset: {
 					const placeHolder = localize(
 						"select.one.or.more.package.preset.placeholder",
@@ -1211,6 +1270,7 @@ export class PresetsController implements vscode.Disposable {
 						presets,
 						{ placeHolder, canPickMany: true },
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -1220,6 +1280,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.Custom: {
 					newPreset = {
 						name: "__placeholder__",
@@ -1229,6 +1290,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				default:
 					break;
 			}
@@ -1241,8 +1303,10 @@ export class PresetsController implements vscode.Disposable {
 				}
 
 				newPreset.name = name;
+
 				await this.addPresetAddUpdate(newPreset, "packagePresets");
 			}
+
 			return true;
 		}
 	}
@@ -1295,6 +1359,7 @@ export class PresetsController implements vscode.Disposable {
 				),
 			});
 		}
+
 		items.push({
 			name: SpecialOptions.Custom,
 			label: localize("custom.workflow.preset", "Custom"),
@@ -1352,6 +1417,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.CreateFromWorkflowPreset: {
 					const placeHolder = localize(
 						"select.one.workflow.preset.placeholder",
@@ -1369,6 +1435,7 @@ export class PresetsController implements vscode.Disposable {
 					const workflowBasePreset = presets.find(
 						(pr) => pr.name === workflowBasePresetName,
 					);
+
 					newPreset = {
 						name: "__placeholder__",
 						description: "",
@@ -1380,6 +1447,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				case SpecialOptions.Custom: {
 					newPreset = {
 						name: "__placeholder__",
@@ -1390,6 +1458,7 @@ export class PresetsController implements vscode.Disposable {
 
 					break;
 				}
+
 				default:
 					break;
 			}
@@ -1402,8 +1471,10 @@ export class PresetsController implements vscode.Disposable {
 				}
 
 				newPreset.name = name;
+
 				await this.addPresetAddUpdate(newPreset, "workflowPresets");
 			}
+
 			return true;
 		}
 	}
@@ -1431,12 +1502,14 @@ export class PresetsController implements vscode.Disposable {
 		options: vscode.QuickPickOptions & { canPickMany: true },
 		showHiddenPresets: boolean,
 	): Promise<string[] | undefined>;
+
 	private async selectPreset(
 		candidates: preset.Preset[],
 		allPresets: preset.Preset[],
 		options: vscode.QuickPickOptions,
 		showHiddenPresets: boolean,
 	): Promise<string | undefined>;
+
 	private async selectPreset(
 		candidates: preset.Preset[],
 		allPresets: preset.Preset[],
@@ -1446,6 +1519,7 @@ export class PresetsController implements vscode.Disposable {
 		interface PresetItem extends vscode.QuickPickItem {
 			preset: string;
 		}
+
 		const presetsPool: preset.Preset[] = showHiddenPresets
 			? candidates
 			: candidates.filter(
@@ -1459,6 +1533,7 @@ export class PresetsController implements vscode.Disposable {
 			description: _preset.description,
 			preset: _preset.name,
 		}));
+
 		items.push({
 			label: localize("add.new.preset", "Add a New Preset..."),
 			preset: PresetsController._addPreset,
@@ -1469,6 +1544,7 @@ export class PresetsController implements vscode.Disposable {
 		if (util.isArray<PresetItem>(chosenPresets)) {
 			return chosenPresets.map((_preset) => _preset.preset);
 		}
+
 		return chosenPresets?.preset;
 	}
 
@@ -1587,6 +1663,7 @@ export class PresetsController implements vscode.Disposable {
 						JSON.stringify(chosenPreset),
 					),
 				);
+
 				await this.setConfigurePreset(chosenPreset);
 			}
 
@@ -1600,6 +1677,7 @@ export class PresetsController implements vscode.Disposable {
 					ConfigureType.Normal,
 				);
 			}
+
 			return !addPreset || allPresets.length === 0;
 		}
 	}
@@ -1681,6 +1759,7 @@ export class PresetsController implements vscode.Disposable {
 						false /*checkChangingPreset*/,
 					);
 				}
+
 				if (!buildPreset || !this.project.buildPreset) {
 					await this.guessBuildPreset();
 				}
@@ -1692,6 +1771,7 @@ export class PresetsController implements vscode.Disposable {
 						false /*checkChangingPreset*/,
 					);
 				}
+
 				if (!testPreset || !this.project.testPreset) {
 					await this.guessTestPreset();
 				}
@@ -1703,6 +1783,7 @@ export class PresetsController implements vscode.Disposable {
 						false /*checkChangingPreset*/,
 					);
 				}
+
 				if (!packagePreset || !this.project.packagePreset) {
 					await this.guessPackagePreset();
 				}
@@ -1714,6 +1795,7 @@ export class PresetsController implements vscode.Disposable {
 						false /*checkChangingPreset*/,
 					);
 				}
+
 				if (!workflowPreset || !this.project.workflowPreset) {
 					await this.guessWorkflowPreset();
 				}
@@ -1753,8 +1835,10 @@ export class PresetsController implements vscode.Disposable {
 						false /*needToCheckConfigurePreset*/,
 						false /*checkChangingPreset*/,
 					);
+
 					currentBuildPreset = this.project.buildPreset?.name;
 				}
+
 				if (currentBuildPreset) {
 					break;
 				}
@@ -1801,8 +1885,10 @@ export class PresetsController implements vscode.Disposable {
 						false /*needToCheckConfigurePreset*/,
 						false /*checkChangingPreset*/,
 					);
+
 					currentTestPreset = this.project.testPreset?.name;
 				}
+
 				if (currentTestPreset) {
 					break;
 				}
@@ -1849,8 +1935,10 @@ export class PresetsController implements vscode.Disposable {
 						false /*needToCheckConfigurePreset*/,
 						false /*checkChangingPreset*/,
 					);
+
 					currentPackagePreset = this.project.packagePreset?.name;
 				}
+
 				if (currentPackagePreset) {
 					break;
 				}
@@ -1893,6 +1981,7 @@ export class PresetsController implements vscode.Disposable {
 					false /*needToCheckConfigurePreset*/,
 					false /*checkChangingPreset*/,
 				);
+
 				currentWorkflowPreset = this.project.workflowPreset?.name;
 
 				if (currentWorkflowPreset) {
@@ -1942,6 +2031,7 @@ export class PresetsController implements vscode.Disposable {
 				return this.project.configurePreset;
 			}
 		}
+
 		return selectedConfigurePreset;
 	}
 
@@ -1976,6 +2066,7 @@ export class PresetsController implements vscode.Disposable {
 				return this.project.buildPreset;
 			}
 		}
+
 		return selectedBuildPreset;
 	}
 
@@ -1996,6 +2087,7 @@ export class PresetsController implements vscode.Disposable {
 				this.checkCompatibility(selectedConfigurePreset, _preset)
 					.buildPresetCompatible,
 		);
+
 		presets.push(preset.defaultBuildPreset);
 
 		log.debug(
@@ -2048,6 +2140,7 @@ export class PresetsController implements vscode.Disposable {
 					JSON.stringify(chosenPreset),
 				),
 			);
+
 			await this.setBuildPreset(chosenPreset, false);
 
 			return true;
@@ -2063,6 +2156,7 @@ export class PresetsController implements vscode.Disposable {
 			if (this._isChangingPresets) {
 				return;
 			}
+
 			this._isChangingPresets = true;
 		}
 
@@ -2093,6 +2187,7 @@ export class PresetsController implements vscode.Disposable {
 						presetName,
 					),
 				);
+
 				await vscode.window.withProgress(
 					{
 						location: vscode.ProgressLocation.Notification,
@@ -2110,6 +2205,7 @@ export class PresetsController implements vscode.Disposable {
 
 				return;
 			}
+
 			if (!compatibility.testPresetCompatible) {
 				await vscode.window.withProgress(
 					{
@@ -2150,8 +2246,11 @@ export class PresetsController implements vscode.Disposable {
 		workflowPreset?: preset.WorkflowPreset | null,
 	): {
 		buildPresetCompatible: boolean;
+
 		testPresetCompatible: boolean;
+
 		packagePresetCompatible: boolean;
+
 		workflowPresetCompatible: boolean;
 	} {
 		let testPresetCompatible = true;
@@ -2188,6 +2287,7 @@ export class PresetsController implements vscode.Disposable {
 								?.toString()
 								.split(";")?.[0] ||
 							"Debug";
+
 						buildTypeMatches =
 							testPreset.configuration === buildType ||
 							testPreset.configuration === undefined;
@@ -2196,12 +2296,14 @@ export class PresetsController implements vscode.Disposable {
 							configurePreset?.cacheVariables?.[
 								"CMAKE_BUILD_TYPE"
 							] || "Debug";
+
 						buildTypeMatches =
 							buildPreset === undefined ||
 							testPreset.configuration === buildType ||
 							testPreset.configuration === undefined;
 					}
 				}
+
 				testPresetCompatible = configMatches && buildTypeMatches;
 			}
 		}
@@ -2282,6 +2384,7 @@ export class PresetsController implements vscode.Disposable {
 		if (!selectedConfigurePreset) {
 			return false;
 		}
+
 		const selectedBuildPreset = await this.checkBuildPreset();
 
 		if (!selectedBuildPreset) {
@@ -2300,6 +2403,7 @@ export class PresetsController implements vscode.Disposable {
 					_preset,
 				).testPresetCompatible,
 		);
+
 		presets.push(preset.defaultTestPreset);
 
 		log.debug(
@@ -2345,7 +2449,9 @@ export class PresetsController implements vscode.Disposable {
 					JSON.stringify(chosenPreset),
 				),
 			);
+
 			await this.setTestPreset(chosenPreset, false);
+
 			await vscode.commands.executeCommand(
 				"cmake.refreshTests",
 				this.workspaceFolder,
@@ -2365,6 +2471,7 @@ export class PresetsController implements vscode.Disposable {
 				if (this._isChangingPresets) {
 					return;
 				}
+
 				this._isChangingPresets = true;
 			}
 
@@ -2393,6 +2500,7 @@ export class PresetsController implements vscode.Disposable {
 							`'${presetName}'`,
 						),
 					);
+
 					await vscode.window.withProgress(
 						{
 							location: vscode.ProgressLocation.Notification,
@@ -2470,6 +2578,7 @@ export class PresetsController implements vscode.Disposable {
 					_preset,
 				).packagePresetCompatible,
 		);
+
 		presets.push(preset.defaultPackagePreset);
 
 		log.debug(
@@ -2515,6 +2624,7 @@ export class PresetsController implements vscode.Disposable {
 					JSON.stringify(chosenPreset),
 				),
 			);
+
 			await this.setPackagePreset(chosenPreset, false);
 
 			return true;
@@ -2531,6 +2641,7 @@ export class PresetsController implements vscode.Disposable {
 				if (this._isChangingPresets) {
 					return;
 				}
+
 				this._isChangingPresets = true;
 			}
 
@@ -2563,6 +2674,7 @@ export class PresetsController implements vscode.Disposable {
 							`'${presetName}'`,
 						),
 					);
+
 					await vscode.window.withProgress(
 						{
 							location: vscode.ProgressLocation.Notification,
@@ -2619,6 +2731,7 @@ export class PresetsController implements vscode.Disposable {
 		preset.expandConfigurePresetForPresets(this.folderPath, "workflow");
 
 		const allPresets = await this.getAllWorkflowPresets();
+
 		allPresets.push(preset.defaultWorkflowPreset);
 
 		log.debug(
@@ -2664,6 +2777,7 @@ export class PresetsController implements vscode.Disposable {
 					JSON.stringify(chosenPreset),
 				),
 			);
+
 			await this.setWorkflowPreset(chosenPreset, false);
 
 			return true;
@@ -2680,6 +2794,7 @@ export class PresetsController implements vscode.Disposable {
 				if (this._isChangingPresets) {
 					return;
 				}
+
 				this._isChangingPresets = true;
 			}
 
@@ -2713,6 +2828,7 @@ export class PresetsController implements vscode.Disposable {
 							`'${presetName}'`,
 						),
 					);
+
 					await vscode.window.withProgress(
 						{
 							location: vscode.ProgressLocation.Notification,
@@ -2785,6 +2901,7 @@ export class PresetsController implements vscode.Disposable {
 		if (!(await fs.exists(file))) {
 			return undefined;
 		}
+
 		log.debug(
 			localize("reading.presets.file", "Reading presets file {0}", file),
 		);
@@ -2822,6 +2939,7 @@ export class PresetsController implements vscode.Disposable {
 
 			return undefined;
 		}
+
 		return presetsFile;
 	}
 
@@ -2965,6 +3083,7 @@ export class PresetsController implements vscode.Disposable {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.buildPresets) {
 						presetsFile.buildPresets = lodash.unionWith(
 							referencedIncludeFile.buildPresets,
@@ -2972,6 +3091,7 @@ export class PresetsController implements vscode.Disposable {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.testPresets) {
 						presetsFile.testPresets = lodash.unionWith(
 							referencedIncludeFile.testPresets,
@@ -2979,6 +3099,7 @@ export class PresetsController implements vscode.Disposable {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.packagePresets) {
 						presetsFile.packagePresets = lodash.unionWith(
 							referencedIncludeFile.packagePresets,
@@ -2986,6 +3107,7 @@ export class PresetsController implements vscode.Disposable {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.workflowPresets) {
 						presetsFile.workflowPresets = lodash.unionWith(
 							referencedIncludeFile.workflowPresets,
@@ -2993,6 +3115,7 @@ export class PresetsController implements vscode.Disposable {
 							(a, b) => a.name === b.name,
 						);
 					}
+
 					if (referencedIncludeFile.cmakeMinimumRequired) {
 						if (
 							!presetsFile.cmakeMinimumRequired ||
@@ -3006,6 +3129,7 @@ export class PresetsController implements vscode.Disposable {
 						}
 					}
 				}
+
 				continue;
 			}
 			// Record the file as referenced, even if the file does not exist.
@@ -3022,6 +3146,7 @@ export class PresetsController implements vscode.Disposable {
 						fullIncludePath,
 					),
 				);
+
 				expansionErrors.errorList.push([
 					localize(
 						"included.presets.file.not.found",
@@ -3038,7 +3163,9 @@ export class PresetsController implements vscode.Disposable {
 				includeFileBuffer,
 				fullIncludePath,
 			);
+
 			referencedFiles.set(fullIncludePath, includeFile);
+
 			includeFile = await this.validatePresetsFile(
 				includeFile,
 				fullIncludePath,
@@ -3066,6 +3193,7 @@ export class PresetsController implements vscode.Disposable {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.buildPresets) {
 				presetsFile.buildPresets = lodash.unionWith(
 					includeFile.buildPresets,
@@ -3073,6 +3201,7 @@ export class PresetsController implements vscode.Disposable {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.testPresets) {
 				presetsFile.testPresets = lodash.unionWith(
 					includeFile.testPresets,
@@ -3080,6 +3209,7 @@ export class PresetsController implements vscode.Disposable {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.packagePresets) {
 				presetsFile.packagePresets = lodash.unionWith(
 					includeFile.packagePresets,
@@ -3087,6 +3217,7 @@ export class PresetsController implements vscode.Disposable {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.workflowPresets) {
 				presetsFile.workflowPresets = lodash.unionWith(
 					includeFile.workflowPresets,
@@ -3094,6 +3225,7 @@ export class PresetsController implements vscode.Disposable {
 					(a, b) => a.name === b.name,
 				);
 			}
+
 			if (includeFile.cmakeMinimumRequired) {
 				if (
 					!presetsFile.cmakeMinimumRequired ||
@@ -3115,12 +3247,14 @@ export class PresetsController implements vscode.Disposable {
 			expansionErrors.tempErrorList.forEach((error) =>
 				expansionErrors.errorList.unshift(error),
 			);
+
 			log.error(
 				localize(
 					"expansion.errors",
 					"Expansion errors found in the presets file.",
 				),
 			);
+
 			await this.reportPresetsFileErrors(
 				presetsFile.__path,
 				expansionErrors,
@@ -3291,6 +3425,7 @@ export class PresetsController implements vscode.Disposable {
 					"Expansion errors found in the presets file.",
 				),
 			);
+
 			await this.reportPresetsFileErrors(
 				presetsFile.__path,
 				expansionErrors,
@@ -3309,9 +3444,13 @@ export class PresetsController implements vscode.Disposable {
 			// cache everything that we just expanded
 			// we'll only need to expand again on set preset - to apply the vs dev env if needed
 			presetsFile.configurePresets = expandedConfigurePresets;
+
 			presetsFile.buildPresets = expandedBuildPresets;
+
 			presetsFile.testPresets = expandedTestPresets;
+
 			presetsFile.packagePresets = expandedPackagePresets;
+
 			presetsFile.workflowPresets = expandedWorkflowPresets;
 
 			// clear out the errors since there are none now
@@ -3406,6 +3545,7 @@ export class PresetsController implements vscode.Disposable {
 		if (!is_valid) {
 			const showErrors = (logFunc: (x: string) => void) => {
 				const errors = validator.errors!;
+
 				logFunc(
 					localize(
 						"unsupported.presets",
@@ -3432,6 +3572,7 @@ export class PresetsController implements vscode.Disposable {
 				return presetsFile;
 			} else {
 				showErrors((x) => log.error(x));
+
 				log.error(
 					localize(
 						"unsupported.presets.disable",
@@ -3613,17 +3754,20 @@ export class PresetsController implements vscode.Disposable {
 			presetsFile = preset.getOriginalUserPresetsFile(
 				this.folderPath,
 			) || { version: 8 };
+
 			isUserPreset = true;
 		} else {
 			presetsFile = preset.getOriginalPresetsFile(this.folderPath) || {
 				version: 8,
 			};
+
 			isUserPreset = false;
 		}
 
 		if (!presetsFile[presetType]) {
 			presetsFile[presetType] = [];
 		}
+
 		switch (presetType) {
 			case "configurePresets":
 			case "buildPresets":
@@ -3640,6 +3784,7 @@ export class PresetsController implements vscode.Disposable {
 
 				break;
 		}
+
 		await this.updatePresetsFile(presetsFile, isUserPreset);
 	}
 
@@ -3650,9 +3795,11 @@ export class PresetsController implements vscode.Disposable {
 		);
 
 		let tabSize = config.get<number>("tabSize");
+
 		tabSize = tabSize === undefined ? 4 : tabSize;
 
 		let insertSpaces = config.get<boolean>("insertSpaces");
+
 		insertSpaces = insertSpaces === undefined ? true : insertSpaces;
 
 		return { insertSpaces, tabSize };
@@ -3696,6 +3843,7 @@ export class PresetsController implements vscode.Disposable {
 	// this is used for the file watcher on adding a new presets file
 	async onCreatePresetsFile() {
 		await this.reapplyPresets();
+
 		await this.project.projectController?.updateActiveProject(
 			this.workspaceFolder,
 		);
@@ -3717,6 +3865,7 @@ export class PresetsController implements vscode.Disposable {
 		]);
 
 		this._presetsWatchers?.dispose();
+
 		this._presetsWatchers = new FileWatcher(this._referencedFiles, events, {
 			ignoreInitial: true,
 		});
@@ -3753,8 +3902,10 @@ class FileWatcher implements vscode.Disposable {
 
 				for (let i = 0; i < eventHandlerEntries.length; i++) {
 					const [event, handler] = eventHandlerEntries[i];
+
 					watcher.on(event, handler);
 				}
+
 				this.watchers.set(path, watcher);
 			} catch (error) {
 				log.error(

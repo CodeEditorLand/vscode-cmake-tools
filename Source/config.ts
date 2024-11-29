@@ -93,13 +93,17 @@ export type UseVsDeveloperEnvironment = "always" | "never" | "auto";
 
 export interface AdvancedTouchBarConfig {
 	configure?: TouchBarOptionVisibility;
+
 	build?: TouchBarOptionVisibility;
+
 	debug?: TouchBarOptionVisibility;
+
 	launch?: TouchBarOptionVisibility;
 }
 
 export interface TouchBarConfig {
 	advanced?: AdvancedTouchBarConfig;
+
 	visibility: TouchBarOptionVisibility;
 }
 
@@ -107,104 +111,165 @@ export interface AdvancedOptionConfig {
 	configure?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
 	};
+
 	configurePreset?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	buildPreset?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	testPreset?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	packagePreset?: {
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	workflowPreset?: {
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	kit?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
 
 	variant?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
 	};
+
 	folder?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	buildTarget?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarTextOptionVisibility;
+
 		inheritDefault?: StatusBarInheritTextOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	build?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarStaticOptionVisibility;
+
 		inheritDefault?: StatusBarInheritStaticOptionVisibility;
 	};
+
 	launchTarget?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarTextOptionVisibility;
+
 		inheritDefault?: StatusBarInheritTextOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	debug?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarIconOptionVisibility;
+
 		inheritDefault?: StatusBarInheritIconOptionVisibility;
 	};
+
 	launch?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		statusBarVisibility?: StatusBarIconOptionVisibility;
+
 		inheritDefault?: StatusBarInheritIconOptionVisibility;
 	};
+
 	ctest?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		color?: boolean;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	cpack?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		color?: boolean;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
+
 	workflow?: {
 		projectStatusVisibility?: ProjectStatusOptionVisibility;
+
 		color?: boolean;
+
 		statusBarVisibility?: StatusBarOptionVisibility;
+
 		inheritDefault?: StatusBarInheritOptionVisibility;
+
 		statusBarLength?: number;
 	};
 }
 
 export interface OptionConfig {
 	advanced?: AdvancedOptionConfig;
+
 	statusBarVisibility: StatusBarOptionVisibility;
 }
 
@@ -212,75 +277,138 @@ export interface ExtensionConfigurationSettings {
 	autoSelectActiveFolder: boolean;
 
 	defaultActiveFolder: string | null;
+
 	cmakePath: string;
+
 	buildDirectory: string;
+
 	installPrefix: string | null;
+
 	sourceDirectory: string | string[];
+
 	saveBeforeBuild: boolean;
+
 	buildBeforeRun: boolean;
+
 	clearOutputBeforeBuild: boolean;
+
 	configureSettings: {
 		[key: string]: boolean | number | string | string[] | util.CMakeValue;
 	};
+
 	cacheInit: string | string[] | null;
+
 	preferredGenerators: string[];
+
 	generator: string | null;
+
 	toolset: string | null;
+
 	platform: string | null;
+
 	configureArgs: string[];
+
 	buildArgs: string[];
+
 	buildToolArgs: string[];
+
 	parallelJobs: number | undefined;
+
 	ctestPath: string;
+
 	ctest: {
 		parallelJobs: number;
+
 		allowParallelJobs: boolean;
+
 		testExplorerIntegrationEnabled: boolean;
+
 		testSuiteDelimiter: string;
 	};
+
 	parseBuildDiagnostics: boolean;
+
 	enabledOutputParsers: string[];
+
 	debugConfig: CppDebugConfiguration;
 
 	defaultVariants: object;
+
 	ctestArgs: string[];
+
 	ctestDefaultArgs: string[];
+
 	environment: Environment;
+
 	configureEnvironment: Environment;
+
 	buildEnvironment: Environment;
+
 	testEnvironment: Environment;
+
 	cpackEnvironment: Environment;
+
 	cpackPath: string;
+
 	cpackArgs: string[];
+
 	mingwSearchDirs: string[]; // Deprecated in 1.14, replaced by additionalCompilerSearchDirs, but kept for backwards compatibility
 	additionalCompilerSearchDirs: string[];
+
 	emscriptenSearchDirs: string[];
+
 	mergedCompileCommands: string | null;
+
 	copyCompileCommands: string | null;
+
 	loadCompileCommands: boolean;
+
 	configureOnOpen: boolean;
+
 	configureOnEdit: boolean;
+
 	deleteBuildDirOnCleanConfigure: boolean;
+
 	skipConfigureIfCachePresent: boolean | null;
+
 	useCMakeServer: boolean;
+
 	cmakeCommunicationMode: CMakeCommunicationMode;
+
 	showSystemKits: boolean;
+
 	ignoreKitEnv: boolean;
+
 	buildTask: boolean;
+
 	outputLogEncoding: string;
+
 	enableTraceLogging: boolean;
+
 	loggingLevel: LogLevelKey;
+
 	additionalKits: string[];
+
 	touchbar: TouchBarConfig;
+
 	options: OptionConfig;
+
 	useCMakePresets: UseCMakePresets;
+
 	useVsDeveloperEnvironment: UseVsDeveloperEnvironment;
+
 	allowCommentsInPresetsFile: boolean;
+
 	allowUnsupportedPresetsVersions: boolean;
+
 	launchBehavior: string;
+
 	ignoreCMakeListsMissing: boolean;
+
 	automaticReconfigure: boolean;
+
 	pinnedCommands: string[];
+
 	enableAutomaticKitScan: boolean;
 }
 
@@ -316,6 +444,7 @@ export class ConfigurationReader implements vscode.Disposable {
 		const configData = ConfigurationReader.loadConfig(folder);
 
 		const reader = new ConfigurationReader(configData);
+
 		reader.updateSubscription = vscode.workspace.onDidChangeConfiguration(
 			(e) => {
 				if (e.affectsConfiguration("cmake", folder?.uri)) {
@@ -372,6 +501,7 @@ export class ConfigurationReader implements vscode.Disposable {
 		const keys: string[] = [];
 
 		const oldValues = { ...this.configData };
+
 		Object.assign(this.configData, newConfigData);
 
 		for (const keyObject of Object.getOwnPropertyNames(newConfigData)) {
@@ -380,6 +510,7 @@ export class ConfigurationReader implements vscode.Disposable {
 			if (!(key in this.emitters)) {
 				continue; // Extension config we load has some additional properties we don't care about.
 			}
+
 			const newValue = this.configData[key];
 
 			const oldValue = oldValues[key];
@@ -396,6 +527,7 @@ export class ConfigurationReader implements vscode.Disposable {
 						em.fire(temp);
 					}
 				}
+
 				keys.push(key);
 			}
 		}
@@ -406,9 +538,11 @@ export class ConfigurationReader implements vscode.Disposable {
 	get autoSelectActiveFolder(): boolean {
 		return this.configData.autoSelectActiveFolder;
 	}
+
 	get defaultActiveFolder(): string | null {
 		return this.configData.defaultActiveFolder;
 	}
+
 	buildDirectory(
 		multiProject: boolean,
 		workspaceFolder?: vscode.ConfigurationScope,
@@ -419,11 +553,14 @@ export class ConfigurationReader implements vscode.Disposable {
 		) {
 			return "${sourceDirectory}/build";
 		}
+
 		return this.configData.buildDirectory;
 	}
+
 	get installPrefix(): string | null {
 		return this.configData.installPrefix;
 	}
+
 	get sourceDirectory(): string[] {
 		if (!Array.isArray(this.configData.sourceDirectory)) {
 			return [this.configData.sourceDirectory];
@@ -431,122 +568,161 @@ export class ConfigurationReader implements vscode.Disposable {
 			return this.configData.sourceDirectory;
 		}
 	}
+
 	get saveBeforeBuild(): boolean {
 		return !!this.configData.saveBeforeBuild;
 	}
+
 	get buildBeforeRun(): boolean {
 		return this.configData.buildBeforeRun;
 	}
+
 	get clearOutputBeforeBuild(): boolean {
 		return !!this.configData.clearOutputBeforeBuild;
 	}
+
 	get configureSettings(): {
 		[key: string]: boolean | number | string | string[] | util.CMakeValue;
 	} {
 		return this.configData.configureSettings;
 	}
+
 	get cacheInit() {
 		return this.configData.cacheInit;
 	}
+
 	get preferredGenerators(): string[] {
 		return this.configData.preferredGenerators;
 	}
+
 	get generator(): string | null {
 		return this.configData.generator;
 	}
+
 	get toolset(): string | null {
 		return this.configData.toolset;
 	}
+
 	get platform(): string | null {
 		return this.configData.platform;
 	}
+
 	get configureArgs(): string[] {
 		return this.configData.configureArgs;
 	}
+
 	get buildArgs(): string[] {
 		return this.configData.buildArgs;
 	}
+
 	get buildToolArgs(): string[] {
 		return this.configData.buildToolArgs;
 	}
+
 	get parallelJobs(): number | undefined {
 		return this.configData.parallelJobs;
 	}
+
 	get ctestParallelJobs(): number | null {
 		return this.configData.ctest.parallelJobs;
 	}
+
 	get ctestAllowParallelJobs(): boolean {
 		return this.configData.ctest.allowParallelJobs;
 	}
+
 	get testExplorerIntegrationEnabled(): boolean {
 		return this.configData.ctest.testExplorerIntegrationEnabled;
 	}
+
 	get testSuiteDelimiter(): string {
 		return this.configData.ctest.testSuiteDelimiter;
 	}
+
 	get parseBuildDiagnostics(): boolean {
 		return !!this.configData.parseBuildDiagnostics;
 	}
+
 	get enableOutputParsers(): string[] | null {
 		return this.configData.enabledOutputParsers;
 	}
+
 	get pinnedCommands(): string[] | null {
 		return this.configData.pinnedCommands;
 	}
+
 	get rawCMakePath(): string {
 		return this.configData.cmakePath;
 	}
+
 	get rawCTestPath(): string {
 		return this.configData.ctestPath;
 	}
+
 	get rawCPackPath(): string {
 		return this.configData.cpackPath;
 	}
+
 	get debugConfig(): CppDebugConfiguration {
 		return this.configData.debugConfig;
 	}
+
 	get environment() {
 		return this.configData.environment;
 	}
+
 	get configureEnvironment() {
 		return this.configData.configureEnvironment;
 	}
+
 	get buildEnvironment() {
 		return this.configData.buildEnvironment;
 	}
+
 	get testEnvironment() {
 		return this.configData.testEnvironment;
 	}
+
 	get defaultVariants(): Object {
 		return this.configData.defaultVariants;
 	}
+
 	get ctestArgs(): string[] {
 		return this.configData.ctestArgs;
 	}
+
 	get ctestDefaultArgs(): string[] {
 		return this.configData.ctestDefaultArgs;
 	}
+
 	get cpackEnvironment() {
 		return this.configData.cpackEnvironment;
 	}
+
 	get cpackArgs(): string[] {
 		return this.configData.cpackArgs;
 	}
+
 	get configureOnOpen() {
 		if (this.configData.configureOnOpen === null) {
 			return true;
 		}
+
 		return this.configData.configureOnOpen;
 	}
+
 	get configureOnEdit() {
 		return this.configData.configureOnEdit;
 	}
+
 	get deleteBuildDirOnCleanConfigure() {
 		return this.configData.deleteBuildDirOnCleanConfigure;
 	}
+
 	get skipConfigureIfCachePresent() {
 		return this.configData.skipConfigureIfCachePresent;
 	}
+
 	get useCMakeServer(): boolean {
 		return this.configData.useCMakeServer;
 	}
@@ -557,9 +733,11 @@ export class ConfigurationReader implements vscode.Disposable {
 	get useCMakePresets(): UseCMakePresets {
 		return this.configData.useCMakePresets;
 	}
+
 	get useVsDeveloperEnvironment(): UseVsDeveloperEnvironment {
 		return this.configData.useVsDeveloperEnvironment;
 	}
+
 	get allowCommentsInPresetsFile(): boolean {
 		return this.configData.allowCommentsInPresetsFile;
 	}
@@ -584,8 +762,10 @@ export class ConfigurationReader implements vscode.Disposable {
 					'"cmakeCommunicationMode"',
 				),
 			);
+
 			communicationMode = "serverApi";
 		}
+
 		return communicationMode;
 	}
 
@@ -605,6 +785,7 @@ export class ConfigurationReader implements vscode.Disposable {
 		if (!ctestJobs) {
 			return this.numJobs || defaultNumJobs();
 		}
+
 		return ctestJobs;
 	}
 
@@ -625,35 +806,46 @@ export class ConfigurationReader implements vscode.Disposable {
 
 			return this.configData.mingwSearchDirs;
 		}
+
 		return this.configData.additionalCompilerSearchDirs;
 	}
+
 	get additionalKits(): string[] {
 		return this.configData.additionalKits;
 	}
+
 	get emscriptenSearchDirs(): string[] {
 		return this.configData.emscriptenSearchDirs;
 	}
+
 	get mergedCompileCommands(): string | null {
 		return this.configData.mergedCompileCommands;
 	}
+
 	get copyCompileCommands(): string | null {
 		return this.configData.copyCompileCommands;
 	}
+
 	get loadCompileCommands(): boolean {
 		return this.configData.loadCompileCommands;
 	}
+
 	get showSystemKits(): boolean {
 		return this.configData.showSystemKits;
 	}
+
 	get ignoreKitEnv(): boolean {
 		return this.configData.ignoreKitEnv;
 	}
+
 	get buildTask(): boolean {
 		return this.configData.buildTask;
 	}
+
 	get outputLogEncoding(): string {
 		return this.configData.outputLogEncoding;
 	}
+
 	get enableTraceLogging(): boolean {
 		return this.configData.enableTraceLogging;
 	}
@@ -662,6 +854,7 @@ export class ConfigurationReader implements vscode.Disposable {
 		if (process.env["CMT_LOGGING_LEVEL"]) {
 			return process.env["CMT_LOGGING_LEVEL"]! as LogLevelKey;
 		}
+
 		return this.configData.loggingLevel;
 	}
 
@@ -709,8 +902,11 @@ export class ConfigurationReader implements vscode.Disposable {
 		cpackPath: new vscode.EventEmitter<string>(),
 		ctest: new vscode.EventEmitter<{
 			parallelJobs: number;
+
 			allowParallelJobs: boolean;
+
 			testExplorerIntegrationEnabled: boolean;
+
 			testSuiteDelimiter: string;
 		}>(),
 		parseBuildDiagnostics: new vscode.EventEmitter<boolean>(),
@@ -822,6 +1018,7 @@ class PromiseTracker {
 			.then(() => {
 				this.promises.delete(selfDestructWrapper);
 			});
+
 		this.promises.add(selfDestructWrapper);
 	}
 

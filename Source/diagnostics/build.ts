@@ -20,10 +20,15 @@ export class Compilers {
 	[compiler: string]: RawDiagnosticParser;
 
 	gcc = new gcc.Parser();
+
 	gnuld = new gnu_ld.Parser();
+
 	ghs = new ghs.Parser();
+
 	diab = new diab.Parser();
+
 	msvc = new mvsc.Parser();
+
 	iar = new iar.Parser();
 }
 
@@ -53,6 +58,7 @@ export class CompileOutputConsumer implements OutputConsumer {
 				return resolved;
 			}
 		}
+
 		return util.resolvePath(file, basePaths[0] ?? "");
 	}
 
@@ -114,19 +120,23 @@ export class CompileOutputConsumer implements OutputConsumer {
 				if (severity === undefined) {
 					continue;
 				}
+
 				const diag = new vscode.Diagnostic(
 					raw_diag.location,
 					raw_diag.message,
 					severity,
 				);
+
 				diag.source = source;
 
 				if (raw_diag.code) {
 					diag.code = raw_diag.code;
 				}
+
 				if (!diags_by_file.has(filepath)) {
 					diags_by_file.set(filepath, []);
 				}
+
 				diag.relatedInformation = [];
 
 				for (const rel of raw_diag.related) {
@@ -138,15 +148,19 @@ export class CompileOutputConsumer implements OutputConsumer {
 						new vscode.Location(relFilePath, rel.location),
 						rel.message,
 					);
+
 					diag.relatedInformation.push(related);
 				}
+
 				diags_by_file.get(filepath)!.push(diag);
+
 				arrs.push({
 					filepath,
 					diag,
 				});
 			}
 		}
+
 		return arrs;
 	}
 }
@@ -171,8 +185,10 @@ export class CMakeBuildConsumer implements OutputConsumer, vscode.Disposable {
 	get onProgress() {
 		return this._onProgressEmitter.event;
 	}
+
 	private readonly _onProgressEmitter =
 		new vscode.EventEmitter<proc.ProgressData>();
+
 	private readonly _percent_re = /\[.*?(\d+)\%.*?\]/;
 
 	readonly compileConsumer: CompileOutputConsumer;
@@ -195,10 +211,12 @@ export class CMakeBuildConsumer implements OutputConsumer, vscode.Disposable {
 		if (this.logger) {
 			this.logger.info(line);
 		}
+
 		const progress = this._percent_re.exec(line);
 
 		if (progress) {
 			const percent = progress[1];
+
 			this._onProgressEmitter.fire({
 				minimum: 0,
 				maximum: 100,

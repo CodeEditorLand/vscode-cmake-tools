@@ -60,6 +60,7 @@ export class WorkflowDriver implements vscode.Disposable {
 
 			return -3;
 		}
+
 		const oldConfigurePreset = configurePreset;
 
 		const oldBuildPreset = buildPreset;
@@ -121,6 +122,7 @@ export class WorkflowDriver implements vscode.Disposable {
 								newConfigurePreset?.name,
 							),
 						);
+
 						await prj.configureInternal(
 							ConfigureTrigger.workflow,
 							[],
@@ -134,6 +136,7 @@ export class WorkflowDriver implements vscode.Disposable {
 								newConfigurePreset?.name,
 							),
 						);
+
 						await prj.configureInternal(ConfigureTrigger.workflow);
 					}
 
@@ -156,6 +159,7 @@ export class WorkflowDriver implements vscode.Disposable {
 							step.name,
 						),
 					);
+
 					await prj.runBuild();
 
 					break;
@@ -177,6 +181,7 @@ export class WorkflowDriver implements vscode.Disposable {
 							step.name,
 						),
 					);
+
 					await prj.ctest(/*fromWorkflow = */ true);
 
 					break;
@@ -198,6 +203,7 @@ export class WorkflowDriver implements vscode.Disposable {
 							step.name,
 						),
 					);
+
 					await prj.cpack(true /*fromWorkflow*/);
 
 					break;
@@ -209,6 +215,7 @@ export class WorkflowDriver implements vscode.Disposable {
 			oldConfigurePreset
 		) {
 			await prj.setConfigurePreset(oldConfigurePreset?.name);
+
 			log.info(
 				localize(
 					"workflow.restore.configuring",

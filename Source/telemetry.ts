@@ -20,7 +20,9 @@ export type Measures = { [key: string]: number };
 
 interface IPackageInfo {
 	name: string;
+
 	version: string;
+
 	aiKey: string;
 }
 
@@ -65,6 +67,7 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
 		for (const [key, value] of props) {
 			event[key] = value;
 		}
+
 		this.sendTelemetryEvent(eventName, event);
 	}
 
@@ -85,9 +88,11 @@ export function activate(extensionContext: vscode.ExtensionContext): void {
 			if (packageInfo) {
 				const targetPopulation: TargetPopulation =
 					TargetPopulation.Public;
+
 				experimentationTelemetry = new ExperimentationTelemetry(
 					new TelemetryReporter(appInsightsKey),
 				);
+
 				initializationPromise = getExperimentationServiceAsync(
 					packageInfo.name,
 					packageInfo.version,
@@ -125,6 +130,7 @@ export function sendOpenTelemetry(telemetryProperties: Properties): void {
 		default:
 			break;
 	}
+
 	logEvent("open", telemetryProperties);
 }
 
@@ -142,6 +148,7 @@ export async function deactivate(): Promise<void> {
 			// Continue even if we were not able to initialize the experimentation platform.
 		}
 	}
+
 	if (experimentationTelemetry) {
 		await experimentationTelemetry.dispose();
 	}
@@ -171,6 +178,7 @@ export function logEvent(
 			// Send telemetry even if we were not able to initialize the experimentation platform.
 		}
 	}
+
 	sendTelemetry();
 }
 

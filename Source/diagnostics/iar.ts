@@ -22,7 +22,9 @@ enum ParserState {
 }
 export class Parser extends RawDiagnosticParser {
 	private state: ParserState = ParserState.init;
+
 	private pending_diagnostic: RawDiagnostic | null = null;
+
 	private pending_column: number | null = null;
 
 	private translateSeverity(iar_severity: string): string {
@@ -41,7 +43,9 @@ export class Parser extends RawDiagnosticParser {
 
 	private reset() {
 		this.state = ParserState.init;
+
 		this.pending_diagnostic = null;
+
 		this.pending_column = null;
 	}
 
@@ -55,10 +59,12 @@ export class Parser extends RawDiagnosticParser {
 				}
 
 				this.pending_column = mat[1].length - 2;
+
 				this.state = ParserState.pending_code;
 
 				return FeedLineResult.Ok;
 			}
+
 			case ParserState.pending_code: {
 				const mat = CODE_REGEX.exec(line);
 
@@ -98,19 +104,23 @@ export class Parser extends RawDiagnosticParser {
 
 					return FeedLineResult.Ok;
 				}
+
 				break;
 			}
+
 			case ParserState.pending_message: {
 				const diagnostic = this.pending_diagnostic!;
 
 				if (line === "" || line[0] !== " ") {
 					diagnostic.message = diagnostic.message.trim();
+
 					this.reset();
 
 					return diagnostic;
 				}
 
 				diagnostic.message += line.trim() + "\n";
+
 				diagnostic.full += `\n${line}`;
 
 				return FeedLineResult.Ok;

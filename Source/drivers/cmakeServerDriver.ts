@@ -74,7 +74,9 @@ export class CMakeServerDriver extends CMakeDriver {
 			workspaceFolder,
 			preconditionHandler,
 		);
+
 		this.config.onChange("environment", () => this._restartClient());
+
 		this.config.onChange("configureEnvironment", () =>
 			this._restartClient(),
 		);
@@ -82,9 +84,13 @@ export class CMakeServerDriver extends CMakeDriver {
 
 	private _cmsClient: Promise<CMakeServerClient | null> =
 		Promise.resolve(null);
+
 	private _clientChangeInProgress: Promise<void> = Promise.resolve();
+
 	private _globalSettings!: GlobalSettingsContent;
+
 	private _cacheEntries = new Map<string, cache.CacheEntry>();
+
 	private _cmakeInputFileSet = InputFileSet.createEmpty();
 
 	private readonly _progressEmitter =
@@ -101,6 +107,7 @@ export class CMakeServerDriver extends CMakeDriver {
 	private _prevConfigureEnv = "null";
 
 	private codeModel: CodeModelContent | null = null;
+
 	private convertServerCodeModel(
 		serverCodeModel: null | ServerCodeModelContent,
 	): CodeModelContent | null {
@@ -151,17 +158,23 @@ export class CMakeServerDriver extends CMakeDriver {
 											? [linkLanguageFlags]
 											: [],
 								};
+
 								newTarget.fileGroups.push(newGroup);
 							}
 						}
+
 						newProject.targets.push(newTarget);
 					}
+
 					newConfig.projects.push(newProject);
 				}
+
 				codeModel.configurations.push(newConfig);
 			}
+
 			return codeModel;
 		}
+
 		return null;
 	}
 
@@ -174,6 +187,7 @@ export class CMakeServerDriver extends CMakeDriver {
 
 	async asyncDispose() {
 		this._codeModelChanged.dispose();
+
 		this._progressEmitter.dispose();
 
 		await this.shutdownClient();
@@ -203,11 +217,13 @@ export class CMakeServerDriver extends CMakeDriver {
 
 	protected async doPreCleanConfigure(): Promise<void> {
 		const old_cl = await this._cmsClient;
+
 		this._cmsClient = (async () => {
 			// Stop the server before we try to rip out any old files
 			if (old_cl) {
 				await old_cl.shutdownAsync();
 			}
+
 			await this._cleanPriorConfiguration();
 
 			return this._startNewClient();
@@ -237,13 +253,16 @@ export class CMakeServerDriver extends CMakeDriver {
 
 		if (showCommandOnly) {
 			log.showChannel();
+
 			log.info(proc.buildCmdStr(this.cmake.path, args));
 		} else {
 			try {
 				if (!configurePreset) {
 					this._hadConfigurationChanged = false;
 				}
+
 				await cl.configure({ cacheArguments: args });
+
 				await cl.compute();
 			} catch (e) {
 				if (e instanceof ServerError) {
@@ -262,8 +281,10 @@ export class CMakeServerDriver extends CMakeDriver {
 			} finally {
 				sub.dispose();
 			}
+
 			await this._refreshPostConfigure();
 		}
+
 		return 0;
 	}
 
@@ -286,6 +307,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		this._cmakeInputFileSet = await InputFileSet.create(cmake_inputs);
 
 		const clcache = await client.getCMakeCacheContent();
+
 		this._cacheEntries = clcache.cache.reduce((acc, el) => {
 			const entry_map: {
 				[key: string]: cache.CacheEntryType | undefined;
@@ -312,6 +334,7 @@ export class CMakeServerDriver extends CMakeDriver {
 
 				return acc;
 			}
+
 			acc.set(
 				el.key,
 				new cache.CacheEntry(
@@ -327,6 +350,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		}, new Map<string, cache.CacheEntry>());
 		// Convert ServerCodeModel to general CodeModel.
 		this.codeModel = this.convertServerCodeModel(await client.codemodel());
+
 		this._codeModelChanged.fire(this.codeModel);
 	}
 
@@ -336,11 +360,13 @@ export class CMakeServerDriver extends CMakeDriver {
 		const bindir_before = this.binaryDir;
 
 		const srcdir_before = this.sourceDir;
+
 		await cb();
 
 		if (!bindir_before.length || !srcdir_before.length) {
 			return;
 		}
+
 		const new_env = JSON.stringify(await this.getConfigureEnvironment());
 
 		if (
@@ -351,6 +377,7 @@ export class CMakeServerDriver extends CMakeDriver {
 			// Directories changed. We need to restart the driver
 			await this._restartClient();
 		}
+
 		this._prevConfigureEnv = new_env;
 	}
 
@@ -358,6 +385,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		if (!this.codeModel) {
 			return [];
 		}
+
 		const build_config = this.codeModel.configurations.find(
 			(conf) => conf.name === this.currentBuildType,
 		);
@@ -372,6 +400,7 @@ export class CMakeServerDriver extends CMakeDriver {
 
 			return [];
 		}
+
 		const metaTargets = [
 			{
 				type: "rich" as "rich",
@@ -399,6 +428,7 @@ export class CMakeServerDriver extends CMakeDriver {
 				targetType: "META",
 			});
 		}
+
 		return build_config.projects.reduce<RichTarget[]>(
 			(acc, project) =>
 				acc.concat(
@@ -439,8 +469,10 @@ export class CMakeServerDriver extends CMakeDriver {
 	 * Track if the user changes the settings of the configure via settings.json
 	 */
 	private _hadConfigurationChanged = true;
+
 	protected async doConfigureSettingsChange(): Promise<void> {
 		this._hadConfigurationChanged = true;
+
 		await onConfigureSettingsChange();
 	}
 
@@ -452,6 +484,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		if (this._cmakeInputFileSet.inputFiles.length === 0) {
 			return true;
 		}
+
 		return this._cmakeInputFileSet.checkOutOfDate();
 	}
 
@@ -470,9 +503,11 @@ export class CMakeServerDriver extends CMakeDriver {
 		if (client) {
 			await client.shutdownAsync();
 		}
+
 		if (need_clean) {
 			await this._cleanPriorConfiguration();
 		}
+
 		await cb();
 
 		if (!this.generator) {
@@ -517,6 +552,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		this._cmsClient = this._doRestartClient();
 
 		const client = await this.getClient();
+
 		this._globalSettings = await client.getGlobalSettings();
 	}
 
@@ -526,6 +562,7 @@ export class CMakeServerDriver extends CMakeDriver {
 		if (old_client) {
 			await old_client.shutdownAsync();
 		}
+
 		return this._startNewClient();
 	}
 
@@ -569,7 +606,9 @@ export class CMakeServerDriver extends CMakeDriver {
 			if (this.configInProgress()) {
 				client.shutdownServer();
 			}
+
 			await client.shutdownAsync();
+
 			this._cmsClient = Promise.resolve(null);
 		}
 	}
@@ -636,5 +675,6 @@ function targetReducer(set: RichTarget[], t: RichTarget): RichTarget[] {
 	) {
 		set.push(t);
 	}
+
 	return set;
 }

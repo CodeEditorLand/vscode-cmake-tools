@@ -132,6 +132,7 @@ export class StateManager {
 		if (configurePresets.indexOf(preset) >= 0) {
 			return;
 		}
+
 		configurePresets.push(preset);
 
 		return this._update(
@@ -158,18 +159,21 @@ export class StateManager {
 				null,
 				isMultiProject,
 			);
+
 			await this.setTestPresetName(
 				folderName,
 				preset,
 				null,
 				isMultiProject,
 			);
+
 			await this.setPackagePresetName(
 				folderName,
 				preset,
 				null,
 				isMultiProject,
 			);
+
 			await this.setWorkflowPresetName(
 				folderName,
 				preset,
@@ -177,6 +181,7 @@ export class StateManager {
 				isMultiProject,
 			);
 		}
+
 		return this._update(
 			"cachedConfigurePresets",
 			null,
@@ -210,6 +215,7 @@ export class StateManager {
 			configurePreset,
 			isMultiProject,
 		);
+
 		await this._update(
 			`buildPreset for ${configurePreset}`,
 			v,
@@ -243,6 +249,7 @@ export class StateManager {
 			configurePreset,
 			isMultiProject,
 		);
+
 		await this._update(
 			`testPreset for ${configurePreset}`,
 			v,
@@ -276,6 +283,7 @@ export class StateManager {
 			configurePreset,
 			isMultiProject,
 		);
+
 		await this._update(
 			`packagePreset for ${configurePreset}`,
 			v,
@@ -309,6 +317,7 @@ export class StateManager {
 			configurePreset,
 			isMultiProject,
 		);
+
 		await this._update(
 			`workflowPreset for ${configurePreset}`,
 			v,
@@ -407,6 +416,7 @@ export class StateManager {
 	) {
 		if (settings) {
 			const pairs: [string, string][] = Array.from(settings.entries());
+
 			await this._update(
 				"activeVariantSettings",
 				pairs,
@@ -428,11 +438,17 @@ export class StateManager {
 	 */
 	async reset(folderName: string, isMultiProject: boolean) {
 		await this.setConfigurePresetName(folderName, null, isMultiProject);
+
 		await this.clearCachedConfigurePresets(folderName, isMultiProject);
+
 		await this.setActiveVariantSettings(folderName, null, isMultiProject);
+
 		await this.setLaunchTargetName(folderName, null, isMultiProject);
+
 		await this.setDefaultBuildTarget(folderName, null, isMultiProject);
+
 		await this.setActiveKitName(folderName, null, isMultiProject);
+
 		await this.setIgnoreCMakeListsMissing(
 			folderName,
 			false,

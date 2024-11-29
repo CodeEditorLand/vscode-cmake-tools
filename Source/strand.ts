@@ -29,13 +29,17 @@ export class Strand {
 	 * the enqueued function.
 	 */
 	execute<T>(func: () => Thenable<T>): Thenable<T>;
+
 	execute<T>(func: () => Promise<T>): Thenable<T>;
+
 	execute<T>(func: () => T): Thenable<T>;
+
 	execute<Ret>(func: () => Ret): Thenable<Ret> {
 		return new Promise<Ret>((resolve, reject) => {
 			this._enqueue(async () => {
 				try {
 					const result = await Promise.resolve(func());
+
 					resolve(result);
 				} catch (e) {
 					reject(e);

@@ -124,6 +124,7 @@ export class Parser extends RawDiagnosticParser {
 							break;
 					}
 				}
+
 				break;
 			}
 		}

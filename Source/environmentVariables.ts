@@ -36,11 +36,14 @@ class EnvironmentPrivate {
 	private keyMapping: Map<string, string>;
 	/* Using envProperty symbol is to provide valid implemention for [inspect]() */
 	public [envProperty]: EnvironmentWithNull;
+
 	protected options: EnvironmentOptions;
 
 	constructor(options?: EnvironmentOptions) {
 		this.keyMapping = new Map<string, string>();
+
 		this[envProperty] = {};
+
 		this.options = {
 			preserveNull: options?.preserveNull,
 			isWin32: options?.isWin32,
@@ -49,6 +52,7 @@ class EnvironmentPrivate {
 		if (this.options.preserveNull === undefined) {
 			this.options.preserveNull = false;
 		}
+
 		if (this.options.isWin32 === undefined) {
 			this.options.isWin32 = os.platform() === "win32";
 		}
@@ -67,8 +71,10 @@ class EnvironmentPrivate {
 					this.keyMapping.set(normalizedKey, resultKey);
 				}
 			}
+
 			return resultKey;
 		}
+
 		return key;
 	}
 
@@ -95,6 +101,7 @@ class EnvironmentPrivate {
 			} else if (typeof value !== "string") {
 				value = "" + value;
 			}
+
 			const existKey = this.getKey(key, true);
 
 			if (deleteKey) {
@@ -108,6 +115,7 @@ class EnvironmentPrivate {
 				);
 			}
 		}
+
 		return false;
 	}
 
@@ -136,6 +144,7 @@ export class EnvironmentUtils {
 				if (typeof p === "string") {
 					return target.get(p);
 				}
+
 				return Reflect.get(target, p);
 			},
 			getOwnPropertyDescriptor: (target, p) => {
@@ -172,6 +181,7 @@ export class EnvironmentUtils {
 				Object.assign(p, from);
 			}
 		}
+
 		return p;
 	}
 
@@ -192,6 +202,7 @@ export class EnvironmentUtils {
 				Object.assign(newEnv, env);
 			}
 		}
+
 		return newEnv;
 	}
 

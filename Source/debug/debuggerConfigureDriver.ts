@@ -3,7 +3,9 @@ import * as vscode from "vscode";
 
 export interface DebuggerInformation {
 	pipeName: string;
+
 	dapLog?: string;
+
 	debuggerIsReady(): void;
 }
 
@@ -31,6 +33,7 @@ export class DebugTrackerFactory implements vscode.DebugAdapterTrackerFactory {
 		return {
 			async onDidSendMessage(message: {
 				event?: string;
+
 				command?: string;
 			}) {
 				if (message.command === "disconnect") {

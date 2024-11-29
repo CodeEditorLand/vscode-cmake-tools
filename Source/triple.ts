@@ -1,9 +1,14 @@
 export interface TargetTriple {
 	triple: string;
+
 	targetOs: string;
+
 	targetArch: string;
+
 	vendors: string[];
+
 	abi: string;
+
 	libc: string;
 }
 
@@ -15,6 +20,7 @@ export function findTargetTriple(line: string): string | null {
 	if (target_triple_match !== null) {
 		return target_triple_match[1];
 	}
+
 	const target_triple_re_old = /.*gcc-lib[/\\]([^/\\]*)[/\\]/;
 
 	const target_triple_match_old = target_triple_re_old.exec(line);
@@ -22,6 +28,7 @@ export function findTargetTriple(line: string): string | null {
 	if (target_triple_match_old !== null) {
 		return target_triple_match_old[1];
 	}
+
 	return null;
 }
 
@@ -121,16 +128,20 @@ export function computeTargetTriple(target: TargetTriple): string {
 
 	if (target.vendors.length > 0) {
 		const vendor = target.vendors.join("_");
+
 		triple += `-${vendor}`;
 	}
+
 	triple += `-${target.targetOs}`;
 
 	if (target.abi.length > 0) {
 		triple += `-${target.abi}`;
 	}
+
 	if (target.libc.length > 0) {
 		triple += `-${target.libc}`;
 	}
+
 	return triple;
 }
 
@@ -204,6 +215,7 @@ export function parseTargetTriple(triple: string): TargetTriple | undefined {
 			}
 		}
 	}
+
 	const vendors: string[] = [];
 
 	for (const tripleElement of triples) {
@@ -230,6 +242,7 @@ export function majorVersionSemver(semver: string): string {
 	if (Array.isArray(major_version_match)) {
 		return major_version_match[1] ?? "";
 	}
+
 	return "";
 }
 
@@ -241,5 +254,6 @@ export function minorVersionSemver(semver: string): string {
 	if (Array.isArray(minor_version_match)) {
 		return minor_version_match[2] ?? "";
 	}
+
 	return "";
 }

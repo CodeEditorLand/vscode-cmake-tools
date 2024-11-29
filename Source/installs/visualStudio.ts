@@ -34,12 +34,19 @@ export interface VSCatalog {
  */
 export interface VSInstallation {
 	catalog?: VSCatalog;
+
 	channelId?: string;
+
 	instanceId: string;
+
 	displayName?: string;
+
 	installationPath: string;
+
 	installationVersion: string;
+
 	description: string;
+
 	isPrerelease: boolean;
 }
 
@@ -48,6 +55,7 @@ export interface VSInstallation {
  */
 interface VSInstallationCache {
 	installations: VSInstallation[];
+
 	queryTime: number;
 }
 
@@ -108,9 +116,11 @@ export async function vsInstallations(): Promise<VSInstallation[]> {
 	for (const inst of vsInstalls) {
 		if (instanceIds.indexOf(inst.instanceId) < 0) {
 			installs.push(inst);
+
 			instanceIds.push(inst.instanceId);
 		}
 	}
+
 	cachedVSInstallations = {
 		installations: installs,
 		queryTime: now,
@@ -168,6 +178,7 @@ export function targetArchFromGeneratorPlatform(generatorPlatform?: string) {
 	if (!generatorPlatform) {
 		return undefined;
 	}
+
 	return vsArchFromGeneratorPlatform[generatorPlatform] || generatorPlatform;
 }
 
@@ -293,8 +304,11 @@ export function filterVSInstallationsByMsvcToolset(
     FrameworkVersion=v4.0.30319
     FrameworkVersion32=v4.0.30319
     INCLUDE=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt;
+
     LIB=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\ARM;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\ARM;C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\ARM;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\ARM;C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\ARM;
+
     LIBPATH=C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\ARM;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\ARM;C:\Program Files (x86)\Windows Kits\10\UnionMetadata;C:\Program Files (x86)\Windows Kits\10\References;\Microsoft.VCLibs\14.0\References\CommonConfiguration\neutral;
+
     NETFXSDKDir=C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\
     Path=C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\x86_ARM;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools;C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\VCPackages;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Performance Tools;C:\Program Files (x86)\Windows Kits\10\bin\x86;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files\Microsoft SQL Server\120\Tools\Binn\;C:\Program Files\Microsoft VS Code\bin;C:\Program Files\CMake\bin;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\
     Platform=ARM
@@ -431,6 +445,7 @@ async function collectDevBatVars(
 	} catch (error) {}
 
 	const batContent = bat.join("\r\n");
+
 	await fs.writeFile(batPath, batContent);
 
 	const outputEncoding = await codepages.getWindowsCodepage();
@@ -448,6 +463,7 @@ async function collectDevBatVars(
 		null,
 		execOption,
 	).result;
+
 	await fs.unlink(batPath);
 
 	const output = result.stdout
@@ -459,7 +475,9 @@ async function collectDevBatVars(
 	try {
 		/* When the bat running failed, envPath would not exist */
 		const binEnv = await fs.readFile(envPath);
+
 		env = iconv.decode(binEnv, outputEncoding);
+
 		await fs.unlink(envPath);
 	} catch (error) {
 		log.error(error as Error);
@@ -487,6 +505,7 @@ async function collectDevBatVars(
 					),
 				);
 			}
+
 			return acc;
 		}, EnvironmentUtils.create());
 
@@ -521,6 +540,7 @@ async function collectDevBatVars(
 	} catch (err) {
 		log.error(`Parse '${WindowsSDKVersion}' failed`);
 	}
+
 	if (
 		majorVersion === 14 &&
 		util.compareVersion(WindowsSDKVersionParsed, {
@@ -562,6 +582,7 @@ async function collectDevBatVars(
 			vars["PATH"] = `${newWinSdkBinPath};${existPath}`;
 		}
 	}
+
 	log.debug(
 		localize(
 			"ok.running",
@@ -596,6 +617,7 @@ export async function getVcVarsBatScript(
 		// The arm(64) vcvars filename for x64 hosted toolset is using the 'amd64' alias.
 		vcVarsScript = `vcvars${getHostTargetArchString(hostArch, targetArch, true)}.bat`;
 	}
+
 	let devBatFolder = path.join(
 		vsInstall.installationPath,
 		"VC",
@@ -651,6 +673,7 @@ export async function varsForVSInstallation(
 	if (toolsetVersion && majorVersion >= 15) {
 		devBatArgs.push(`-vcvars_ver=${toolsetVersion}`);
 	}
+
 	const variables = await collectDevBatVars(
 		hostArch,
 		devbat,

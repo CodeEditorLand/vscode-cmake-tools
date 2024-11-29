@@ -20,16 +20,22 @@ enum FontFormat {
  */
 class SvgIcon {
 	public fp: string;
+
 	public glyphCode: number;
+
 	public name: string;
 
 	constructor(args: {
 		fp: string;
+
 		glyph_code: number;
+
 		name: Optional<string>;
 	}) {
 		this.fp = args.fp;
+
 		this.glyphCode = args.glyph_code;
+
 		this.name = args.name || "";
 	}
 }
@@ -44,10 +50,12 @@ class WebfontGenerator {
 	);
 
 	private _svgIcons: SvgIcon[];
+
 	private _enabledFormats: Set<FontFormat>;
 
 	constructor() {
 		this._svgIcons = [];
+
 		this._enabledFormats = new Set<FontFormat>();
 	}
 
@@ -92,7 +100,9 @@ class WebfontGenerator {
 						name: parsed_fp.name,
 					}),
 				);
+
 				console.log(`Added icon: '${fp}'`);
+
 				console.log(Number.parseInt(`0x${match.groups["code"]}`));
 				// Assume a directory (checked in begin of function when recursing).
 			} else {
@@ -142,12 +152,14 @@ class WebfontGenerator {
 			switch (format) {
 				case FontFormat.WOFF:
 					format_options["woff"] = {};
+
 					extensions.push(".woff");
 
 					break;
 
 				case FontFormat.WOFF2:
 					format_options["woff2"] = {};
+
 					extensions.push(".woff2");
 
 					break;
@@ -186,11 +198,13 @@ class WebfontGenerator {
 			if (!extensions.includes(path.parse(fp).ext)) {
 				continue;
 			}
+
 			fs.renameSync(
 				path.resolve(tmp_directory, fp),
 				path.join(outputDirectory, path.basename(fp)),
 			);
 		}
+
 		fs.existsSync(tmp_directory) &&
 			fs.rmSync(tmp_directory, { recursive: true });
 	}
@@ -225,7 +239,9 @@ try {
 	const register_format = (opt: boolean, format: FontFormat) => {
 		opt && generator.enableFormat(format);
 	};
+
 	register_format(opts.woff, FontFormat.WOFF);
+
 	register_format(opts.woff2, FontFormat.WOFF2);
 
 	generator.addFromDirectory(opts.sourceDirectory);

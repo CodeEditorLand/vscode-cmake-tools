@@ -57,11 +57,13 @@ export class KitsController {
 	static specialKits: Kit[] = [];
 
 	private static checkingHaveKits = false;
+
 	public static isScanningForKits() {
 		return this.checkingHaveKits;
 	}
 
 	folderKits: Kit[] = [];
+
 	additionalKits: Kit[] = [];
 
 	private constructor(
@@ -88,6 +90,7 @@ export class KitsController {
 		});
 
 		const kitsController = new KitsController(project, kitsWatcher);
+
 		chokidarOnAnyChange(kitsWatcher, (_) =>
 			rollbar.takePromise(
 				localize("rereading.kits", "Re-reading folder kits"),
@@ -95,6 +98,7 @@ export class KitsController {
 				kitsController.readKits(KitsReadMode.folderKits),
 			),
 		);
+
 		project.workspaceContext.config.onChange("additionalKits", () =>
 			kitsController.readKits(KitsReadMode.folderKits),
 		);
@@ -108,6 +112,7 @@ export class KitsController {
 		if (this._pickKitCancellationTokenSource) {
 			this._pickKitCancellationTokenSource.dispose();
 		}
+
 		void this._kitsWatcher.close();
 	}
 
@@ -150,7 +155,9 @@ export class KitsController {
 					localize("migrating.kits.file", "Migrating kits file"),
 					{ from: OLD_USER_KITS_FILEPATH, to: USER_KITS_FILEPATH },
 				);
+
 				await fs.mkdir_p(path.dirname(USER_KITS_FILEPATH));
+
 				await fs.rename(OLD_USER_KITS_FILEPATH, USER_KITS_FILEPATH);
 			}
 		} catch (e: any) {
@@ -285,6 +292,7 @@ export class KitsController {
 				() => inst.setKit(k),
 			);
 		}
+
 		return raw_name;
 	}
 
@@ -295,6 +303,7 @@ export class KitsController {
 			// We have kits. Okay.
 			return true;
 		}
+
 		if (!avail.find((kit) => kit.name === SpecialKits.Unspecified)) {
 			// We should _always_ have the 'UnspecifiedKit'.
 			rollbar.error(
@@ -311,9 +320,11 @@ export class KitsController {
 		// We don't have any kits defined. Scan for kits
 		if (!KitsController.checkingHaveKits) {
 			KitsController.checkingHaveKits = true;
+
 			await KitsController.scanForKits(
 				await this.project.getCMakePathofProject(),
 			);
+
 			KitsController.checkingHaveKits = false;
 
 			return true;
@@ -344,6 +355,7 @@ export class KitsController {
 		}
 
 		const avail = this.availableKits;
+
 		log.debug(
 			localize(
 				"start.selection.of.kits",
@@ -355,6 +367,7 @@ export class KitsController {
 		interface KitItem extends vscode.QuickPickItem {
 			kit: Kit;
 		}
+
 		log.debug(
 			localize(
 				"opening.kit.selection",
@@ -396,7 +409,9 @@ export class KitsController {
 			},
 			this._pickKitCancellationTokenSource.token,
 		);
+
 		this._pickKitCancellationTokenSource.dispose();
+
 		this._pickKitCancellationTokenSource =
 			new vscode.CancellationTokenSource();
 
@@ -429,6 +444,7 @@ export class KitsController {
 
 				if (kitChanged) {
 					await this.setFolderActiveKit(chosen_kit.kit);
+
 					this.project.notifyOnSelectedConfigurationChanged(
 						ConfigurationType.Kit,
 					);
@@ -445,6 +461,7 @@ export class KitsController {
 						ConfigureType.Normal,
 					);
 				}
+
 				return true;
 			}
 		}
@@ -457,9 +474,11 @@ export class KitsController {
 		if (!kitName) {
 			kitName = SpecialKits.Unspecified;
 		}
+
 		const newKit: Kit | undefined = this.availableKits.find(
 			(kit) => kit.name === kitName,
 		);
+
 		await this.setFolderActiveKit(newKit || null);
 		// if we are showing a quickpick menu...
 		this._pickKitCancellationTokenSource.cancel();
@@ -489,6 +508,7 @@ export class KitsController {
 				// Kit is explicitly marked to be kept
 				continue;
 			}
+
 			if (!kit.compilers) {
 				// We only prune kits with a `compilers` field.
 				continue;
@@ -496,8 +516,10 @@ export class KitsController {
 			// Accrue a list of promises that resolve to whether a give file exists
 			interface FileInfo {
 				path: string;
+
 				exists: boolean;
 			}
+
 			const missing_paths_prs: Promise<FileInfo>[] = [];
 
 			for (const lang in kit.compilers) {
@@ -513,6 +535,7 @@ export class KitsController {
 					exists_pr.then((exists) => ({ exists, path: comp_path })),
 				);
 			}
+
 			const pr = Promise.all(missing_paths_prs).then(async (infos) => {
 				const missing = infos.find((i) => !i.exists);
 
@@ -523,6 +546,7 @@ export class KitsController {
 				interface UpdateKitsItem extends vscode.MessageItem {
 					action: "remove" | "keep";
 				}
+
 				const chosen =
 					await vscode.window.showInformationMessage<UpdateKitsItem>(
 						localize(
@@ -545,6 +569,7 @@ export class KitsController {
 				if (chosen === undefined) {
 					return;
 				}
+
 				switch (chosen.action) {
 					case "keep":
 						return KitsController._keepKit(cmakePath, kit);
@@ -553,6 +578,7 @@ export class KitsController {
 						return KitsController._removeKit(cmakePath, kit);
 				}
 			});
+
 			rollbar.takePromise(
 				localize("pruning.kit", "Pruning kit"),
 				{ kit },
@@ -574,6 +600,7 @@ export class KitsController {
 				return k;
 			}
 		});
+
 		KitsController.userKits = new_kits;
 
 		return KitsController._writeUserKitsFile(cmakePath, new_kits);
@@ -587,6 +614,7 @@ export class KitsController {
 		const new_kits = KitsController.userKits.filter(
 			(k) => k.name !== kit.name,
 		);
+
 		KitsController.userKits = new_kits;
 
 		return KitsController._writeUserKitsFile(cmakePath, new_kits);
@@ -643,6 +671,7 @@ export class KitsController {
 			interface FailOptions extends vscode.MessageItem {
 				do: "retry" | "cancel";
 			}
+
 			const pr = vscode.window
 				.showErrorMessage<FailOptions>(
 					`Failed to write kits file to disk: ${USER_KITS_FILEPATH}: ${e.toString()}`,
@@ -659,6 +688,7 @@ export class KitsController {
 					if (!choice) {
 						return false;
 					}
+
 					switch (choice.do) {
 						case "retry":
 							return KitsController.scanForKits(cmakePath);
@@ -710,6 +740,7 @@ export class KitsController {
 
 		// Separate the VS kits based on old/new definition.
 		const old_definition_vs_kits = [];
+
 		user_vs_kits.forEach((kit) => {
 			if (
 				kit.visualStudio &&
@@ -753,6 +784,7 @@ export class KitsController {
 
 			if (chosen !== undefined && chosen.title === yesButtonTitle) {
 				KitsController.userKits = new_definition_user_kits;
+
 				duplicateRemoved = true;
 			}
 		}
@@ -778,7 +810,9 @@ export class KitsController {
 		const new_kits = Object.keys(new_kits_by_name).map(
 			(k) => new_kits_by_name[k],
 		);
+
 		KitsController.userKits = new_kits;
+
 		await KitsController._writeUserKitsFile(cmakePath, new_kits);
 
 		KitsController._startPruneOutdatedKitsAsync(cmakePath);
@@ -790,6 +824,7 @@ export class KitsController {
 		if (KitsController.isBetterClangCLDefinition(newKit, existingKit)) {
 			return true;
 		}
+
 		return KitsController.isBetterCompilerMatch(
 			newKit.compilers,
 			existingKit?.compilers,
@@ -806,6 +841,7 @@ export class KitsController {
 						0)
 			);
 		}
+
 		return false;
 	}
 
@@ -817,6 +853,7 @@ export class KitsController {
 		if (!existingCompilers) {
 			return true;
 		}
+
 		if (newCompilers) {
 			const newLangs = Object.keys(newCompilers);
 
@@ -825,6 +862,7 @@ export class KitsController {
 			if (newLangs.length > existingLangs.length) {
 				return true;
 			}
+
 			const path = process.env["PATH"]?.split(
 				process.platform === "win32" ? ";" : ":",
 			);
@@ -854,6 +892,7 @@ export class KitsController {
 				}
 			}
 		}
+
 		return false;
 	}
 }

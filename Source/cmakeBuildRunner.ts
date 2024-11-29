@@ -14,7 +14,9 @@ nls.config({
 
 export class CMakeBuildRunner {
 	private taskExecutor: vscode.TaskExecution | undefined;
+
 	private currentBuildProcess: proc.Subprocess | undefined;
+
 	private buildInProgress: boolean = false;
 
 	constructor() {
@@ -31,6 +33,7 @@ export class CMakeBuildRunner {
 
 	public setBuildProcess(buildProcess: proc.Subprocess): void {
 		this.currentBuildProcess = buildProcess;
+
 		this.setBuildInProgress(true);
 	}
 
@@ -38,6 +41,7 @@ export class CMakeBuildRunner {
 		taskExecutor: vscode.TaskExecution,
 	): Promise<void> {
 		this.taskExecutor = taskExecutor;
+
 		this.currentBuildProcess = {
 			child: undefined,
 			result: new Promise<proc.ExecutionResult>((resolve) => {
@@ -45,24 +49,30 @@ export class CMakeBuildRunner {
 					(endEvent: vscode.TaskEndEvent) => {
 						if (endEvent.execution === this.taskExecutor) {
 							this.taskExecutor = undefined;
+
 							disposable.dispose();
+
 							resolve({ retc: 0, stdout: "", stderr: "" });
 						}
 					},
 				);
 			}),
 		};
+
 		this.setBuildInProgress(true);
 	}
 
 	public async stop(): Promise<void> {
 		if (this.currentBuildProcess && this.currentBuildProcess.child) {
 			await util.termProc(this.currentBuildProcess.child);
+
 			this.currentBuildProcess = undefined;
 		}
+
 		if (this.taskExecutor) {
 			this.taskExecutor.terminate();
 		}
+
 		this.setBuildInProgress(false);
 	}
 
@@ -70,6 +80,7 @@ export class CMakeBuildRunner {
 		await this.currentBuildProcess?.result;
 
 		const buildProcess = this.currentBuildProcess;
+
 		this.currentBuildProcess = undefined;
 
 		return buildProcess;
