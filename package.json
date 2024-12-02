@@ -3690,7 +3690,7 @@
 		"@types/js-yaml": "4.0.9",
 		"@types/json5": "2.2.0",
 		"@types/lodash": "4.17.13",
-		"@types/node": "22.10.0",
+		"@types/node": "22.10.1",
 		"@types/rimraf": "4.0.5",
 		"@types/sinon": "17.0.3",
 		"@types/tmp": "0.2.6",
