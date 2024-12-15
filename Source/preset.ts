@@ -3388,9 +3388,7 @@ export async function expandTestPresetVariables(
 
 		for (
 			let index = 0;
-
 			index < preset.overwriteConfigurationFile.length;
-
 			index++
 		) {
 			expandedPreset.overwriteConfigurationFile[index] =
