@@ -6,8 +6,8 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"@types/node": "22.10.7",
-		"commander": "13.0.0",
+		"@types/node": "22.10.9",
+		"commander": "13.1.0",
 		"rimraf": "6.0.1"
 	}
 }
