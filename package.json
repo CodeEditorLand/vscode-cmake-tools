@@ -3751,7 +3751,7 @@
 		"yargs-parser": "20.2.4"
 	},
 	"dependencies": {
-		"@friedemannsommer/lcov-parser": "4.0.2",
+		"@friedemannsommer/lcov-parser": "4.0.3",
 		"@types/string.prototype.matchall": "4.0.4",
 		"ajv": "8.17.1",
 		"chokidar": "4.0.3",
@@ -3778,8 +3778,8 @@
 		"@types/chai-string": "1.4.5",
 		"@types/js-yaml": "4.0.9",
 		"@types/json5": "2.2.0",
-		"@types/lodash": "4.17.14",
-		"@types/node": "22.10.10",
+		"@types/lodash": "4.17.15",
+		"@types/node": "22.12.0",
 		"@types/rimraf": "4.0.5",
 		"@types/sinon": "17.0.3",
 		"@types/tmp": "0.2.6",
